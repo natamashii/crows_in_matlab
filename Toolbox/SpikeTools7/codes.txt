@@ -1,0 +1,105 @@
+Code	Description
+
+1	Spike 1
+2	Spike 2
+3	Reward
+4	Bar up
+5	Bar left
+6	Bar right
+7	Bar down
+8	fixation occurs
+9	Start inter-trial interval
+10	End inter-trial interval
+11	Start wait fixation
+12	End wait fixation
+13	Start wait lever
+14	End wait lever
+15	Start pre-trial
+16	End pre-trial
+17	Start post-trial
+18	End post-trial
+19	Start pause
+20	End pause
+21	Start random pause
+22	End random pause
+23	Turn sample on
+24	Turn sample off
+25	Turn test1 on
+26	Turn test1 off
+27	Turn test2 on
+28	Turn test2 off
+29	Turn test3 on
+30	Turn test3 off
+31	Turn test4 on
+32	Turn test4 off
+33	Turn test5 on
+34	Turn test5 off
+35	Turn fix-spot on
+36	Turn fix-spot off
+37	Start fix-spot dim
+38	Start up lever
+39	End up lever
+40	Start left lever
+41	End left lever
+42	Start right lever
+43	End right lever
+44	Start eye1
+45	End eye1
+46	Start eye2
+47	End eye2
+48	Turn test6 on
+49	Turn test6 off
+50	Turn test7 on
+51	Turn test7 off
+52	Turn test8 on
+53	Turn test8 off
+54	Turn test9 on
+55	Turn test9 off
+56	Start scroll bitmap sample
+57	End scroll bitmap sample
+58	Start scroll bitmap test1
+59	End scroll bitmap test1
+60	Start scroll bitmap test2
+61	End scroll bitmap test2
+62	Start scroll bitmap test3
+63	End scroll bitmap test3
+64	Start scroll bitmap test4
+65	End scroll bitmap test4
+66	Start scroll bitmap test5
+67	End scroll bitmap test5
+68	Start scroll bitmap test6
+69	End scroll bitmap test6
+70	Start scroll bitmap test7
+71	End scroll bitmap test7
+72	Start scroll bitmap test8
+73	End scroll bitmap test8
+74	Start scroll bitmap test9
+75	End scroll bitmap test9
+76	Start scroll screen sample
+77	End scroll screen sample
+78	Start scroll screen test1
+79	End scroll screen test1
+80	Start scroll screen test2
+81	End scroll screen test2
+82	Start scroll screen test3
+83	End scroll screen test3
+84	Start scroll screen test4
+85	End scroll screen test4
+86	Start scroll screen test5
+87	End scroll screen test5
+88	Start scroll screen test6
+89	End scroll screen test6
+90	Start scroll screen test7
+91	End scroll screen test7
+92	Start scroll screen test8
+93	End scroll screen test8
+94	Start scroll screen test9
+95	End scroll screen test9
+96	Reward given
+97	Start extra lever
+98	End extra lever
+99	Bar extra
+100	Start EOG data collection
+101	End EOG data collection
+
+	
