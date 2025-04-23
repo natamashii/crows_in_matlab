@@ -15,36 +15,9 @@ samples = {1:10, 4:13, 5:14, 6:15, 7:16, 8:17}; % potential samples to use
 factors = [1, 1, 1, 1, 1];
 n_match = 4;
 n_nonmatch = 1;
+stim_type = 'C';     % toggle to either generate standard or control stimuli
 
 samples_to_use = 1; % set value to decide which sample to use for stimuli generation 
-
-% Pre allocation
-all_values = zeros(size(samples, 1), 10, size(factors, 1));
-
-for s = 1:size(samples, 2)
-    current_sample = samples{s};
-    for fact = 1:size(factors, 2)
-        current_factor = factors(fact);
-        nonmatch = current_sample * current_factor;
-        all_values(s, :, fact) = round(nonmatch);
-    end
-end
-
-% Plot distribution of number frequency of values
-to_plot = false;
-if to_plot
-    fig = figure(1);
-    hold on
-    for s = 1:size(samples, 2)
-        subplot(size(samples, 2), 1, s)
-        % identify bin counts
-        nbins = size(unique(all_values(s, :, :)), 1);
-        histogram(all_values(s, :, :), nbins)
-        xlim([0 55])
-        ylim([0 12])
-    end
-    hold off
-end
 
 %% Create Stimuli 
 % specify window
@@ -79,6 +52,22 @@ y = cos(t);
 current_sample = samples{samples_to_use};
 nums = unique(current_sample);
 
+% make B_grey.bmp
+hold on
+pos = [0, 0, winsize_x/2, winsize_y/2];
+set(gcf, "Position", pos, "Units", "pixels");
+backcircle = fill(x * rbig + xbig, y * rbig + ybig, backcolour);
+backcircle.EdgeColor = "none";  % disable white edge around circle
+axis square off
+% Take a snapshot HELLO HELLO PLS DEBUG 
+f = getframe(gcf);
+[image, ~] = frame2im(f);
+
+% save the stimulus pattern
+filename = strcat('B_grey.bmp');
+imwrite(image, strcat(stim_path, filename));
+close all
+
 % iterate over each number to be visualized as stimulus pattern
 for d = 1:size(nums, 2)
     curr_num = nums(d);
@@ -101,12 +90,12 @@ for d = 1:size(nums, 2)
         backcircle.EdgeColor = "none";
         % toggle axis off 
         axis square off
-        
+
         % get random dot position in [0, 1], rescaled within background
         % circle
         dot_pos_limit = max(max(x * rbig + xbig, y * rbig + ybig)) - 2 * dot_rad;
 
-        dot_pos = dot_pos_limit * rand(2, curr_num); 
+        dot_pos = dot_pos_limit * rand(2, curr_num);
 
         % control of dots truly lying within background circle
         % set threshold here already cuz I guess this needs to be
@@ -114,16 +103,46 @@ for d = 1:size(nums, 2)
         threshold = rbig - 2 * dot_rad;
         % do the control
         dot_pos = rand_dot_pos(dot_pos, dot_rad, threshold, dot_pos_limit, xbig, ybig, min_dist);
+
+        % identify individual dot sizes
+        if stim_type == 'C'
+            sizes = calc_area(total_area, curr_num);
+            % copied from Lena, gotta generalize rand_dot_pos first
+            for dot = 1:curr_num
+                check = false;
+                while ~check
+                    distance = sqrt(abs(dot_pos(1, dot) - xbig)^2 + ...
+                        abs(dot_pos(2, dot) - ybig)^2);
+                    distance = distance + 2 * sizes(dot);
+                    if distance < min_dist
+                        dot_pos(:, dot) = dot_pos_limit * rand(2, 1);
+                    else
+                        check = true;
+                    end
+                end
+            end
+        elseif stim_type == 'S'
+            sizes = ones(curr_num, 1) * dot_rad;
+        end
+
+        % density control
+        if curr_num > 1
+            dense = density(dot_pos(1, 1:curr_num), dot_pos(2, 1:curr_num));
+            if not (mean(dense) > lowcut && mean(dense) < highcut) && ...
+                (min(dense) > min_dist)
+                continue
+            end
+        end
+
         
-        % Control for density
-        %dot_pos = density_control(dot_pos, min_dist);
+
 
         % plotting
         % Lena Approach
         % iterate over each dot
         for dot = 1:curr_num
-            fill(x * dot_rad + dot_pos(1, dot), ...
-                y * dot_rad + dot_pos(2, dot), ...
+            fill(x * sizes(dot) + dot_pos(1, dot), ...
+                y * sizes(dot) + dot_pos(2, dot), ...
                 [0 0 0], "EdgeColor", [0 0 0]);
         end
         % My approach of avoiding another for loop :(
@@ -133,7 +152,7 @@ for d = 1:size(nums, 2)
         [image, ~] = frame2im(f);
 
         % save the stimulus pattern
-        filename = strcat('S', strcat(num2str(curr_num), num2str(img)), '.bmp');
+        filename = strcat(stim_type, strcat(num2str(curr_num), num2str(img)), '.bmp');
         imwrite(image, strcat(stim_path, filename));
         %reset(groot)
         close all
