@@ -8,7 +8,7 @@ close all
 % computationally efficient)
 
 % path to save stimuli pattern
-stim_path = 'D:/MasterThesis/Stimuli_creation/ver_220242025/dot_size_0p25/'; 
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\ver_23042025\dot_size_0p25\'; 
 
 samples = {1:10, 4:13, 5:14, 6:15, 7:16, 8:17}; % potential samples to use
 %factors = [0.316, 0.56, 1, 1.77, 3.16]; % factors to generate nonmatches
@@ -48,8 +48,8 @@ end
 
 %% Create Stimuli 
 % specify window
-winsize_x = 178;
-winsize_y = 178;
+winsize_x = 267;
+winsize_y = 356;
 
 % specify Dots
 dot_rad = .25;

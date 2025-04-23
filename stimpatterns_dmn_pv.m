@@ -7,7 +7,7 @@ set(groot);
 
 %% Parameters
 
-stim_pathes = {"D:/MasterThesis/Stimuli_creation/"};
+stim_pathes = {"E:/"};
 
 %PV = false; %true; 
 
@@ -20,15 +20,15 @@ for foldernum = 1:length(stim_pathes)
     %winsize_x = 220; %
     %winsize_y = 220; %
     %pos = [220, 220, winsize_x/2, winsize_y/2]; %half for mac for getframe to get correct size
-    winsize_x = 210; %
-    winsize_y = 210; %
-    pos = [210, 210, winsize_x/2, winsize_y/2];
+    winsize_x = 267; %
+    winsize_y = 356; %
+    pos = [267, 356, winsize_x/2, winsize_y/2];
     set(gcf,'Position',pos,'Units','pixels');
     
      % Numerosity specs
     %nums = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,18,19,22,25,28,32];  % match 4-fach [1,2,3,4,5,6,7,8,9,10], non match [11,12,13,14,16,18,19,22,25,28,32] 1-fach
-    nums = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 21, 22, 23, 25, 27, 28, 32, 35, 38, 41, 44, 47];
-    imagesii = [1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    nums = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 21, 22, 23, 25, 27, 28, 32, 35, 38, 41, 44, 47];
+    imagesii = [1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
     %imagesii = [4,4,4,4,4,4,4,4,4,4,1,1,1,1,1,1,1,1,1,1,1]; % Number of different images per numerosity and condition, 4 match, 1 non-match
     
     
@@ -49,7 +49,7 @@ for foldernum = 1:length(stim_pathes)
     ybig = 5.5;
     radiusbig = 5;              % radius
     backcolor = [0.5 0.5 0.5];  % color
-    edgecolor2 = [0 0.5 0.5]; %PV
+    edgecolor2 = [0.5 0.5 0.5]; %PV
      
     %edgecolor = backcolor;
     % if PV == true
@@ -265,7 +265,8 @@ for foldernum = 1:length(stim_pathes)
                 set(gcf, 'Position', pos, 'Units', 'pixels');
                 % fill(x * (radiusbig + 0.3) + xbig, y * (radiusbig + 0.3) + ybig, edgecolor2); 
                 hold on 
-                fill(x * radiusbig + xbig, y * radiusbig + xbig, backcolor); % Draw ackground circle
+                c = fill(x * radiusbig + xbig, y * radiusbig + xbig, backcolor); % Draw ackground circle
+                c.EdgeColor = "none";
                 axis([0 12 0 12]);
                 axis square off
                 % Loop over dots
