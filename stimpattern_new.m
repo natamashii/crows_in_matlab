@@ -8,24 +8,25 @@ close all
 % computationally efficient)
 
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\ver_23042025\dot_size_0p25\'; 
+stim_path = 'C:\Users\Natalie\Desktop\Stimuli_creation\ver_24042025\'; 
 
 samples = {1:10, 4:13, 5:14, 6:15, 7:16, 8:17}; % potential samples to use
 %factors = [0.316, 0.56, 1, 1.77, 3.16]; % factors to generate nonmatches
 factors = [1, 1, 1, 1, 1];
 n_match = 4;
 n_nonmatch = 1;
-stim_type = 'C';     % toggle to either generate standard or control stimuli
+stim_type = 'S';     % toggle to either generate standard or control stimuli
 
 samples_to_use = 1; % set value to decide which sample to use for stimuli generation 
 
-%% Create Stimuli 
+% Create Stimuli 
 % specify window
-winsize_x = 534;
-winsize_y = 534;
+winsize_x = 418;
+winsize_y = 418;
+pos = [0, 0, winsize_x/2, winsize_y/2];
 
 % specify Dots
-dot_rad = .25;
+dot_rad = .4;
 min_dist = .5;
 lowcut = .01;
 highcut = 20;
@@ -53,23 +54,36 @@ current_sample = samples{samples_to_use};
 nums = unique(current_sample);
 
 % make B_grey.bmp
-
-pos = [0, 0, winsize_x/2, winsize_y/2];
-set(gcf, "Position", pos, "Units", "pixels");
+b_grey = figure();
 hold on
+b_grey.Position = pos;
+b_grey.Units = "pixels";
+%b_grey.OuterPosition = [0, 0, 400, 400];
+b_grey.Visible = "off";
+set(gcf, "Color", [1 1 1])
+set(0,'defaultfigurecolor',[1 1 1])
+set(groot, 'defaultFigureColor', 'k')
+a = groot;
+a.CurrentFigure.Color = "k";
+set(gca, "Visible", "off")
+axes('Units', 'normalized', 'Position', [0 0 1 1], 'Visible', "off");
 backcircle = fill(x * rbig + xbig, y * rbig + ybig, backcolour);
 backcircle.EdgeColor = "none";  % disable white edge around circle
 axis square off
-% Take a snapshot HELLO HELLO PLS DEBUG 
-f = getframe(gcf);
-[image, ~] = frame2im(f);
+% Take a snapshot (Lena Approach)
+%f = getframe(gcf);
+%[image, ~] = frame2im(f);
 
 % save the stimulus pattern
-filename = strcat('B_grey.bmp');
-imwrite(image, strcat(stim_path, filename));
-close all
+%imwrite(image, strcat(stim_path, 'B_grey.bmp'));
 
+% attempt my own shit
+saveas(b_grey, strcat(stim_path, 'B_grey.bmp'), 'bmp')
+%%
+close all
+%
 % iterate over each number to be visualized as stimulus pattern
+
 for d = 1:size(nums, 2)
     curr_num = nums(d);
     % define how many variations to generate
@@ -83,10 +97,22 @@ for d = 1:size(nums, 2)
         % set figure stuff
         %set(groot);
         pos = [0, 0, winsize_x/2, winsize_y/2];
-        set(gcf, "Position", pos, "Units", "pixels");
-
-        % background circle
+        fig = figure();
         hold on
+
+        fig.Position = pos;
+        %set(gcf, "Position", pos, "Units", "pixels");
+        fig.Units = "pixels";
+        fig.Visible = "off";
+
+        set(gcf, "Color", [1 1 1])
+        set(0,'defaultfigurecolor',[1 1 1])
+        set(groot, 'defaultFigureColor', 'k')
+        a = groot;
+        a.CurrentFigure.Color = "k";
+        % background circle
+        set(gca, "Visible", "off")
+        aa = axes('Units', 'normalized', 'Position', [0 0 1 1], 'Visible', "off");
         backcircle = fill(x * rbig + xbig, y * rbig + ybig, backcolour);
         backcircle.EdgeColor = "none";
         % toggle axis off 
@@ -104,7 +130,7 @@ for d = 1:size(nums, 2)
         threshold = rbig - 2 * dot_rad;
         % do the control
         dot_pos = rand_dot_pos(dot_pos, dot_rad, threshold, dot_pos_limit, xbig, ybig, min_dist);
-
+        aa.Units = "pixels";
         % identify individual dot sizes
         if stim_type == 'C'
             sizes = calc_area(total_area, curr_num);
@@ -149,12 +175,12 @@ for d = 1:size(nums, 2)
         % My approach of avoiding another for loop :(
 
         % Take a snapshot HELLO HELLO PLS DEBUG 
-        f = getframe(gcf);
-        [image, ~] = frame2im(f);
+        %f = getframe(gcf);
+        %[image, ~] = frame2im(f);
 
         % save the stimulus pattern
         filename = strcat(stim_type, strcat(num2str(curr_num), num2str(img)), '.bmp');
-        imwrite(image, strcat(stim_path, filename));
+        saveas(fig, strcat(stim_path, filename), 'bmp')
         %reset(groot)
         close all
     end
