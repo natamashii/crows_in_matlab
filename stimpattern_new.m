@@ -21,8 +21,8 @@ samples_to_use = 1; % set value to decide which sample to use for stimuli genera
 
 %% Create Stimuli 
 % specify window
-winsize_x = 267;
-winsize_y = 356;
+winsize_x = 445;
+winsize_y = 742;
 
 % specify Dots
 dot_rad = .25;
@@ -39,7 +39,7 @@ highcut_control = 4.2;
 % Specify background
 xbig = 5.5;
 ybig = 5.5;
-rbig = 5;
+rbig = 7;
 backcolour = [.5, .5, .5];
 edgecolour = [.5 .5 .5];
 
@@ -53,9 +53,10 @@ current_sample = samples{samples_to_use};
 nums = unique(current_sample);
 
 % make B_grey.bmp
-hold on
+
 pos = [0, 0, winsize_x/2, winsize_y/2];
 set(gcf, "Position", pos, "Units", "pixels");
+hold on
 backcircle = fill(x * rbig + xbig, y * rbig + ybig, backcolour);
 backcircle.EdgeColor = "none";  % disable white edge around circle
 axis square off
