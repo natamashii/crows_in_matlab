@@ -21,8 +21,8 @@ samples_to_use = 1; % set value to decide which sample to use for stimuli genera
 
 %% Create Stimuli 
 % specify window
-winsize_x = 445;
-winsize_y = 742;
+winsize_x = 534;
+winsize_y = 534;
 
 % specify Dots
 dot_rad = .25;
@@ -39,7 +39,7 @@ highcut_control = 4.2;
 % Specify background
 xbig = 5.5;
 ybig = 5.5;
-rbig = 7;
+rbig = 5;
 backcolour = [.5, .5, .5];
 edgecolour = [.5 .5 .5];
 
