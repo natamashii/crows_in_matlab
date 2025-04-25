@@ -8,14 +8,14 @@ close all
 % computationally efficient)
 
 % path to save stimuli pattern
-stim_path = 'C:\Users\Natalie\Desktop\Stimuli_creation\ver_24042025\'; 
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\ver_25042025\'; 
 
 samples = {1:10, 4:13, 5:14, 6:15, 7:16, 8:17}; % potential samples to use
 %factors = [0.316, 0.56, 1, 1.77, 3.16]; % factors to generate nonmatches
 factors = [1, 1, 1, 1, 1];
 n_match = 4;
 n_nonmatch = 1;
-stim_type = 'S';     % toggle to either generate standard or control stimuli
+stim_type = 'C';     % toggle to either generate standard or control stimuli
 
 samples_to_use = 1; % set value to decide which sample to use for stimuli generation 
 
@@ -23,7 +23,6 @@ samples_to_use = 1; % set value to decide which sample to use for stimuli genera
 % specify window
 winsize_x = 418;
 winsize_y = 418;
-pos = [0, 0, winsize_x/2, winsize_y/2];
 
 % specify Dots
 dot_rad = .4;
@@ -56,34 +55,25 @@ nums = unique(current_sample);
 % make B_grey.bmp
 b_grey = figure();
 hold on
+pos = [0, 0, winsize_x/2, winsize_y/2];
+
 b_grey.Position = pos;
-b_grey.Units = "pixels";
-%b_grey.OuterPosition = [0, 0, 400, 400];
-b_grey.Visible = "off";
-set(gcf, "Color", [1 1 1])
-set(0,'defaultfigurecolor',[1 1 1])
-set(groot, 'defaultFigureColor', 'k')
-a = groot;
-a.CurrentFigure.Color = "k";
-set(gca, "Visible", "off")
-axes('Units', 'normalized', 'Position', [0 0 1 1], 'Visible', "off");
-backcircle = fill(x * rbig + xbig, y * rbig + ybig, backcolour);
+set(gcf, 'Color', [0 0 0]);
+
+backcircle = fill(x * rbig + xbig, y * rbig*1.3 + ybig, backcolour);
 backcircle.EdgeColor = "none";  % disable white edge around circle
-axis square off
-% Take a snapshot (Lena Approach)
-%f = getframe(gcf);
-%[image, ~] = frame2im(f);
+axis equal off
+
+% Take a snapshot HELLO HELLO PLS DEBUG 
+f = getframe(gcf);
+[image, ~] = frame2im(f);
 
 % save the stimulus pattern
-%imwrite(image, strcat(stim_path, 'B_grey.bmp'));
-
-% attempt my own shit
-saveas(b_grey, strcat(stim_path, 'B_grey.bmp'), 'bmp')
-%%
+filename = strcat('B_grey.bmp');
+imwrite(image, strcat(stim_path, filename));
 close all
-%
+%%
 % iterate over each number to be visualized as stimulus pattern
-
 for d = 1:size(nums, 2)
     curr_num = nums(d);
     % define how many variations to generate
@@ -94,30 +84,19 @@ for d = 1:size(nums, 2)
     end
     % create the stimulus
     for img = 1:amount_img
-        % set figure stuff
-        %set(groot);
-        pos = [0, 0, winsize_x/2, winsize_y/2];
         fig = figure();
         hold on
+        pos = [0, 0, winsize_x/2, winsize_y/2];
 
         fig.Position = pos;
-        %set(gcf, "Position", pos, "Units", "pixels");
-        fig.Units = "pixels";
-        fig.Visible = "off";
-
-        set(gcf, "Color", [1 1 1])
-        set(0,'defaultfigurecolor',[1 1 1])
-        set(groot, 'defaultFigureColor', 'k')
-        a = groot;
-        a.CurrentFigure.Color = "k";
+        set(gcf, 'Color', [0 0 0]);
         % background circle
-        set(gca, "Visible", "off")
-        aa = axes('Units', 'normalized', 'Position', [0 0 1 1], 'Visible', "off");
-        backcircle = fill(x * rbig + xbig, y * rbig + ybig, backcolour);
-        backcircle.EdgeColor = "none";
+        hold on
+        backcircle = fill(x * rbig + xbig, (y * rbig*1.3 + ybig), backcolour);
+        backcircle.EdgeColor = "none";  % disable white edge around circle
         % toggle axis off 
-        axis square off
-
+        axis equal off
+        
         % get random dot position in [0, 1], rescaled within background
         % circle
         dot_pos_limit = max(max(x * rbig + xbig, y * rbig + ybig)) - 2 * dot_rad;
@@ -127,7 +106,7 @@ for d = 1:size(nums, 2)
         % control of dots truly lying within background circle
         % set threshold here already cuz I guess this needs to be
         % hardcoded...
-        threshold = rbig - 2 * dot_rad;
+        threshold = rbig - 1 * dot_rad;
         % do the control
         dot_pos = rand_dot_pos(dot_pos, dot_rad, threshold, dot_pos_limit, xbig, ybig, min_dist);
         aa.Units = "pixels";
@@ -175,13 +154,12 @@ for d = 1:size(nums, 2)
         % My approach of avoiding another for loop :(
 
         % Take a snapshot HELLO HELLO PLS DEBUG 
-        %f = getframe(gcf);
-        %[image, ~] = frame2im(f);
+        f = getframe(gcf);
+        [image, ~] = frame2im(f);
 
         % save the stimulus pattern
         filename = strcat(stim_type, strcat(num2str(curr_num), num2str(img)), '.bmp');
-        saveas(fig, strcat(stim_path, filename), 'bmp')
-        %reset(groot)
+        imwrite(image, strcat(stim_path, filename));
         close all
     end
     %progressbar(d, size(nums, 2))
