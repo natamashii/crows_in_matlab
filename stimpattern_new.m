@@ -8,7 +8,7 @@ close all
 % computationally efficient)
 
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\ver_23042025\dot_size_0p25\'; 
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\ver_25042025\'; 
 
 samples = {1:10, 4:13, 5:14, 6:15, 7:16, 8:17}; % potential samples to use
 %factors = [0.316, 0.56, 1, 1.77, 3.16]; % factors to generate nonmatches
@@ -19,13 +19,13 @@ stim_type = 'C';     % toggle to either generate standard or control stimuli
 
 samples_to_use = 1; % set value to decide which sample to use for stimuli generation 
 
-%% Create Stimuli 
+% Create Stimuli 
 % specify window
-winsize_x = 534;
-winsize_y = 534;
+winsize_x = 418;
+winsize_y = 418;
 
 % specify Dots
-dot_rad = .25;
+dot_rad = .4;
 min_dist = .5;
 lowcut = .01;
 highcut = 20;
@@ -53,13 +53,17 @@ current_sample = samples{samples_to_use};
 nums = unique(current_sample);
 
 % make B_grey.bmp
-
-pos = [0, 0, winsize_x/2, winsize_y/2];
-set(gcf, "Position", pos, "Units", "pixels");
+b_grey = figure();
 hold on
-backcircle = fill(x * rbig + xbig, y * rbig + ybig, backcolour);
+pos = [0, 0, winsize_x/2, winsize_y/2];
+
+b_grey.Position = pos;
+set(gcf, 'Color', [0 0 0]);
+
+backcircle = fill(x * rbig + xbig, y * rbig*1.3 + ybig, backcolour);
 backcircle.EdgeColor = "none";  % disable white edge around circle
-axis square off
+axis equal off
+
 % Take a snapshot HELLO HELLO PLS DEBUG 
 f = getframe(gcf);
 [image, ~] = frame2im(f);
@@ -68,7 +72,7 @@ f = getframe(gcf);
 filename = strcat('B_grey.bmp');
 imwrite(image, strcat(stim_path, filename));
 close all
-
+%%
 % iterate over each number to be visualized as stimulus pattern
 for d = 1:size(nums, 2)
     curr_num = nums(d);
@@ -80,18 +84,19 @@ for d = 1:size(nums, 2)
     end
     % create the stimulus
     for img = 1:amount_img
-        % set figure stuff
-        %set(groot);
+        fig = figure();
+        hold on
         pos = [0, 0, winsize_x/2, winsize_y/2];
-        set(gcf, "Position", pos, "Units", "pixels");
 
+        fig.Position = pos;
+        set(gcf, 'Color', [0 0 0]);
         % background circle
         hold on
-        backcircle = fill(x * rbig + xbig, y * rbig + ybig, backcolour);
-        backcircle.EdgeColor = "none";
+        backcircle = fill(x * rbig + xbig, (y * rbig*1.3 + ybig), backcolour);
+        backcircle.EdgeColor = "none";  % disable white edge around circle
         % toggle axis off 
-        axis square off
-
+        axis equal off
+        
         % get random dot position in [0, 1], rescaled within background
         % circle
         dot_pos_limit = max(max(x * rbig + xbig, y * rbig + ybig)) - 2 * dot_rad;
@@ -101,10 +106,10 @@ for d = 1:size(nums, 2)
         % control of dots truly lying within background circle
         % set threshold here already cuz I guess this needs to be
         % hardcoded...
-        threshold = rbig - 2 * dot_rad;
+        threshold = rbig - 1 * dot_rad;
         % do the control
         dot_pos = rand_dot_pos(dot_pos, dot_rad, threshold, dot_pos_limit, xbig, ybig, min_dist);
-
+        aa.Units = "pixels";
         % identify individual dot sizes
         if stim_type == 'C'
             sizes = calc_area(total_area, curr_num);
@@ -155,7 +160,6 @@ for d = 1:size(nums, 2)
         % save the stimulus pattern
         filename = strcat(stim_type, strcat(num2str(curr_num), num2str(img)), '.bmp');
         imwrite(image, strcat(stim_path, filename));
-        %reset(groot)
         close all
     end
     %progressbar(d, size(nums, 2))
