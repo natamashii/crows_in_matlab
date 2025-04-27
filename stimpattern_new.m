@@ -8,14 +8,14 @@ close all
 % computationally efficient)
 
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\ver_25042025\'; 
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\'; 
 
 samples = {1:10, 4:13, 5:14, 6:15, 7:16, 8:17}; % potential samples to use
 %factors = [0.316, 0.56, 1, 1.77, 3.16]; % factors to generate nonmatches
 factors = [1, 1, 1, 1, 1];
 n_match = 4;
 n_nonmatch = 1;
-stim_type = 'C';     % toggle to either generate standard or control stimuli
+stim_type = 'S';     % toggle to either generate standard or control stimuli
 
 samples_to_use = 1; % set value to decide which sample to use for stimuli generation 
 
