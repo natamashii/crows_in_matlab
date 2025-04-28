@@ -44,10 +44,10 @@ x = sin(angles);    % x values for unit circle
 y = cos(angles);    % y values for unit circle
 
 % dot specifications
-rad_dot_limit = [.08, .28];   % radius limitations in [] (based on control)
-min_dist = .05;  % minimal intra-dot distance in []
+rad_dot_limit = [.08, .2];   % radius limitations in [] (based on control)
+min_dist = .01;  % minimal intra-dot distance in []
 area_limit = [.18, .2];   % limits of cumulative area of the dots
-
+density_limit = [.75, .9; .01, 20];
 
 % Pre allocation
 
@@ -67,6 +67,7 @@ close
 % sizes and then control? to the maximum of those sizes?
 
 all_distances = cell(4, size(numbers, 2));
+counter = 0;
 
 % iterate over amount of desired stimuli
 for stimulus = 1:size(numbers, 2)
@@ -82,9 +83,10 @@ for stimulus = 1:size(numbers, 2)
             % Control Stimuli
             if stim_type == "c" || stim_type == "C"
                 stim_type = "C";
-                
                 % control: constant cumulative area
                 dot_radii = calc_area(area_limit(2), curr_num);
+
+                density_limit_spec = density_limit(1, :);
 
             % Standard Stimuli
             elseif stim_type == "s" || stim_type == "S"
@@ -94,28 +96,53 @@ for stimulus = 1:size(numbers, 2)
                 dot_radii = (rad_dot_limit(2) - rad_dot_limit(1)) ...
                     .* rand(1, curr_num) + rad_dot_limit(1);
 
+                density_limit_spec = density_limit(2, :);
+
+
             end
 
             % Dot Positions
             % validation 1: dot inside background
             for dot = 1:curr_num
                 dot_pos_limit = max(max(x * rad_back(1), y * rad_back(1))) ...
-                    - 2 * (dot_radii(dot) * scaling);
-
+                    - 2 * (dot_radii(dot) * scaling) * 1.4;
                 dot_pos(:, dot) = (2 * dot_pos_limit) * (rand(2, 1) - .5);
-                % validation 2: intra-dot distances
-                % get distance among each dot
-                distances = pdist(dot_pos);
-                all_distances{img, stimulus} = distances;
-                % identify minimum distance as two times the biggest size 
-                 
+            end
+            % validation 2: intra-dot distances
+            % get distance among each dot
+            d_x = bsxfun(@minus, dot_pos(1, :)', dot_pos(1, :));    % x coordinates
+            d_y = bsxfun(@minus, dot_pos(2, :)', dot_pos(2, :));    % y coordinates
+            distances = sqrt(d_x .^2 + d_x .^2);    % get euclidian distance among each dot
+            all_distances{img, stimulus} = distances;
+            % identify minimum distance as two times the biggest size 
+            if curr_num > 1
+                biggest_size = max(dot_radii) * 2;
+                min_distance = biggest_size - (biggest_size * 0.5); % minimum distance threshold
+                % sort distances
+                sort_distances = sort(distances, 1, "ascend");
+                % remove first line (distance of a dot to itself, aka 0)
+                sort_distances = sort_distances(2:end, :);
 
+                if ~all(sort_distances(:) >= min_distance)
+                    check = false;
+                else
+
+                    % cumulative density control: mean of it
+                    mean_distance = mean(sort_distances, "all");
+                    if (mean_distance > density_limit_spec(1) && ...
+                        mean_distance < density_limit_spec(2))
+                        check = true;
+                    else
+                        check = false;
+                    end
+                end
+            else
+                check = true;
             end
             
             
 
-            % control: constant cumulative density and area
-            check = true;
+            % control: constant cumulative density 
         end
         % plot the dots
         [fig, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
@@ -131,6 +158,7 @@ for stimulus = 1:size(numbers, 2)
         saveas(fig, strcat(stim_path, filename), 'bmp')  % save the figure
         close
 
+        counter = counter + 1;
+        progressbar(counter, 40)
     end
-
 end
