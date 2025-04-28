@@ -10,7 +10,7 @@ x_al = [0.1, 0.3, 0.5, 0.8, 1.0, 2.0, 3.0, 4.0, 8.0, 16.0]; % in mm
 x_pb = [1.0, 2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 15.0, 20.0, 30.0];  % in mm
 t_al = ones(size(x_al));
 t_pb = ones(size(x_pb));
-t_al(:) = 60;    % in s
+t_al(:) = 30;    % in s
 t_pb(:) = 120;  % in s
 tau_0 = 230;    % in µs
 y = log(1/50);
@@ -18,8 +18,8 @@ rho_al = 2.7;   % in g/cm^3
 rho_pb = 11.34; % in g/cm^3
 
 % insert their values here
-N_al = [15656, 6086, 2683, 666, 576, 523, 497, 491, 411, 374];
-N_pb = [1199, 1042, 950, 871, 731, 596, 514, 351, 255, 128];
+N_al = [8247, 3395, 1157, 363, 268, 258, 247, 234, 208, 189];
+N_pb = [1334, 1115, 1013, 908, 722, 615, 599, 334, 242, 145];
 
 % 1a) n_mess & n_korr Aluminium
 n_mess_al = zeros(size(N_al));
@@ -38,7 +38,7 @@ end
 n1 = n_korr_al(1);
 
 % 1b) plot 
-fig = figure(1);
+fig_al = figure(1);
 hold on
 
 
@@ -48,28 +48,35 @@ x2 = x_al(5:end);
 y1 = ln_nin1_al(1:4);
 y2 = ln_nin1_al(5:end);
 
+p1 = polyfit(x1, y1, 1);
+f1 = polyval(p1, x1);
+p2 = polyfit(x2, y2, 1);
+f2 = polyval(p2, x2);
+
+
 al_1 = plot(x1, y1);
 al_1.Marker = "o";
 al_1.MarkerEdgeColor = "blue";
 al_1.MarkerFaceColor = "blue";
 al_1.LineStyle = "none";
+al_1_reg = plot(x1, f1);
+al_1_reg.Color = "blue";
 al_2 = plot(x2, y2);
 al_2.Marker = "o";
 al_2.MarkerEdgeColor = "red";
 al_2.MarkerFaceColor = "red";
 al_2.LineStyle = "none";
+al_2_reg = plot(x2, f2);
+al_2_reg.Color = "red";
 
 xlabel("x [mm]")
 ylabel("ln(ni/n1)")
+hold off
 
-prompt = "Insert slope of reg1: ";
-m1 = input(prompt);
-prompt = "Insert y-intersection of reg1: ";
-y0_1 = input(prompt);
-prompt = "Insert slope of reg2: ";
-m2 = input(prompt);
-prompt = "Insert y-intersection of reg2: ";
-y0_2 = input(prompt);
+m1 = p1(1);
+y0_1 = p1(2);
+m2 = p2(1);
+y0_2 = p2(2);
 
 % 1c) Interpolation to find d_beta,max
 d_betamax = (y - y0_1) / m1;
@@ -122,8 +129,11 @@ end
 n1 = n_mess_pb(1);
 
 % plot 
-fig = figure(2);
+fig_pb = figure(2);
 hold on
+
+p_pb = polyfit(x_pb, ln_nin1_pb, 1);
+f_pb = polyval(p_pb, x_pb);
 
 
 % Regressionsgerade
@@ -133,13 +143,14 @@ pb_plot.MarkerEdgeColor = "blue";
 pb_plot.MarkerFaceColor = "blue";
 pb_plot.LineStyle = "none";
 
+pb_plot_reg = plot(x_pb, f_pb);
+pb_plot_reg.Color = "blue";
+
 xlabel("x [mm]")
 ylabel("ln(ni/n1)")
 
-prompt = "Insert slope of reg1: ";
-m1 = input(prompt);
-prompt = "Insert y-intersection of reg1: ";
-y0_1 = input(prompt);
+m1 = p_pb(1);
+y0_1 = p_pb(2);
 
 % 3 b) Halbwertsdicke
 d_half_pb = (y - y0_1) / m1;
@@ -161,7 +172,7 @@ data.Massenschwaechungskoeffizient_pb = mu_rho;
 data.Schwaechungskoeffizient_pb = mu_pb;
 
 
-to_save = true;
+to_save = false;
 if to_save
     prompt = ("Insert Filename: ");
     savename = input(prompt);

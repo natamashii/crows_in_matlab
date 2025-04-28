@@ -22,9 +22,11 @@ stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli?';
 stim_type = input(prompt, "s");
+amount_img = 4;     % defines how many versions of one condition should be generated
 
 % numerosities of interest
 numbers = 1:10;
+check = false;  % boolean that toggles if every control is fulfilled
 
 % figure specifications
 set(0, "defaultfigurecolor", [0 0 0])
@@ -42,9 +44,9 @@ x = sin(angles);    % x values for unit circle
 y = cos(angles);    % y values for unit circle
 
 % dot specifications
-max_rad_dot = .4;   % radius in []
-min_dist = .5;  % minimal intra-dot distance in []
-
+rad_dot_limit = [.08, .28];   % radius limitations in [] (based on control)
+min_dist = .05;  % minimal intra-dot distance in []
+area_limit = [.18, .2];   % limits of cumulative area of the dots
 
 
 % Pre allocation
@@ -61,36 +63,74 @@ backcircle.EdgeColor = back_circ_c;
 saveas(b_grey, strcat(stim_path, 'B_grey.bmp'), 'bmp')  % save the figure
 close
 
+% control group dot size area must be same for entire set, so get first all
+% sizes and then control? to the maximum of those sizes?
+
+all_distances = cell(4, size(numbers, 2));
+
 % iterate over amount of desired stimuli
 for stimulus = 1:size(numbers, 2)
     curr_num = numbers(stimulus);
-    [b_grey, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
+    for img = 1:amount_img
+        % Pre definitions
+        check = false;
+        size_check = false;
+        % pre allocations
+        dot_pos = zeros(2, curr_num);
+        while ~check
+            % Dot Sizes
+            % Control Stimuli
+            if stim_type == "c" || stim_type == "C"
+                stim_type = "C";
+                
+                % control: constant cumulative area
+                dot_radii = calc_area(area_limit(2), curr_num);
 
-    % set random dot positions
-    dot_pos = rand(2, curr_num);
+            % Standard Stimuli
+            elseif stim_type == "s" || stim_type == "S"
+                stim_type = "S";
 
-    % set random dot sizes
-    dot_sizes = rand(2, curr_num) * max_rad_dot;
+                % set random dot sizes within prior specified limit
+                dot_radii = (rad_dot_limit(2) - rad_dot_limit(1)) ...
+                    .* rand(1, curr_num) + rad_dot_limit(1);
 
-    while ~check
-        if stim_type == "c" || stim_type == "C"
+            end
 
-            % control: constant cumulative area
+            % Dot Positions
+            % validation 1: dot inside background
+            for dot = 1:curr_num
+                dot_pos_limit = max(max(x * rad_back(1), y * rad_back(1))) ...
+                    - 2 * (dot_radii(dot) * scaling);
+
+                dot_pos(:, dot) = (2 * dot_pos_limit) * (rand(2, 1) - .5);
+                % validation 2: intra-dot distances
+                % get distance among each dot
+                distances = pdist(dot_pos);
+                all_distances{img, stimulus} = distances;
+                % identify minimum distance as two times the biggest size 
+                 
+
+            end
+            
             
 
+            % control: constant cumulative density and area
+            check = true;
         end
-        % validation 1: dot inside background
-    
-    
-        % validation 2: intra-dot distances 
-    
-    
-        % control: constant cumulative density and area
-        
+        % plot the dots
+        [fig, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
+
+        for dot = 1:curr_num
+            fill(x * dot_radii(dot) + dot_pos(1, dot), ...
+                y * dot_radii(dot) * scaling + dot_pos(2, dot), ...
+                [0 0 0], "EdgeColor", [0 0 0]);
+        end
+
+        % save the shit
+        filename = strcat(stim_type, strcat(num2str(curr_num), num2str(img)), '.bmp');
+        saveas(fig, strcat(stim_path, filename), 'bmp')  % save the figure
+        close
+
     end
-    % plot the dots
-
-    % save the shit 
-
 
 end
