@@ -4,15 +4,16 @@ close all
 
 % main script
 
-% automatize standard & control
-% make it flexible for different samples
-% density control
-% improve all controls together
-% varying sizes in all
-% control stimuli: area control, density control
-% what is lowcut & highcut in lenas script?
-% one for loop with switch case of stim type, otherwise = Error
-% maybe add flexibility of original project: ranges
+% sort code bit: move hardcoded variables to top
+% maybe try to work around hardcoded variables
+% find a way to make things faster: dot position is slowing things down
+% ask lena again about density range
+% after this, implement b_grey to main loop (only let it generated once)
+% then make standard and control generation all at once
+% make path adaptive
+% maybe find a solution for winsize soft coding and why it matters on which
+% PC i am letting this code run
+% put controls and stuff into functions
 
 
 % Pre definition
@@ -22,6 +23,7 @@ stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli?';
 stim_type = input(prompt, "s");
+counter = 0;    % for progressbar
 amount_img = 4;     % defines how many versions of one condition should be generated
 
 % numerosities of interest
@@ -63,12 +65,6 @@ backcircle.EdgeColor = back_circ_c;
 
 saveas(b_grey, strcat(stim_path, 'B_grey.bmp'), 'bmp')  % save the figure
 close
-
-% control group dot size area must be same for entire set, so get first all
-% sizes and then control? to the maximum of those sizes?
-
-all_distances = cell(4, size(numbers, 2));
-counter = 0;
 
 % iterate over amount of desired stimuli
 for stimulus = 1:size(numbers, 2)
