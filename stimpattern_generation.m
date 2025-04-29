@@ -27,6 +27,7 @@ amount_img = 4;     % defines how many versions of one condition should be gener
 % numerosities of interest
 numbers = 1:10;
 check = false;  % boolean that toggles if every control is fulfilled
+to_break = false;   % boolean that toggles in case of mistyping stimulus type
 
 % figure specifications
 set(0, "defaultfigurecolor", [0 0 0])
@@ -97,8 +98,11 @@ for stimulus = 1:size(numbers, 2)
                     .* rand(1, curr_num) + rad_dot_limit(1);
 
                 density_limit_spec = density_limit(2, :);
-
-
+            else
+                fprintf("Error. You probably mistyped the stimulus type: ")
+                fprintf(stim_type)
+                to_break = true;
+                break
             end
 
             % Dot Positions
@@ -140,9 +144,9 @@ for stimulus = 1:size(numbers, 2)
                 check = true;
             end
             
-            
-
-            % control: constant cumulative density 
+        end
+        if to_break
+            break
         end
         % plot the dots
         [fig, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
@@ -160,5 +164,8 @@ for stimulus = 1:size(numbers, 2)
 
         counter = counter + 1;
         progressbar(counter, 40)
+    end
+    if to_break
+        break
     end
 end
