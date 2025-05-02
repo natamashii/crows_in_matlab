@@ -27,7 +27,7 @@ counter = 0;    % for progressbar
 amount_img = 4;     % defines how many versions of one condition should be generated
 
 % numerosities of interest
-numbers = 8:10;
+numbers = 1:10;
 check = false;  % boolean that toggles if every control is fulfilled
 to_break = false;   % boolean that toggles in case of mistyping stimulus type
 
@@ -117,7 +117,7 @@ for stimulus = 1:size(numbers, 2)
             % identify minimum distance as two times the biggest size 
             if curr_num > 1
                 biggest_size = max(dot_radii) * 2;
-                min_distance = biggest_size - (biggest_size * 0); % minimum distance threshold
+                min_distance = biggest_size - (biggest_size * 0.5); % minimum distance threshold
                 % sort distances
                 sort_distances = sort(distances, 1, "ascend");
                 % remove first line (distance of a dot to itself, aka 0)
