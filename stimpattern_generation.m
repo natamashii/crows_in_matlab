@@ -18,7 +18,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\a_bunch_of_sets\';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli?';
@@ -50,7 +50,7 @@ y = cos(angles);    % y values for unit circle
 rad_dot_limit = [.08, .2];   % radius limitations in [] (based on control)
 min_dist = .01;  % minimal intra-dot distance in []
 area_limit = [.18, .2];   % limits of cumulative area of the dots
-density_limit = [.75, .9; .01, 20];
+density_limit = [.8, .85; .01, 20];
 
 % Pre allocation
 
@@ -110,14 +110,14 @@ for stimulus = 1:size(numbers, 2)
             end
             % validation 2: intra-dot distances
             % get distance among each dot
-            d_x = bsxfun(@minus, dot_pos(1, :)', dot_pos(1, :));    % x coordinates
-            d_y = bsxfun(@minus, dot_pos(2, :)', dot_pos(2, :));    % y coordinates
-            distances = sqrt(d_x .^2 + d_x .^2);    % get euclidian distance among each dot
+            d_x = bsxfun(@minus, dot_pos(1, :)', dot_pos(1, :));    % x coordinates distance
+            d_y = bsxfun(@minus, dot_pos(2, :)', dot_pos(2, :));    % y coordinates distance
+            distances = sqrt(d_x .^2 + d_y .^2);    % get euclidian distance among each dot
             all_distances{img, stimulus} = distances;
             % identify minimum distance as two times the biggest size 
             if curr_num > 1
-                biggest_size = max(dot_radii) * 2;
-                min_distance = biggest_size - (biggest_size * 0.5); % minimum distance threshold
+                biggest_size = max(dot_radii) * 2.2;
+                min_distance = biggest_size; % minimum distance threshold
                 % sort distances
                 sort_distances = sort(distances, 1, "ascend");
                 % remove first line (distance of a dot to itself, aka 0)
