@@ -4,10 +4,10 @@ close all
 
 % main script
 
+% add groupitizing function
+% ideas: spatial grouping, colour grouping, temporal grouping 
 % sort code bit: move hardcoded variables to top
 % maybe try to work around hardcoded variables
-% find a way to make things faster: dot position is slowing things down
-% ask lena again about density range
 % after this, implement b_grey to main loop (only let it generated once)
 % then make standard and control generation all at once
 % make path adaptive
@@ -113,7 +113,6 @@ for stimulus = 1:size(numbers, 2)
             d_x = bsxfun(@minus, dot_pos(1, :)', dot_pos(1, :));    % x coordinates distance
             d_y = bsxfun(@minus, dot_pos(2, :)', dot_pos(2, :));    % y coordinates distance
             distances = sqrt(d_x .^2 + d_y .^2);    % get euclidian distance among each dot
-            all_distances{img, stimulus} = distances;
             % identify minimum distance as two times the biggest size 
             if curr_num > 1
                 biggest_size = max(dot_radii) * 2.2;
@@ -153,12 +152,12 @@ for stimulus = 1:size(numbers, 2)
                 [0 0 0], "EdgeColor", [0 0 0]);
         end
 
-        % save the shit
+        % save
         filename = strcat(stim_type, strcat(num2str(curr_num), num2str(img)), '.bmp');
         saveas(fig, strcat(stim_path, filename), 'bmp')  % save the figure
         close
 
-        counter = counter + 1;
+        counter = counter + 1;  % for progressbar
         progressbar(counter, 40)
     end
     if to_break
