@@ -10,7 +10,7 @@ y = cos(angles);    % y values for unit circle
 % set figure settings
 fig = figure("Units", "pixels", "Position", [0 0 winsize winsize]);
 hold on
-axis equal off  
+axis equal off
 
 % plot the circle
 backcircle = fill(x * rad_back(1), y * rad_back(2), back_circ_c);
