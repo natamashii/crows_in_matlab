@@ -27,7 +27,8 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\a_bunch_of_sets\';
+%stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\a_bunch_of_sets\';
+stim_path = '/home/nati/Desktop/test';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli?';
@@ -165,27 +166,45 @@ for stimulus = 1:size(numbers, 2)
                     end
                     
                     % generate dots within each group
-                    dot_pos = {};
+                    dot_pos = zeros(sum(dot_amounts), 2);
+                    dot_id = zeros(sum(dot_amounts), 1);
+                    group_wise_distances = {};
+                    dot_counter = 1;
 
                     % iterate over each subgroup
                     for group = 1:group_amount
                         % set angle of first dot randomly
                         alpha_1 = randi(361) - 1;
                         % convert to cartesian coordinates
-                        dot_pos{1} = [group_centers(group, 1) + sin(alpha_1), ...
-                            group_centers(group, 2) + cos(alpha_1)];
+                        dot_pos(dot_counter, 1) = group_centers(group, 1) + sin(alpha_1);
+                        dot_pos(dot_counter, 2) = group_centers(group, 2) + cos(alpha_1);
+
+                        % add dot ID
+                        dot_id(dot_counter) = dot_counter;
 
                         % get angles of remaining dots & convert to
                         % cartesian coordinates
                         for dot = 2:dot_amounts(group)
+                            dot_counter = dot_counter + 1;
+                            % get angle
                             alpha = alpha_1 - (360 / dot_amouns(group)) * (dot - 1);
-                            dot_pos{end + 1} = [group_centers(group, 1) + sin(alpha), ...
-                                group_centers(group, 2) + cos(alpha)];
+                            % get distance to first dot
+                            total_distance = dot_radii(dot_counter - 1) + dot_radii(dot_counter) + subgrouprad;
+                            dot_pos(dot_counter, 1) = group_centers(group, 1) + sin(alpha) * total_distance;
+                            dot_pos(dot_counter, 2) = group_centers(group, 2) + cos(alpha) * total_distance;
+                            % add dot ID
+                            dot_id(dot_counter) = dot_counter;
+
+                            % get distance to first dot
+                            [group_wise_distances{end + 1}, ~] = ...
+                                get_distances(dot_pos, 0);
                         end
+
 
                         % validation: density control
                         % they all need to have the same distance
 
+                    end
 
 
 
@@ -204,21 +223,21 @@ for stimulus = 1:size(numbers, 2)
                         %     group_check = true;
                         % 
                         % end
-                        
-                        dot_counter = 1;
-                        dot_pos = zeros(2, 6);
-                        for group = 1:group_amount
-                            % get rad
-                            alpha = randi(361) - 1;
-                            total_distance = dot_radii(dot_counter) + dot_radii(dot_counter + 1) + subgrouprad;
-                            % convert it to cartesian coordinates
-                            dot_pos(1, dot_counter) = group_centers(1, group) + sin(alpha) * total_distance;
-                            dot_pos(2, dot_counter) = group_centers(2, group) + cos(alpha) * total_distance;
-                            dot_pos(1, dot_counter + 1) = group_centers(1, group) - sin(alpha) * total_distance;
-                            dot_pos(2, dot_counter + 1) = group_centers(1, group) - cos(alpha) * total_distance;
-                            dot_counter = dot_counter + 2;
-                        end
-                    
+                        % 
+                        % dot_counter = 1;
+                        % dot_pos = zeros(2, 6);
+                        % for group = 1:group_amount
+                        %     % get rad
+                        %     alpha = randi(361) - 1;
+                        %     total_distance = dot_radii(dot_counter) + dot_radii(dot_counter + 1) + subgrouprad;
+                        %     % convert it to cartesian coordinates
+                        %     dot_pos(1, dot_counter) = group_centers(1, group) + sin(alpha) * total_distance;
+                        %     dot_pos(2, dot_counter) = group_centers(2, group) + cos(alpha) * total_distance;
+                        %     dot_pos(1, dot_counter + 1) = group_centers(1, group) - sin(alpha) * total_distance;
+                        %     dot_pos(2, dot_counter + 1) = group_centers(1, group) - cos(alpha) * total_distance;
+                        %     dot_counter = dot_counter + 2;
+                        % end
+                        % 
 
 
 
@@ -317,7 +336,7 @@ for stimulus = 1:size(numbers, 2)
                     %         check = false;
                     %     end 
                     % 
-                     end
+                     
             end
         end
         if to_break
