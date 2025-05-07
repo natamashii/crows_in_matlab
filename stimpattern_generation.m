@@ -52,7 +52,7 @@ rad_back(2) = rad_back(2) * scaling;    % plot actually an ellipse (will be disp
 back_circ_c = [.5, .5, .5];     % grey colour
 angle_steps = 360;  % fine tuning of background circle
 % background circle generation
-angles = 0 : (2 * pi)/(angle_steps - 1) : 2*pi; % all angle values for full circle
+angles = 0 : (2 * pi)/(angle_steps - 1) : 2 * pi; % all angle values for full circle
 x = sin(angles);    % x values for unit circle
 y = cos(angles);    % y values for unit circle
 
@@ -63,7 +63,7 @@ area_limit = [.18, .2];   % limits of cumulative area of the dots
 density_limit = [.8, .85; .01, 20];
 subgrouprad = .1;
 
-pattern = "grouped";
+pattern = "random";
 
 % generate fixation stimulus (b_grey)
 [b_grey, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
@@ -114,71 +114,96 @@ for stimulus = 1:size(numbers, 2)
                             - 2 * (dot_radii(dot) * scaling) * 1;
                         dot_pos(dot, :) = (2 * dot_pos_limit) * (rand(2, 1) - .5);
                     end
-        
+
                     % validation: no overlap between dots
-                    % get distance among each dot
-                    d_x = bsxfun(@minus, dot_pos(:, 1)', dot_pos(:, 1));    % x coordinates distance
-                    d_y = bsxfun(@minus, dot_pos(:, 2)', dot_pos(:, 2));    % y coordinates distance
-                    distances = sqrt(d_x .^2 + d_y .^2);    % get euclidian distance among each dot
-                    
-                    % minimum distance = 2 x biggest size and bit more
-                    min_dot_distance = max(dot_radii) * 2.2;    
-                    % sort distances
-                    sort_distances = sort(distances, 1, "ascend");
-                    % remove first line (distance of a dot to itself, aka 0)
-                    sort_distances = sort_distances(2:end, :);
-        
-        
-                    if ~all(sort_distances(:) >= min_dot_distance)
-                        check = false;
+                    min_dot_distance = max(dot_radii) * 2.2;
+                    [dot_distances, check] = ...
+                        get_distances(dot_pos, min_dot_distance);
+
+                    % cumulative density control
+                    mean_distance = mean(dot_distances, "all");
+                    if (mean_distance > density_limit_spec(1) && ...
+                            mean_distance < density_limit_spec(2))
+                        check = true;
+                        plot_dot_pos = dot_pos;
                     else
-        
-                        % cumulative density control: mean of it
-                        mean_distance = mean(sort_distances, "all");
-                        if (mean_distance > density_limit_spec(1) && ...
-                                mean_distance < density_limit_spec(2))
-                            check = true;
-                            plot_dot_pos = dot_pos;
-                        else
-                            check = false;
-                        end
+                        check = false;
                     end
                 case "grouped"
+                    group_check = false;
                     if curr_num > 1
+                        continue
+                    end
+                    while ~group_check
                         % grouping
                         center_distances = zeros(1, 3);
                         group_amount = 3;   % set how many groups you want (debugging)
                         dot_amounts = [2, 2, 2];   % set how many dots in each group (debugging)
                         % groups should have equal distance to each other, so condition
                         % for >2 groups
-                        group_radius = .3;  
-                        group_distance = rad_back(1) * .8;
-                        group_centers = zeros(2, group_amount);
+                        group_radius = .3;
+                        min_group_distance = rad_back(1) * .8;
+                        group_centers = zeros(group_amount, 2);
                         group_center_limit = max(max(x * rad_back(1), y * rad_back(2))) ...
-                                - (group_radius * scaling) * 1;
+                            - (group_radius * scaling) * 1;
                         for group = 1:group_amount
-                            group_centers(:, group) = group_center_limit + (-group_center_limit - group_center_limit) .* rand(2, 1);
-                            center_distances(group) = sqrt(group_centers(1, group) .^2 + group_centers(2, group) .^2);
+                            group_centers(group, :) = group_center_limit + (-group_center_limit - group_center_limit) .* rand(2, 1);
+                            center_distances(group) = sqrt(group_centers(group, 1) .^2 + group_centers(group, 2) .^2);
 
                         end
                         % validation: group within background
                         % get eucledian distance of center that must be
                         % smoller than group_distance
-                        for group = 1:group_amount
-                        end
                         % validation: equal & enough distance among group centers
                         % get distances among group centers
-                        d_x_group = bsxfun(@minus, group_centers(1, :)', group_centers(1, :));
-                        d_y_group = bsxfun(@minus, group_centers(2, :)', group_centers(2, :));
-                        distances_group = sqrt(d_x_group .^2 + d_y_group .^2);
-                        sort_distances_group = sort(distances_group, 1, "ascend");
-                        sort_distances_group = sort_distances_group(2:end, :);
-            
-                        if all(sort_distances_group(:) >= group_distance) ...
-                                & all(center_distances(:) <= group_center_limit)
-                            group_check = true;
-                            
+                        [group_distances, ~] = get_distances(group_centers, min_group_distance);
+                        % validation: subgroup distances equal
+                        if ~all(group_distances) == min_group_distance
+                            group_check = false;
                         end
+
+                    end
+                    
+                    % generate dots within each group
+                    dot_pos = {};
+
+                    % iterate over each subgroup
+                    for group = 1:group_amount
+                        % set angle of first dot randomly
+                        alpha_1 = randi(361) - 1;
+                        % convert to cartesian coordinates
+                        dot_pos{1} = [group_centers(group, 1) + sin(alpha_1), ...
+                            group_centers(group, 2) + cos(alpha_1)];
+
+                        % get angles of remaining dots & convert to
+                        % cartesian coordinates
+                        for dot = 2:dot_amounts(group)
+                            alpha = alpha_1 - (360 / dot_amouns(group)) * (dot - 1);
+                            dot_pos{end + 1} = [group_centers(group, 1) + sin(alpha), ...
+                                group_centers(group, 2) + cos(alpha)];
+                        end
+
+                        % validation: density control
+                        % they all need to have the same distance
+
+
+
+
+
+
+
+
+                        % d_x_group = bsxfun(@minus, group_centers(1, :)', group_centers(1, :));
+                        % d_y_group = bsxfun(@minus, group_centers(2, :)', group_centers(2, :));
+                        % distances_group = sqrt(d_x_group .^2 + d_y_group .^2);
+                        % sort_distances_group = sort(distances_group, 1, "ascend");
+                        % sort_distances_group = sort_distances_group(2:end, :);
+                        % 
+                        % if all(sort_distances_group(:) >= group_distance) ...
+                        %         & all(center_distances(:) <= group_center_limit)
+                        %     group_check = true;
+                        % 
+                        % end
                         
                         dot_counter = 1;
                         dot_pos = zeros(2, 6);
@@ -193,6 +218,7 @@ for stimulus = 1:size(numbers, 2)
                             dot_pos(2, dot_counter + 1) = group_centers(1, group) - cos(alpha) * total_distance;
                             dot_counter = dot_counter + 2;
                         end
+                    
 
 
 
@@ -318,7 +344,7 @@ for stimulus = 1:size(numbers, 2)
         close
 
         counter = counter + 1;  % for progressbar
-        progressbar(counter, 40)
+        %progressbar(counter, 40)
     end
     if to_break
         break
