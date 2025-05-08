@@ -162,6 +162,7 @@ for stimulus = 1:size(numbers, 2)
                 if isempty(group_wise_distances)
                     group_check = true;
                     continue
+                % not so beautiful but for groups of 3 logic isnt logicing
                 elseif all(isapprox(group_wise_distances(:), group_wise_distances(end), AbsoluteTolerance=1e-1)) ...
                         && all(isapprox(group_distances(:), group_distances(end), "verytight"))
                     group_check = true;
