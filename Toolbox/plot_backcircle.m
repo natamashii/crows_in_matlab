@@ -13,7 +13,7 @@ hold on
 axis equal off
 
 % plot the circle
-backcircle = fill(x * rad_back(1), y * rad_back(2), back_circ_c);
+backcircle = fill(x * rad_back, y * rad_back, back_circ_c);
 backcircle.EdgeColor = back_circ_c;
 
 end
