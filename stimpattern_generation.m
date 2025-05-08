@@ -27,8 +27,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-%stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\a_bunch_of_sets\';
-stim_path = 'C:\Users\Natalie\Desktop\Stimuli_creation\';
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\a_bunch_of_sets\';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli?';
@@ -61,7 +60,7 @@ y = cos(angles);    % y values for unit circle
 rad_dot_limit = [.08, .2];   % radius limitations in [] (based on control)
 min_dist = .01;  % minimal intra-dot distance in []
 area_limit = [.18, .2];   % limits of cumulative area of the dots
-density_limit = [.8, .85; .01, 20];
+density_limit = [.92, .97; .01, 20];
 subgrouprad = .1;
 
 pattern = "grouped";
@@ -118,7 +117,7 @@ for stimulus = 1:size(numbers, 2)
 
                     % validation: no overlap between dots
                     min_dot_distance = max(dot_radii) * 2.2;
-                    [dot_distances, check] = ...
+                    [dot_distances, ~] = ...
                         get_distances(dot_pos, min_dot_distance);
 
                     % cumulative density control
@@ -132,21 +131,21 @@ for stimulus = 1:size(numbers, 2)
                     end
                 case "grouped"
                     group_check = false;
-                    if curr_num < 1
+                    if curr_num == 1
                         continue
                     end
                     while ~group_check
                         % grouping
                         center_distances = zeros(1, 3);
-                        group_amount = 3;   % set how many groups you want (debugging)
-                        dot_amounts = [2, 2, 2];   % set how many dots in each group (debugging)
+                        group_amount = 2;   % set how many groups you want (debugging)
+                        dot_amounts = [3, 3];   % set how many dots in each group (debugging)
                         % groups should have equal distance to each other, so condition
                         % for >2 groups
-                        group_radius = .3;
+                        group_radius = .2;
                         min_group_distance = rad_back(1) * .8;
                         group_centers = zeros(group_amount, 2);
                         group_center_limit = max(max(x * rad_back(1), y * rad_back(2))) ...
-                            - (group_radius * scaling) * 1.2;
+                            - (group_radius * scaling) * 1.6;
 
                         % set first group
                         alpha_1 = 2 * pi * rand(1, 1);
@@ -167,55 +166,67 @@ for stimulus = 1:size(numbers, 2)
                         % get distances among group centers
                         [group_distances, ~] = get_distances(group_centers, min_group_distance);
                         % validation: subgroup distances equal
-                        group_check = true;
-
-                    end
-                    
-                    % generate dots within each group
-                    dot_pos = zeros(sum(dot_amounts), 2);
-                    dot_id = zeros(sum(dot_amounts), 1);
-                    group_wise_distances = {};
-                    dot_counter = 0;
-
-                    % iterate over each subgroup
-                    for group = 1:group_amount
-                        dot_counter = dot_counter + 1;
-                        % set angle of first dot randomly
-                        alpha_1 = 2 * pi * rand(1, 1);
-                        % convert to cartesian coordinates
-                        dot_pos(dot_counter, 1) = group_centers(group, 1) + sin(alpha_1) * (group_radius - dot_radii(dot_counter));
-                        dot_pos(dot_counter, 2) = group_centers(group, 2) + cos(alpha_1) * (group_radius - dot_radii(dot_counter));
-
-                        % add dot ID
-                        dot_id(dot_counter) = dot_counter;
-
-                        % get angles of remaining dots & convert to
-                        % cartesian coordinates
-                        for dot = 2:dot_amounts(group)
+                        % generate dots within each group
+                        dot_pos = zeros(sum(dot_amounts), 2);
+                        dot_id = zeros(sum(dot_amounts), 2);
+                        dot_counter = 0;
+    
+                        % iterate over each subgroup
+                        for group = 1:group_amount
                             dot_counter = dot_counter + 1;
-                            % get angle
-                            alpha = alpha_1 - ((2 * pi) / dot_amounts(group)) * (dot - 1);
-                            % get distance to first dot
-                            total_distance = dot_radii(dot_counter - 1) + dot_radii(dot_counter) + subgrouprad;
-                            dot_pos(dot_counter, 1) = group_centers(group, 1) + sin(alpha) * (group_radius - dot_radii(dot_counter));
-                            dot_pos(dot_counter, 2) = group_centers(group, 2) + cos(alpha) * (group_radius - dot_radii(dot_counter));
+                            % set angle of first dot randomly
+                            alpha_1 = 2 * pi * rand(1, 1);
+                            % convert to cartesian coordinates
+                            dot_pos(dot_counter, 1) = group_centers(group, 1) + sin(alpha_1) * (subgrouprad + dot_radii(dot_counter));
+                            dot_pos(dot_counter, 2) = group_centers(group, 2) + cos(alpha_1) * (subgrouprad + dot_radii(dot_counter));
+    
                             % add dot ID
-                            dot_id(dot_counter) = dot_counter;
-
-                            % get distance to first dot
-                            [group_wise_distances{end + 1}, ~] = ...
-                                get_distances(dot_pos, 0);
+                            dot_id(dot_counter, 1) = dot_counter;
+                            dot_id(dot_counter, 2) = group;
+    
+                            % get angles of remaining dots & convert to
+                            % cartesian coordinates
+                            for dot = 2:dot_amounts(group)
+                                dot_counter = dot_counter + 1;
+                                % get angle
+                                alpha = alpha_1 - ((2 * pi) / dot_amounts(group)) * (dot - 1);
+                                % get distance to first dot
+                                total_distance = dot_radii(dot_counter - 1) + dot_radii(dot_counter) + subgrouprad;
+                                dot_pos(dot_counter, 1) = group_centers(group, 1) + (sin(alpha) * (subgrouprad + dot_radii(dot_counter)));
+                                dot_pos(dot_counter, 2) = group_centers(group, 2) + (cos(alpha) * (subgrouprad + dot_radii(dot_counter)));
+                                % add dot ID
+                                dot_id(dot_counter, 1) = dot_counter;
+                                dot_id(dot_counter, 2) = group;                         
+                            end
                         end
-
-
-                        % validation: density control
-                        % they all need to have the same distance
-
+                        group_wise_distances = {};
+    
+                        % get distances between dots for each group
+                        for group = 1:group_amount
+                            [row, ~] = find(dot_id(:, 2) == group);
+                            [dist, ~] = ...
+                                get_distances(dot_pos(row, :), 0);
+                            group_wise_distances{end + 1} = dist - (sum(dot_radii(row)));
+                        end
+    
+                        % valdiation: same dot distances for each group among
+                        % the dots
+                        % validation: groups have the same distance
+                        group_wise_distances = vertcat(group_wise_distances{:});
+    
+                        if all(isapprox(group_wise_distances(:), group_wise_distances(end), "verytight")) ...
+                                && all(isapprox(group_distances(:), group_distances(end), "verytight"))
+                            group_check = true;
+                        end
+                        group_check = true;
                     end
-
-
-
-                     
+            end
+            % validation: density control: control stimuli
+            dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
+            disp(mean(dot_density))
+            if mean(dot_density) <= density_limit_spec(2) && ...
+                    mean(dot_density) >= density_limit_spec(1)
+                check = true;
             end
             check = true;
         end
