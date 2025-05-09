@@ -24,7 +24,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\a_bunch_of_sets\';
+stim_path = '/home/nati/Pictures/';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -161,7 +161,7 @@ for stimulus = 1:size(numbers, 2)
             end
             % generate grouped dots
             while ~group_check
-                [group_distances, group_wise_distances, dot_pos] = ...
+                [group_distances, group_wise_distances, dot_pos, group_centers] = ...
                     grouped_dots(dot_groups, group_radii, dot_radii, scaling, rad_back, x, y, subgrouprad);
                 
                 % continue if it is only one group
@@ -193,7 +193,16 @@ for stimulus = 1:size(numbers, 2)
         % plot the dots
         fig = plot_stim_pattern(angle_steps, winsize, rad_back, back_circ_c, ...
             dot_pos, dot_radii, scaling);
-        
+        if curr_num > 1
+            for group = 1:size(dot_groups, 1)
+                group_plot = plot(group_centers(group, 1), group_centers(group, 2), "x");
+                group_plot.MarkerEdgeColor = "green";
+                group_circle = fill(group_centers(group, 1) + (group_radii(group) * x), ...
+                    group_centers(group, 2) + (group_radii(group) * y), [0 0 0]);
+                group_circle.FaceColor = "none";
+                group_circle.EdgeColor = "magenta";
+            end
+        end
         % save
         filename = strcat(stim_type, '_', pattern_type, '_', strcat(num2str(curr_num), num2str(img)), '.bmp');
         saveas(fig, strcat(stim_path, filename), 'bmp')  % save the figure
