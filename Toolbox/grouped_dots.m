@@ -1,4 +1,4 @@
-function [group_distances, group_wise_distances, dot_pos] = ...
+function [group_distances, group_wise_distances, dot_pos, group_centers] = ...
     grouped_dots(dot_groups, group_radii, dot_radii, scaling, rad_back, ...
     x, y, subgrouprad)
 
@@ -20,15 +20,14 @@ while ~group_control
         group_pos_limit = max(max(x * rad_back, y * rad_back)) ...
             - (group_radii(group) * scaling * 1.2);
         group_centers(group, :) = (2 * group_pos_limit) * (rand(2, 1) - .5);
-        disp(group_centers)
     end
 
-    % % validation: groups have enough distance among each other
-    % if group_amount == 1
-    %     group_control = true;
-    % else
-    %     [group_distances, group_control] = get_distances(group_centers, 0);
-    % end
+    % validation: groups have enough distance among each other
+    if group_amount == 1
+        group_control = true;
+    else
+        [group_distances, group_control] = get_distances(group_centers, 0);
+    end
     group_control = true;
 end
 % set dots: iterate over each subgroup
