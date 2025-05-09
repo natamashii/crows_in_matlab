@@ -1,5 +1,6 @@
 function [group_distances, group_wise_distances, dot_pos] = ...
-    grouped_dots(dot_groups, group_radii, dot_radii, scaling, rad_back, x, y, subgrouprad)
+    grouped_dots(dot_groups, group_radii, dot_radii, scaling, rad_back, ...
+    x, y, subgrouprad)
 
 % function to generate subgroups to project dots
 
@@ -11,31 +12,26 @@ group_distances = 0;
 dot_pos = zeros(sum(dot_groups), 2);
 dot_id = zeros(sum(dot_groups), 2); % dim 1: ID for dot, dim 2: ID for group
 dot_counter = 0;
+dot_scale = 1;  % arbitrary scaling factor that fixes 3-dot problem real quick
+group_control = false;
 
-% scaling factor for identifying group's center
-group_center_limit = max(max(x * rad_back, y * rad_back)) ...
-    - (group_radii(1) * scaling) * 1.6;
-
-% set first group
-alpha_1 = 2 * pi * rand(1, 1);
-group_centers(1, 1) = sin(alpha_1) * group_center_limit;
-group_centers(1, 2) = cos(alpha_1) * group_center_limit;
-
-if group_amount > 1
-    for group = 2:group_amount
-        % set angle
-        alpha = alpha_1 - ((2 * pi) / group_amount) * (group - 1);
-        % adjust distance to center
-        group_center_limit = max(max(x * rad_back, y * rad_back)) ...
-            - (group_radii(group) * scaling) * 1.6;
-        group_centers(group, 1) = sin(alpha) * group_center_limit;
-        group_centers(group, 2) = cos(alpha) * group_center_limit;
+while ~group_control
+    for group = 1:group_amount
+        group_pos_limit = max(max(x * rad_back, y * rad_back)) ...
+            - (group_radii(group) * scaling * 1.2);
+        group_centers(group, :) = (2 * group_pos_limit) * (rand(2, 1) - .5);
+        disp(group_centers)
     end
-    % get distances of each group center to another
-    [group_distances, ~] = get_distances(group_centers, 0);
-end
 
-% iterate over each subgroup
+    % % validation: groups have enough distance among each other
+    % if group_amount == 1
+    %     group_control = true;
+    % else
+    %     [group_distances, group_control] = get_distances(group_centers, 0);
+    % end
+    group_control = true;
+end
+% set dots: iterate over each subgroup
 for group = 1:group_amount
     dot_counter = dot_counter + 1;
     % set angle of first dot randomly
@@ -55,9 +51,14 @@ for group = 1:group_amount
         dot_counter = dot_counter + 1;
         % get angle
         alpha = alpha_1 - ((2 * pi) / dot_groups(group)) * (dot - 1);
-        % get distance to first dot
-        dot_pos(dot_counter, 1) = group_centers(group, 1) + (sin(alpha) * (subgrouprad + dot_radii(dot_counter)));
-        dot_pos(dot_counter, 2) = group_centers(group, 2) + (cos(alpha) * (subgrouprad + dot_radii(dot_counter)));
+        % set dot position
+        if dot_groups(group) > 2
+            dot_scale = 1.2;
+        end
+        dot_pos(dot_counter, 1) = group_centers(group, 1) ...
+            + (sin(alpha) * (subgrouprad + dot_radii(dot_counter)) * dot_scale);
+        dot_pos(dot_counter, 2) = group_centers(group, 2) ...
+            + (cos(alpha) * (subgrouprad + dot_radii(dot_counter)) * dot_scale);
         % add dot ID
         dot_id(dot_counter, 1) = dot_counter;
         dot_id(dot_counter, 2) = group;
@@ -74,6 +75,9 @@ for group = 1:group_amount
 end
 
 % convert to array
-group_wise_distances = vertcat(group_wise_distances{:});
+for el = 1:size(group_wise_distances, 2)
+    group_wise_distances{el} = reshape(group_wise_distances{el}.', 1, []);
+end
+group_wise_distances = horzcat(group_wise_distances{:});
 
 end
