@@ -24,7 +24,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = '/home/nati/Pictures/';
+stim_path = 'C:\Users\Natalie\Desktop\Stimuli_creation\';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -41,19 +41,18 @@ to_break = false;   % boolean that toggles in case of mistyping stimulus type
 
 % figure specifications
 set(0, "defaultfigurecolor", [0 0 0])
-scaling = 1;   % factor for stretching lovely picture (to be displayed as circle in lateralization setup)
+scaling = 1.55;   % factor for stretching lovely picture (to be displayed as circle in lateralization setup)
 winsize = 209;  % needed for figure specificiation
 
 % background circle specifications
 rad_back = 1;  % radius for x-axis (1. dim) and y-axis (2. dim)
-back_circ_c = [.5, .5, .5];     % grey colour
+back_circ_c = [.5, .5, .5];     % grey colours
 angle_steps = 360;  % fine tuning of background circle
 
 % dot specifications
-rad_dot_limit = [.08, .2];   % radius limitations (based on control)
+rad_dot_limit = [.08, .18];   % radius limitations (based on control)
 area_limit = [.18, .2];   % limits of cumulative area of the dots
-density_limit = [.92, .97; .01, 20];
-subgrouprad = .1;
+density_limit = [.77, .83; .69, 20];
 
 % group radii: (1=1, 2=2, 3=2+1, 4=2*2, 5=2+2+1, 6=3*2) 
 gr_dots_m = {[1], [2], [2; 1], [2; 2], [2; 2; 1], [3; 3]};
@@ -71,8 +70,6 @@ close
 % iterate over amount of desired stimuli
 for stimulus = 1:size(numbers, 2)
     curr_num = numbers(stimulus);
-    fprintf("curr_num: ")
-    disp(curr_num)
     for img = 1:amount_img
         % Pre definitions
         check = false;
@@ -107,7 +104,7 @@ for stimulus = 1:size(numbers, 2)
             if curr_num == 1
                 % validation 1: dot inside background circle
                 dot_pos_limit = max(max(x * rad_back, y * rad_back)) ...
-                            - 2 * (dot_radii * scaling) * 1.2;
+                            - (2 * dot_radii) * scaling;
                 dot_pos = (2 * dot_pos_limit) * (rand(2, 1) - .5); 
                 break
             end
@@ -118,7 +115,7 @@ for stimulus = 1:size(numbers, 2)
                         % validation 1: dot inside background circle
                         for dot = 1:curr_num
                             dot_pos_limit = max(max(x * rad_back, y * rad_back)) ...
-                                - 2 * (dot_radii(dot) * scaling) * 1.6;
+                                - (2 * dot_radii(dot)) * scaling;
                             dot_pos(dot, :) = (2 * dot_pos_limit) * (rand(2, 1) - .5);
                         end
 
@@ -130,8 +127,8 @@ for stimulus = 1:size(numbers, 2)
 
                             % cumulative density control
                             mean_distance = mean(dot_distances, "all");
-                            if (mean_distance > density_limit_spec(1) && ...
-                                    mean_distance < density_limit_spec(2) ...
+                            if (mean_distance >= density_limit_spec(1) && ...
+                                    mean_distance <= density_limit_spec(2) ...
                                     && overlap_check)
                                 dot_check = true;
                                 plot_dot_pos = dot_pos;
@@ -148,43 +145,47 @@ for stimulus = 1:size(numbers, 2)
                     % set grouping way & how dots should be grouped
                     group_radii = gr_rad_a{curr_num};
                     dot_groups = gr_dots_a{curr_num};
+                    % change density interval when only one group
+                    if size(dot_groups, 1) == 1
+                        density_limit_spec = density_limit_spec(:) - .45;
+                    end
                 case "P3"   % multiplicative
                     group_check = false;
                     % set grouping way & how dots should be grouped
                     group_radii = gr_rad_m{curr_num};
                     dot_groups = gr_dots_m{curr_num};
+                    % change density interval when only one group
+                    if size(dot_groups, 1) == 1
+                        density_limit_spec = density_limit_spec(:) - .45;
+                    end
                 otherwise
                     fprintf("Error. This is not a valid pattern type: ")
                     fprintf(pattern_type)
                     to_break = true;
                     break
             end
-            % generate grouped dots
             while ~group_check
+                % generate grouped dots
                 [group_distances, group_wise_distances, dot_pos, group_centers] = ...
-                    grouped_dots(dot_groups, group_radii, dot_radii, scaling, rad_back, x, y, subgrouprad);
-                
-                % continue if it is only one group
-                if isempty(group_wise_distances)
-                    group_check = true;
-                    continue
-                % not so beautiful but for groups of 3 logic isnt logicing
-                elseif all(isapprox(group_wise_distances(:), group_wise_distances(end), AbsoluteTolerance=1e0)) ...
-                        && all(isapprox(group_distances(:), group_distances(end), "verytight"))
+                    grouped_dots(dot_groups, group_radii, dot_radii, scaling, rad_back, x, y);
+    
+                % validation: groups have approximately same distance to one
+                % another
+                if all(isapprox(group_distances(:), group_distances(end), RelativeTolerance=1e-2))
                     group_check = true;
                 end
             end
-            
+
             % validation: density control: control stimuli
             dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
-            disp(mean(dot_density))
-            if mean(dot_density) <= density_limit_spec(2) && ...
-                    mean(dot_density) >= density_limit_spec(1)
+
+            if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
+                    (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
             elseif curr_num == 1
                 check = true;
             end
-            check = true;
+            %check = true;
         end
         if to_break
             break
@@ -192,24 +193,27 @@ for stimulus = 1:size(numbers, 2)
 
         % plot the dots
         fig = plot_stim_pattern(angle_steps, winsize, rad_back, back_circ_c, ...
-            dot_pos, dot_radii, scaling);
-        if curr_num > 1
-            for group = 1:size(dot_groups, 1)
-                group_plot = plot(group_centers(group, 1), group_centers(group, 2), "x");
-                group_plot.MarkerEdgeColor = "green";
-                group_circle = fill(group_centers(group, 1) + (group_radii(group) * x), ...
-                    group_centers(group, 2) + (group_radii(group) * y), [0 0 0]);
-                group_circle.FaceColor = "none";
-                group_circle.EdgeColor = "magenta";
-            end
-        end
+            dot_pos, dot_radii);
+
+        % debugging: plot generated groups
+        % if curr_num > 1
+        %     for group = 1:size(dot_groups, 1)
+        %         group_plot = plot(group_centers(group, 1), group_centers(group, 2), "x");
+        %         group_plot.MarkerEdgeColor = "green";
+        %         group_circle = fill(group_centers(group, 1) + (group_radii(group) * x), ...
+        %             group_centers(group, 2) + (group_radii(group) * y), [0 0 0]);
+        %         group_circle.FaceColor = "none";
+        %         group_circle.EdgeColor = "magenta";
+        %     end
+        % end
+
         % save
         filename = strcat(stim_type, '_', pattern_type, '_', strcat(num2str(curr_num), num2str(img)), '.bmp');
         saveas(fig, strcat(stim_path, filename), 'bmp')  % save the figure
         close
 
         counter = counter + 1;  % for progressbar
-        %progressbar(counter, 40)
+        progressbar(counter, 24)
     end
     if to_break
         break
