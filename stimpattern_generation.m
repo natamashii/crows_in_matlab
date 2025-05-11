@@ -178,12 +178,20 @@ for stimulus = 1:size(numbers, 2)
 
             % validation: density control: control stimuli
             dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
-
+            
             if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
                     (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
             elseif curr_num == 1
                 check = true;
+            end
+            if pattern_type == "P1"
+                if mean(dot_density) >= density_limit_spec(1) && ...
+                    mean(dot_density) <= density_limit_spec(2)
+                    check = true;
+                elseif curr_num == 1
+                    check = true;
+                end
             end
             %check = true;
         end
