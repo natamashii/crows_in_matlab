@@ -24,7 +24,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
+stim_path = '/home/nati/Pictures/';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -42,7 +42,7 @@ to_break = false;   % boolean that toggles in case of mistyping stimulus type
 % figure specifications
 set(0, "defaultfigurecolor", [0 0 0])
 scaling = 1.55;   % factor for stretching lovely picture (to be displayed as circle in lateralization setup)
-winsize = 209;  % needed for figure specificiation
+winsize = 170;  % needed for figure specificiation
 
 % background circle specifications
 rad_back = 1;  % radius for x-axis (1. dim) and y-axis (2. dim)
@@ -63,8 +63,11 @@ gr_rad_a = {[.16], [.16], [.16; .16], [.16; .16], [.16; .16; .16], [.16; .16; .1
 
 % generate fixation stimulus (b_grey)
 [b_grey, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
+filename = 'B_grey.bmp';
 
-saveas(b_grey, strcat(stim_path, 'B_grey.bmp'), 'bmp')  % save the figure
+f = getframe(gcf);
+[img, ~] = frame2im(f);
+imwrite(img, strcat(stim_path,filename));  % save the figure
 close
 
 % iterate over amount of desired stimuli
@@ -215,8 +218,12 @@ for stimulus = 1:size(numbers, 2)
         % end
 
         % save
+
         filename = strcat(stim_type, '_', pattern_type, '_', strcat(num2str(curr_num), num2str(img - 1)), '.bmp');
-        saveas(fig, strcat(stim_path, filename), 'bmp')  % save the figure
+        f = getframe(gcf);
+        [img, ~] = frame2im(f);
+        imwrite(img, strcat(stim_path,filename));   % save figure
+
         close
 
         counter = counter + 1;  % for progressbar
