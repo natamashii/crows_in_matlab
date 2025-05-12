@@ -24,7 +24,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = 'C:\Users\Natalie\Desktop\Stimuli_creation\';
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -32,7 +32,7 @@ stim_type = input(prompt, "s");
 prompt = 'Which Pattern to create? 1 - random, 2 - additive, 3 - multiplicative ';
 pattern_type = "P" + input(prompt, "s");
 counter = 0;    % for progressbar
-amount_img = 4;     % defines how many versions of one condition should be generated
+amount_img = 5;     % defines how many versions of one condition should be generated
 
 % numerosities of interest
 numbers = 1:6;
@@ -54,12 +54,12 @@ rad_dot_limit = [.08, .18];   % radius limitations (based on control)
 area_limit = [.18, .2];   % limits of cumulative area of the dots
 density_limit = [.77, .83; .69, 20];
 
-% group radii: (1=1, 2=2, 3=2+1, 4=2*2, 5=2+2+1, 6=3*2) 
-gr_dots_m = {[1], [2], [2; 1], [2; 2], [2; 2; 1], [3; 3]};
-gr_rad_m = {[.2], [.2], [.2; .2], [.2; .2], [.2; .2; .2], [.2; .2]};
-% group radii: (1=1, 2=2, 3=3, 4=3+1, 5=2+3, 6=3+2+1)
-gr_dots_a = {[1], [2], [3], [3; 1], [2; 3], [3; 2; 1]};
-gr_rad_a = {[.2], [.2], [.2], [.2; .2], [.2; .2], [.2; .2; .2]};
+% group radii: (1=1, 2=2, 3=3, 4=2*2, 5=2+3, 6=3*2) 
+gr_dots_m = {[1], [2], [3], [2; 2], [2; 3], [2; 2; 2]};
+gr_rad_m = {[.16], [.16], [.16], [.16; .16], [.16; .16], [.16; .16; .16]};
+% group radii: (1=1, 2=2, 3=2+1, 4=3+1, 5=2+2+1, 6=3+2+1)
+gr_dots_a = {[1], [2], [2; 1], [3; 1], [2; 2; 1], [3; 2; 1]};
+gr_rad_a = {[.16], [.16], [.16; .16], [.16; .16], [.16; .16; .16], [.16; .16; .16]};
 
 % generate fixation stimulus (b_grey)
 [b_grey, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
@@ -147,7 +147,7 @@ for stimulus = 1:size(numbers, 2)
                     dot_groups = gr_dots_a{curr_num};
                     % change density interval when only one group
                     if size(dot_groups, 1) == 1
-                        density_limit_spec = density_limit_spec(:) - .45;
+                        density_limit_spec = density_limit_spec(:) - .49;
                     end
                 case "P3"   % multiplicative
                     group_check = false;
@@ -156,7 +156,7 @@ for stimulus = 1:size(numbers, 2)
                     dot_groups = gr_dots_m{curr_num};
                     % change density interval when only one group
                     if size(dot_groups, 1) == 1
-                        density_limit_spec = density_limit_spec(:) - .45;
+                        density_limit_spec = density_limit_spec(:) - .49;
                     end
                 otherwise
                     fprintf("Error. This is not a valid pattern type: ")
@@ -178,7 +178,6 @@ for stimulus = 1:size(numbers, 2)
 
             % validation: density control: control stimuli
             dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
-            
             if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
                     (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
@@ -216,12 +215,12 @@ for stimulus = 1:size(numbers, 2)
         % end
 
         % save
-        filename = strcat(stim_type, '_', pattern_type, '_', strcat(num2str(curr_num), num2str(img)), '.bmp');
+        filename = strcat(stim_type, '_', pattern_type, '_', strcat(num2str(curr_num), num2str(img - 1)), '.bmp');
         saveas(fig, strcat(stim_path, filename), 'bmp')  % save the figure
         close
 
         counter = counter + 1;  % for progressbar
-        progressbar(counter, 24)
+        progressbar(counter, 30)
     end
     if to_break
         break
