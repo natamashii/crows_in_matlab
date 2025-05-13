@@ -4,7 +4,7 @@ function [spk_file, resp] = load_spk( day )
 %   Returns: [spk_file resp]
 
 % clc
-spk_file = spk_read([cd, '\Data\spk\' day]);
+spk_file = spk_read(['D:\MasterThesis\analysis\data\spk\' day]);
 resp = getresponsematrix(spk_file);
 end
 

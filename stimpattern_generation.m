@@ -24,7 +24,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = '/home/nati/Pictures/';
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -50,7 +50,7 @@ back_circ_c = [.5, .5, .5];     % grey colours
 angle_steps = 360;  % fine tuning of background circle
 
 % dot specifications
-rad_dot_limit = [.08, .18];   % radius limitations (based on control)
+rad_dot_limit = [.08, .14];   % radius limitations (based on control)
 area_limit = [.18, .2];   % limits of cumulative area of the dots
 density_limit = [.77, .83; .69, 20];
 
