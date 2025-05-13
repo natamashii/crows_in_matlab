@@ -24,7 +24,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
+stim_path = 'C:\Users\Natalie\Desktop\Stimuli_creation\';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -56,10 +56,10 @@ density_limit = [.77, .83; .69, 20];
 
 % group radii: (1=1, 2=2, 3=3, 4=2*2, 5=2+3, 6=3*2) 
 gr_dots_m = {[1], [2], [3], [2; 2], [2; 3], [2; 2; 2]};
-gr_rad_m = {[.16], [.16], [.16], [.16; .16], [.16; .16], [.16; .16; .16]};
+gr_rad_m = {[.15], [.15], [.15], [.15; .15], [.15; .15], [.15; .15; .15]};
 % group radii: (1=1, 2=2, 3=2+1, 4=3+1, 5=2+2+1, 6=3+2+1)
 gr_dots_a = {[1], [2], [2; 1], [3; 1], [2; 2; 1], [3; 2; 1]};
-gr_rad_a = {[.16], [.16], [.16; .16], [.16; .16], [.16; .16; .16], [.16; .16; .16]};
+gr_rad_a = {[.15], [.15], [.15; .15], [.15; .15], [.15; .15; .15], [.15; .15; .15]};
 
 % generate fixation stimulus (b_grey)
 [b_grey, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
@@ -124,7 +124,7 @@ for stimulus = 1:size(numbers, 2)
 
                         if curr_num > 1
                             % validation 2: no overlap between dots
-                            min_dot_distance = max(dot_radii) * 2.2;
+                            min_dot_distance = max(dot_radii) * 2.5;
                             [dot_distances, overlap_check] = ...
                                 get_distances(dot_pos, min_dot_distance);
 
@@ -150,7 +150,7 @@ for stimulus = 1:size(numbers, 2)
                     dot_groups = gr_dots_a{curr_num};
                     % change density interval when only one group
                     if size(dot_groups, 1) == 1
-                        density_limit_spec = density_limit_spec(:) - .49;
+                        density_limit_spec = density_limit_spec(:) - .5;
                     end
                 case "P3"   % multiplicative
                     group_check = false;
@@ -159,7 +159,7 @@ for stimulus = 1:size(numbers, 2)
                     dot_groups = gr_dots_m{curr_num};
                     % change density interval when only one group
                     if size(dot_groups, 1) == 1
-                        density_limit_spec = density_limit_spec(:) - .49;
+                        density_limit_spec = density_limit_spec(:) - .5;
                     end
                 otherwise
                     fprintf("Error. This is not a valid pattern type: ")
@@ -181,6 +181,7 @@ for stimulus = 1:size(numbers, 2)
 
             % validation: density control: control stimuli
             dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
+            disp(mean(dot_density) - mean(dot_radii))
             if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
                     (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
