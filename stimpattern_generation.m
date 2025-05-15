@@ -24,7 +24,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = 'C:\Users\Natalie\Pictures\';
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -42,7 +42,7 @@ to_break = false;   % boolean that toggles in case of mistyping stimulus type
 % figure specifications
 set(0, "defaultfigurecolor", [0 0 0])
 scaling = 1.55;   % factor for stretching lovely picture (to be displayed as circle in lateralization setup)
-winsize = 170;  % needed for figure specificiation
+winsize = 135;  % needed for figure specificiation: 135 for home PC, 170 for work PC
 
 % background circle specifications
 rad_back = 1;  % radius for x-axis (1. dim) and y-axis (2. dim)
@@ -181,7 +181,7 @@ for stimulus = 1:size(numbers, 2)
 
             % validation: density control: control stimuli
             dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
-            disp(mean(dot_density) - mean(dot_radii))
+
             if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
                     (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
