@@ -42,7 +42,7 @@ to_break = false;   % boolean that toggles in case of mistyping stimulus type
 % figure specifications
 set(0, "defaultfigurecolor", [0 0 0])
 scaling = 1.55;   % factor for stretching lovely picture (to be displayed as circle in lateralization setup)
-winsize = 135;  % needed for figure specificiation: 135 for home PC, 170 for work PC
+winsize = 170;  % needed for figure specificiation: 135 for home PC, 170 for work PC
 
 % background circle specifications
 rad_back = 1;  % radius for x-axis (1. dim) and y-axis (2. dim)
