@@ -42,7 +42,7 @@ to_break = false;   % boolean that toggles in case of mistyping stimulus type
 % figure specifications
 set(0, "defaultfigurecolor", [0 0 0])
 scaling = 1.55;   % factor for stretching lovely picture (to be displayed as circle in lateralization setup)
-winsize = 170;  % needed for figure specificiation: 135 for home PC, 170 for work PC
+winsize = 136;  % needed for figure specificiation: 136 for home PC, 170 for work PC
 
 % background circle specifications
 rad_back = 1;  % radius for x-axis (1. dim) and y-axis (2. dim)
@@ -54,7 +54,7 @@ rad_dot_limit = [.08, .14];   % radius limitations (based on control)
 area_limit = [.18, .2];   % limits of cumulative area of the dots
 density_limit = [.77, .83; .69, 20];
 
-% group radii: (1=1, 2=2, 3=3, 4=2*2, 5=2+3, 6=3*2) 
+% group radii: (1=1, 2=2, 3=3, 4=2*2, 5=2+3, 6=3*2)
 gr_dots_m = {[1], [2], [3], [2; 2], [2; 3], [2; 2; 2]};
 gr_rad_m = {[.14], [.14], [.14], [.14; .14], [.14; .14], [.14; .14; .14]};
 % group radii: (1=1, 2=2, 3=2+1, 4=3+1, 5=2+2+1, 6=3+2+1)
@@ -88,7 +88,7 @@ for stimulus = 1:size(numbers, 2)
                 % control: constant cumulative area
                 dot_radii = calc_area(area_limit(2), curr_num);
                 density_limit_spec = density_limit(1, :);
-            % Standard Stimuli
+                % Standard Stimuli
             elseif stim_type == "s" || stim_type == "S"
                 stim_type = "S";
                 % set random dot sizes within prior specified limit
@@ -102,17 +102,17 @@ for stimulus = 1:size(numbers, 2)
                 to_break = true;
                 break
             end
-            
+
             % Dot Positions
             if curr_num == 1
                 % validation 1: dot inside background circle
                 dot_pos_limit = max(max(x * rad_back, y * rad_back)) ...
-                            - (2 * dot_radii) * scaling;
-                dot_pos = (2 * dot_pos_limit) * (rand(2, 1) - .5); 
+                    - (2 * dot_radii) * scaling;
+                dot_pos = (2 * dot_pos_limit) * (rand(2, 1) - .5);
                 break
             end
             switch pattern_type
-                case "P1"
+                case {"Pr", "PR"}     % randomized
                     while ~dot_check
                         % Dot Positions
                         % validation 1: dot inside background circle
@@ -133,6 +133,36 @@ for stimulus = 1:size(numbers, 2)
                             if (mean_distance >= density_limit_spec(1) && ...
                                     mean_distance <= density_limit_spec(2) ...
                                     && overlap_check)
+                                dot_check = true;
+                                plot_dot_pos = dot_pos;
+                            else
+                                dot_check = false;
+                            end
+                        else
+                            dot_check = true;
+                        end
+                    end
+                    group_check = true;
+                    pattern_type = "PR";
+                case "P1"   % equal distances
+                    while ~dot_check
+                        % Dot Positions
+                        % validation 1: dot inside background circle
+                        for dot = 1:curr_num
+                            dot_pos_limit = max(max(x * rad_back, y * rad_back)) ...
+                                - (2 * dot_radii(dot)) * scaling;
+                            dot_pos(dot, :) = (2 * dot_pos_limit) * (rand(2, 1) - .5);
+                        end
+
+                        if curr_num > 1
+                            % validation 2: no overlap between dots
+                            min_dot_distance = max(dot_radii) * 2.5;
+                            [dot_distances, overlap_check] = ...
+                                get_distances(dot_pos, min_dot_distance);
+
+                            % validation: equal distances among each dot
+                            equv_control = equal_distances(dot_pos, dot_radii, density_limit_spec);
+                            if equv_control && overlap_check
                                 dot_check = true;
                                 plot_dot_pos = dot_pos;
                             else
@@ -186,9 +216,11 @@ for stimulus = 1:size(numbers, 2)
                     (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
             elseif curr_num == 1
+
+            elseif pattern_type == "P1"
                 check = true;
             end
-            if pattern_type == "P1"
+            if pattern_type == "PR"
                 if mean(dot_density) >= density_limit_spec(1) && ...
                     mean(dot_density) <= density_limit_spec(2)
                     check = true;
