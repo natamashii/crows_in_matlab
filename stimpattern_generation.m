@@ -32,17 +32,17 @@ stim_type = input(prompt, "s");
 prompt = 'Which Pattern to create? 1 - random, 2 - additive, 3 - multiplicative ';
 pattern_type = "P" + input(prompt, "s");
 counter = 0;    % for progressbar
-amount_img = 5;     % defines how many versions of one condition should be generated
+amount_img = 3;     % defines how many versions of one condition should be generated
 
 % numerosities of interest
-numbers = 1:6;
+numbers = 2:15;
 check = false;  % boolean that toggles if every control is fulfilled
 to_break = false;   % boolean that toggles in case of mistyping stimulus type
 
 % figure specifications
 set(0, "defaultfigurecolor", [0 0 0])
 scaling = 1.55;   % factor for stretching lovely picture (to be displayed as circle in lateralization setup)
-winsize = 136;  % needed for figure specificiation: 136 for home PC, 170 for work PC
+winsize = 170;  % needed for figure specificiation: 136 for home PC, 170 for work PC
 
 % background circle specifications
 rad_back = 1;  % radius for x-axis (1. dim) and y-axis (2. dim)
@@ -50,7 +50,7 @@ back_circ_c = [.5, .5, .5];     % grey colours
 angle_steps = 360;  % fine tuning of background circle
 
 % dot specifications
-rad_dot_limit = [.08, .14];   % radius limitations (based on control)
+rad_dot_limit = [.05, .11];   % radius limitations (based on control)
 area_limit = [.18, .2];   % limits of cumulative area of the dots
 density_limit = [.77, .83; .69, 20];
 
@@ -211,7 +211,6 @@ for stimulus = 1:size(numbers, 2)
 
             % validation: density control: control stimuli
             dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
-
             if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
                     (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
@@ -260,7 +259,7 @@ for stimulus = 1:size(numbers, 2)
         close
 
         counter = counter + 1;  % for progressbar
-        progressbar(counter, 30)
+        progressbar(counter, 42)
     end
     if to_break
         break
