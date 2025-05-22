@@ -15,5 +15,6 @@ axis equal off
 % plot the circle
 backcircle = fill(x * rad_back, y * rad_back, back_circ_c);
 backcircle.EdgeColor = back_circ_c;
+backcircle.LineWidth = 15;
 
 end

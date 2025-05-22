@@ -29,13 +29,16 @@ stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
 stim_type = input(prompt, "s");
-prompt = 'Which Pattern to create? 1 - random, 2 - additive, 3 - multiplicative ';
+prompt = 'Which Pattern to create? r - random, 1 - equal distances, 2 - additive, 3 - multiplicative ';
 pattern_type = "P" + input(prompt, "s");
 counter = 0;    % for progressbar
 amount_img = 3;     % defines how many versions of one condition should be generated
 
 % numerosities of interest
-numbers = 2:15;
+numbers = 4:9;
+if pattern_type == "PR" || pattern_type == "Pr"
+    numbers = 2:15;
+end
 check = false;  % boolean that toggles if every control is fulfilled
 to_break = false;   % boolean that toggles in case of mistyping stimulus type
 
@@ -52,14 +55,29 @@ angle_steps = 360;  % fine tuning of background circle
 % dot specifications
 rad_dot_limit = [.05, .11];   % radius limitations (based on control)
 area_limit = [.18, .2];   % limits of cumulative area of the dots
-density_limit = [.77, .83; .69, 20];
+density_limit = [.80, .86; .69, 20];
 
-% group radii: (1=1, 2=2, 3=3, 4=2*2, 5=2+3, 6=3*2)
-gr_dots_m = {[1], [2], [3], [2; 2], [2; 3], [2; 2; 2]};
-gr_rad_m = {[.14], [.14], [.14], [.14; .14], [.14; .14], [.14; .14; .14]};
-% group radii: (1=1, 2=2, 3=2+1, 4=3+1, 5=2+2+1, 6=3+2+1)
-gr_dots_a = {[1], [2], [2; 1], [3; 1], [2; 2; 1], [3; 2; 1]};
-gr_rad_a = {[.14], [.14], [.14; .14], [.14; .14], [.14; .14; .14], [.14; .14; .14]};
+subgroup_rad = .14;
+
+% group radii: (4=2+2, 5=3+2, 6=2+2+2, 7=3+3+1, 8=2+2+2+2, 9=3+3+3)
+gr_dots_m = {[1], [2], [3], ...
+    [2; 2], [3; 2], [2; 2; 2], [3; 3; 1], [2; 2; 2; 2], [3; 3; 3]};
+gr_rad_m = {[subgroup_rad], [subgroup_rad], [subgroup_rad], ...
+    [subgroup_rad; subgroup_rad], [subgroup_rad; subgroup_rad], ...
+    [subgroup_rad; subgroup_rad; subgroup_rad], ...
+    [subgroup_rad; subgroup_rad; subgroup_rad], ... 
+    [subgroup_rad; subgroup_rad; subgroup_rad; subgroup_rad], ...
+    [subgroup_rad; subgroup_rad; subgroup_rad]};
+% group radii: (4=3+1, 5=2+2+1, 6=3+2+1, 7=4+2+1, 8=3+2+2+1, 9=4+3+2)
+gr_dots_a = {[1], [2], [3], ...
+    [3; 1], [2; 2; 1], [3; 2; 1], [4; 2; 1], [3; 2; 2; 1], [4; 3; 2]};
+gr_rad_a = {[subgroup_rad], [subgroup_rad], [subgroup_rad], ...
+    [subgroup_rad; subgroup_rad], ...
+    [subgroup_rad; subgroup_rad; subgroup_rad], ...
+    [subgroup_rad; subgroup_rad; subgroup_rad], ...
+    [subgroup_rad; subgroup_rad; subgroup_rad], ...
+    [subgroup_rad; subgroup_rad; subgroup_rad; subgroup_rad], ...
+    [subgroup_rad; subgroup_rad; subgroup_rad]};
 
 % generate fixation stimulus (b_grey)
 [b_grey, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
@@ -150,24 +168,26 @@ for stimulus = 1:size(numbers, 2)
                         % validation 1: dot inside background circle
                         for dot = 1:curr_num
                             dot_pos_limit = max(max(x * rad_back, y * rad_back)) ...
-                                - (2 * dot_radii(dot)) * scaling;
+                                - (2 * dot_radii(dot)) * 1;
                             dot_pos(dot, :) = (2 * dot_pos_limit) * (rand(2, 1) - .5);
                         end
 
                         if curr_num > 1
                             % validation 2: no overlap between dots
-                            min_dot_distance = max(dot_radii) * 2.5;
+                            min_dot_distance = subgroup_rad * 2.3;
                             [dot_distances, overlap_check] = ...
                                 get_distances(dot_pos, min_dot_distance);
-
-                            % validation: equal distances among each dot
-                            equv_control = equal_distances(dot_pos, dot_radii, density_limit_spec);
-                            if equv_control && overlap_check
+                            % cumulative density control
+                            mean_distance = mean(dot_distances, "all");
+                            if (mean_distance >= density_limit_spec(1) && ...
+                                    mean_distance <= density_limit_spec(2) ...
+                                    && overlap_check)
                                 dot_check = true;
                                 plot_dot_pos = dot_pos;
                             else
                                 dot_check = false;
                             end
+
                         else
                             dot_check = true;
                         end
@@ -209,17 +229,16 @@ for stimulus = 1:size(numbers, 2)
                 end
             end
 
-            % validation: density control: control stimuli
+            % validation: cumulative density control
             dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
+            disp(mean(dot_density))
             if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
                     (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
             elseif curr_num == 1
-
-            elseif pattern_type == "P1"
                 check = true;
             end
-            if pattern_type == "PR"
+            if pattern_type == "PR" || pattern_type == "P1"
                 if mean(dot_density) >= density_limit_spec(1) && ...
                     mean(dot_density) <= density_limit_spec(2)
                     check = true;
@@ -259,7 +278,7 @@ for stimulus = 1:size(numbers, 2)
         close
 
         counter = counter + 1;  % for progressbar
-        progressbar(counter, 42)
+        %progressbar(counter, size(numbers, 2) * amount_img)
     end
     if to_break
         break
