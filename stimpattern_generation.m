@@ -24,7 +24,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
+stim_path = '/media/nati/My Passport/MasterThesis/analysis/Stimuli_creation/';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -227,6 +227,7 @@ for stimulus = 1:size(numbers, 2)
                 if all(isapprox(group_distances(:), group_distances(end), RelativeTolerance=1e-2))
                     group_check = true;
                 end
+                group_check = true;
             end
 
             % validation: cumulative density control
