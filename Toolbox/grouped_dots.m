@@ -26,7 +26,7 @@ while ~group_control
     if group_amount == 1
         group_control = true;
     else
-        min_group_dist = 2 * max(group_radii) + 2 * max(dot_radii);
+        min_group_dist = 5 * max(group_radii) + 2 * max(dot_radii);
         [group_distances, group_control] = get_distances(group_centers, min_group_dist);
     end
 end
@@ -53,10 +53,12 @@ for group = 1:group_amount
         % get angle
         alpha = alpha_1 - ((2 * pi) / dot_groups(group)) * (dot - 1);
         % set dot position
-        if dot_groups(group) > 2
+        if dot_groups(group) == 3
             % for 3 dot case: to make sure that distance between dots would
             % be 2*subgrouprad
             dot_scale = 1 / cos(pi/6);
+        elseif dot_groups(group) == 4
+            dot_scale = 1/sqrt(1 / 2);
         end
         dot_pos(dot_counter, 1) = group_centers(group, 1) ...
             + (sin(alpha) * (subgrouprad + dot_radii(dot_counter)) * dot_scale);

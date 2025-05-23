@@ -2,8 +2,10 @@ function [fig] = plot_stim_pattern(angle_steps, winsize, rad_back, back_circ_c, 
 
 % function to generate stimulus with dots
 
+
+
 % create figure with background circle
-[fig, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
+[fig, x, y] = plot_backcircle(angle_steps, winsize, rad_back*1.2, back_circ_c);
 
 % iterate over each dot to display
 for dot = 1:size(dot_radii, 1)

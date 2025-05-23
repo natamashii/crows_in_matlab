@@ -24,7 +24,7 @@ close all
 
 % Pre definition
 % path to save stimuli pattern
-stim_path = '/media/nati/My Passport/MasterThesis/analysis/Stimuli_creation/';
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -35,9 +35,9 @@ counter = 0;    % for progressbar
 amount_img = 3;     % defines how many versions of one condition should be generated
 
 % numerosities of interest
-numbers = 4:9;
+numbers = 3:7;
 if pattern_type == "PR" || pattern_type == "Pr"
-    numbers = 2:15;
+    numbers = 2:10;
 end
 check = false;  % boolean that toggles if every control is fulfilled
 to_break = false;   % boolean that toggles in case of mistyping stimulus type
@@ -53,7 +53,7 @@ back_circ_c = [.5, .5, .5];     % grey colours
 angle_steps = 360;  % fine tuning of background circle
 
 % dot specifications
-rad_dot_limit = [.05, .11];   % radius limitations (based on control)
+rad_dot_limit = [.07, .15];   % radius limitations (based on control)
 area_limit = [.18, .2];   % limits of cumulative area of the dots
 density_limit = [.80, .86; .69, 20];
 
@@ -69,9 +69,9 @@ gr_rad_m = {[subgroup_rad], [subgroup_rad], [subgroup_rad], ...
     [subgroup_rad; subgroup_rad; subgroup_rad; subgroup_rad], ...
     [subgroup_rad; subgroup_rad; subgroup_rad]};
 % group radii: (4=3+1, 5=2+2+1, 6=3+2+1, 7=4+2+1, 8=3+2+2+1, 9=4+3+2)
-gr_dots_a = {[1], [2], [3], ...
+gr_dots_a = {[1], [2], [2; 1], ...
     [3; 1], [2; 2; 1], [3; 2; 1], [4; 2; 1], [3; 2; 2; 1], [4; 3; 2]};
-gr_rad_a = {[subgroup_rad], [subgroup_rad], [subgroup_rad], ...
+gr_rad_a = {[subgroup_rad], [subgroup_rad], [subgroup_rad; subgroup_rad], ...
     [subgroup_rad; subgroup_rad], ...
     [subgroup_rad; subgroup_rad; subgroup_rad], ...
     [subgroup_rad; subgroup_rad; subgroup_rad], ...
@@ -174,7 +174,7 @@ for stimulus = 1:size(numbers, 2)
 
                         if curr_num > 1
                             % validation 2: no overlap between dots
-                            min_dot_distance = subgroup_rad * 2.3;
+                            min_dot_distance = subgroup_rad * 3.7;
                             [dot_distances, overlap_check] = ...
                                 get_distances(dot_pos, min_dot_distance);
                             % cumulative density control
@@ -209,7 +209,8 @@ for stimulus = 1:size(numbers, 2)
                     dot_groups = gr_dots_m{curr_num};
                     % change density interval when only one group
                     if size(dot_groups, 1) == 1
-                        density_limit_spec = density_limit_spec(:) - .51;
+                        density_limit_spec = density_limit(2, :);
+                        density_limit_spec(1) = density_limit_spec(1) - 1;
                     end
                 otherwise
                     fprintf("Error. This is not a valid pattern type: ")
@@ -232,7 +233,6 @@ for stimulus = 1:size(numbers, 2)
 
             % validation: cumulative density control
             dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
-            disp(mean(dot_density))
             if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
                     (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
@@ -257,20 +257,7 @@ for stimulus = 1:size(numbers, 2)
         fig = plot_stim_pattern(angle_steps, winsize, rad_back, back_circ_c, ...
             dot_pos, dot_radii);
 
-        % debugging: plot generated groups
-        % if curr_num > 1
-        %     for group = 1:size(dot_groups, 1)
-        %         group_plot = plot(group_centers(group, 1), group_centers(group, 2), "x");
-        %         group_plot.MarkerEdgeColor = "green";
-        %         group_circle = fill(group_centers(group, 1) + (group_radii(group) * x), ...
-        %             group_centers(group, 2) + (group_radii(group) * y), [0 0 0]);
-        %         group_circle.FaceColor = "none";
-        %         group_circle.EdgeColor = "magenta";
-        %     end
-        % end
-
         % save
-
         filename = strcat(stim_type, '_', pattern_type, '_', strcat(num2str(curr_num), num2str(img - 1)), '.bmp');
         f = getframe(gcf);
         [img, ~] = frame2im(f);
@@ -279,7 +266,7 @@ for stimulus = 1:size(numbers, 2)
         close
 
         counter = counter + 1;  % for progressbar
-        %progressbar(counter, size(numbers, 2) * amount_img)
+        progressbar(counter, size(numbers, 2) * amount_img)
     end
     if to_break
         break
