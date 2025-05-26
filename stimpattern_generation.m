@@ -142,7 +142,7 @@ for stimulus = 1:size(numbers, 2)
 
                         if curr_num > 1
                             % validation 2: no overlap between dots
-                            min_dot_distance = max(dot_radii) * 2.5;
+                            min_dot_distance = 2 * subgroup_rad;
                             [dot_distances, overlap_check] = ...
                                 get_distances(dot_pos, min_dot_distance);
 
