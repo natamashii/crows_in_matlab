@@ -10,7 +10,7 @@ x_al = [0.1, 0.3, 0.5, 0.8, 1.0, 2.0, 3.0, 4.0, 8.0, 16.0]; % in mm
 x_pb = [1.0, 2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 15.0, 20.0, 30.0];  % in mm
 t_al = ones(size(x_al));
 t_pb = ones(size(x_pb));
-t_al(:) = 30;    % in s
+t_al(:) = 60;    % in s
 t_pb(:) = 120;  % in s
 tau_0 = 230;    % in µs
 y = log(1/50);
@@ -18,8 +18,8 @@ rho_al = 2.7;   % in g/cm^3
 rho_pb = 11.34; % in g/cm^3
 
 % insert their values here
-N_al = [8247, 3395, 1157, 363, 268, 258, 247, 234, 208, 189];
-N_pb = [1334, 1115, 1013, 908, 722, 615, 599, 334, 242, 145];
+N_al = [15290, 6140, 2562, 624, 549, 490, 506, 495, 410, 362];
+N_pb = [1228, 1024, 919, 937, 663, 588, 468, 340, 245, 117];
 
 % 1a) n_mess & n_korr Aluminium
 n_mess_al = zeros(size(N_al));
@@ -172,10 +172,10 @@ data.Massenschwaechungskoeffizient_pb = mu_rho;
 data.Schwaechungskoeffizient_pb = mu_pb;
 
 
-to_save = false;
+to_save = true;
 if to_save
     prompt = ("Insert Filename: ");
     savename = input(prompt);
-    save(strcat(char('G:\Meine Ablage\Master\Physik\Abgegebene Protokolle\Blockpraktikum WiSe 2425\'), ...
+    save(strcat(char('G:\Meine Ablage\Master\Physik\Abgegebene Protokolle\Praktikum SoSe 25\'), ...
                         char(savename), '.mat'), '-struct', 'data')
 end
