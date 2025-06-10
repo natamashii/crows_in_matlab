@@ -14,7 +14,7 @@ TrialStartTimes_grp=spk_file.TrialStartTimes(resp_grp); %Start and End-Times for
 TrialEndTimes_grp=spk_file.TrialEndTimes(resp_grp);
 
 counter=0;
-for Trial=1:size(TrialEndTimes_grp)
+for Trial=1:size(TrialEndTimes_grp, 1)
     Times = spk_file.CodeTimes(find(spk_file.CodeTimes==TrialStartTimes_grp(Trial,:)): ...
                                 find(spk_file.CodeTimes==TrialEndTimes_grp(Trial,:)),:); 
                             

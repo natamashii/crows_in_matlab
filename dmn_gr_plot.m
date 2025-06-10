@@ -17,7 +17,7 @@ disp(filename);
 P1_idx = resp_mat(:,2)==1; %pattern 1 == similar distance
 P2_idx = resp_mat(:,2)==2; %pattern 2 == additive subgroups (max diff)
 P3_idx = resp_mat(:,2)==3; %pattern 3 == multiplicative subgroups (min diff)
-PR_idx = resp_mat(:,2) == 4; % random versus random pattern
+PR_idx = resp_mat(:,2) == 4; % P3 vs P3
 correct_idx = resp_mat(:,5)==0; %correct trials
 badpk_idx = resp_mat(:,5)==9; %badpecks
 aborted_idx = resp_mat(:,5)==9 & resp_mat(:,3)~=9; %aborted trials after sample was seen
@@ -374,6 +374,8 @@ end
 % plot(0,0,'LineStyle','--','LineWidth',1.5 ...
 %     ,'Color','k')
 leg_h2 = legend('P1','P2','P3','Position',[.75 .67 .1 .02],'orientation','horizontal');
+leg_h2.Color ="none";
+
 title(leg_h2,'Pattern');
 fontsize(16,"points")
 
@@ -467,7 +469,7 @@ end
 hold off
 
 % MIP
-set(gca,'Box','off','YLim',[150 500],'XLim',[min(spl_nums)-.25 ,max(spl_nums)+.25],...
+set(gca,'Box','off','YLim',[150 600],'XLim',[min(spl_nums)-.25 ,max(spl_nums)+.5],...
     'XTick',spl_nums,'XTickLabel',sprintfc('%d',spl_nums))
 ylabel('Reaction time [ms]')
 xlabel('Sample')
@@ -482,12 +484,12 @@ sgtitle(sprintf('%s, %d Hits, %2.f%% correct',filename,sum(correct_idx),...
     (sum(correct_idx)/(sum(correct_idx)+sum(error_idx))*100)),'FontSize',15);
 
 %% Export figure
-base_path = regexp(cd,'/MATLAB','split');
-save_path = [base_path{1},'/MATLAB/Groupitizing/Plots/',...
+base_path = regexp(cd,'\MATLAB','split');
+save_path = ['D:\MasterThesis\figures\general_daily\',...
     filename,'_Behavior'];
 % print('-dpng','-painters','-r200',save_path);
 saveas(gca, save_path, 'jpg');
-fprintf('Saved plot to [...]\\MATLAB\\Groupitizing\\Plots\n',filename);
+fprintf('Saved plot. \n',filename);
 
 
 end
