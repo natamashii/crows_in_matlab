@@ -39,21 +39,38 @@ bin_width = 25; % for RT histogram
 trial_types = {'match','nonmatch'}; % for RT histogram
 sub_sets = {'P1','P2','P3','PR'}; % Stimulus subsets for tuning curve plot, could include protocol as well
 lstyles = {'-','--',':','-'};
-symbols = {'o','s','d'}; %{'d','o','o','s','s'};
+symbols = {'o','s','d', 'p'}; %{'d','o','o','s','s'};
 c_pattern = {'b','r','g'};
 sub_lbl = {'Average','Standard','Control'};%'Average','Standard','Control';
 tr_outc = {'correct','error','badpk'};
 
+% response matrix
+% col 1: stimulus type (standard (1) or control (2))
+% col 2: pattern type (P1, P2, P3, P4)
+% col 3: sample 
+% col 4: match or non-match (referring to Lena's table with test 1-3)
+% col 5: bird response evaluation
+% col 6: test numerosity
+
+% 0 = correct
+% 1 = error by bird
+% 9 = abundance by bird
+
 % Find test numerosity and write in 6th column
 resp_mat(:,6)=0;
+% iterating over trials
 for trial_idx = 1:1:size(resp_mat,1)
+    % correction: 8 should be 3
     if resp_mat(trial_idx,3) == 8
         resp_mat(trial_idx,3) = 3; % sample 3 nicht 8 (correction for timing file)
     end
-    if resp_mat(trial_idx,4)==0 % match trials
+    % match trials
+    if resp_mat(trial_idx,4)==0
         resp_mat(trial_idx,6)=resp_mat(trial_idx,3) ; 
-    else % nonmatch trials
-        if resp_mat(trial_idx,4) == 1 % test 1
+    % nonmatch trials
+    else 
+        % if test was test 1 
+        if resp_mat(trial_idx,4) == 1 
             if resp_mat(trial_idx,3)==4 % sample == 4
                 resp_mat(trial_idx,6) = 2;
             elseif resp_mat(trial_idx,3)==5
@@ -65,7 +82,8 @@ for trial_idx = 1:1:size(resp_mat,1)
             elseif resp_mat(trial_idx,3)==3 % 
                 resp_mat(trial_idx,6) = 2;
             end
-        elseif resp_mat(trial_idx,4) == 2 % test 2
+        % if test was test 2
+        elseif resp_mat(trial_idx,4) == 2
             if resp_mat(trial_idx,3)==4 % sample == 4
                 resp_mat(trial_idx,6) = 6;
             elseif resp_mat(trial_idx,3)==5
@@ -77,6 +95,7 @@ for trial_idx = 1:1:size(resp_mat,1)
             elseif resp_mat(trial_idx,3)==3
                 resp_mat(trial_idx,6) = 5;
             end
+        % if test was test 3
         elseif resp_mat(trial_idx,4) == 3
             if resp_mat(trial_idx,3)==4 % sample == 4
                 resp_mat(trial_idx,6) = 7;
@@ -341,7 +360,6 @@ xlabel('Test 1')
 ylabel('Response frequency')
 title('Pattern 3 (multiplikativ)')
 fontsize(16,"points")
-
 
 
 %% Plot average
