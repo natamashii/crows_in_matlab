@@ -27,6 +27,10 @@ control_idx = resp_mat(:,1)==2; %control stimuli
 match_idx = resp_mat(:,4)==0 & resp_mat(:,5)~=9; %match trials
 nonmatch_idx = resp_mat(:,4)>0 & resp_mat(:,5)~=9; %nonmatch tr.
 
+% extract condition numbers of pattern 4
+condition_nrs = spk_data.ConditionNumber;
+pr_idx = find(condition_nrs > 180);
+
 % Parameters
 spl_nums =  3:1:7;
 test_nums = 1:1:10;
@@ -40,7 +44,7 @@ trial_types = {'match','nonmatch'}; % for RT histogram
 sub_sets = {'P1','P2','P3','PR'}; % Stimulus subsets for tuning curve plot, could include protocol as well
 lstyles = {'-','--',':','-'};
 symbols = {'o','s','d', 'p'}; %{'d','o','o','s','s'};
-c_pattern = {'b','r','g'};
+c_pattern = {'b','r','g', 'm'};
 sub_lbl = {'Average','Standard','Control'};%'Average','Standard','Control';
 tr_outc = {'correct','error','badpk'};
 
@@ -69,44 +73,57 @@ for trial_idx = 1:1:size(resp_mat,1)
         resp_mat(trial_idx,6)=resp_mat(trial_idx,3) ; 
     % nonmatch trials
     else 
-        % if test was test 1 
-        if resp_mat(trial_idx,4) == 1 
-            if resp_mat(trial_idx,3)==4 % sample == 4
-                resp_mat(trial_idx,6) = 2;
-            elseif resp_mat(trial_idx,3)==5
-                resp_mat(trial_idx,6) = 3;
-            elseif resp_mat(trial_idx,3)==6
-                resp_mat(trial_idx,6) = 3; %4;
-            elseif resp_mat(trial_idx,3)==7
-                resp_mat(trial_idx,6) = 3; %4; 
-            elseif resp_mat(trial_idx,3)==3 % 
-                resp_mat(trial_idx,6) = 2;
+        % for P1, P2 and P3:
+        if resp_mat(trial_idx, 2) ~= 4
+            % if test was test 1
+            if resp_mat(trial_idx,4) == 1
+                if resp_mat(trial_idx,3)==4 % sample == 4
+                    resp_mat(trial_idx,6) = 2;
+                elseif resp_mat(trial_idx,3)==5
+                    resp_mat(trial_idx,6) = 3;
+                elseif resp_mat(trial_idx,3)==6
+                    resp_mat(trial_idx,6) = 3; %4;
+                elseif resp_mat(trial_idx,3)==7
+                    resp_mat(trial_idx,6) = 3; %4;
+                elseif resp_mat(trial_idx,3)==3 %
+                    resp_mat(trial_idx,6) = 2;
+                end
+                % if test was test 2
+            elseif resp_mat(trial_idx,4) == 2
+                if resp_mat(trial_idx,3)==4 % sample == 4
+                    resp_mat(trial_idx,6) = 6;
+                elseif resp_mat(trial_idx,3)==5
+                    resp_mat(trial_idx,6) = 7;
+                elseif resp_mat(trial_idx,3)==6
+                    resp_mat(trial_idx,6) = 4;
+                elseif resp_mat(trial_idx,3)==7
+                    resp_mat(trial_idx,6) = 4; %5;
+                elseif resp_mat(trial_idx,3)==3
+                    resp_mat(trial_idx,6) = 5;
+                end
+                % if test was test 3
+            elseif resp_mat(trial_idx,4) == 3
+                if resp_mat(trial_idx,3)==4 % sample == 4
+                    resp_mat(trial_idx,6) = 7;
+                elseif resp_mat(trial_idx,3)==5
+                    resp_mat(trial_idx,6) = 8;
+                elseif resp_mat(trial_idx,3)==6
+                    resp_mat(trial_idx,6) = 9;
+                elseif resp_mat(trial_idx,3)==7
+                    resp_mat(trial_idx,6) = 10;
+                elseif resp_mat(trial_idx,3)==3 % sample 3
+                    resp_mat(trial_idx,6) = 6;
+                end
             end
-        % if test was test 2
-        elseif resp_mat(trial_idx,4) == 2
-            if resp_mat(trial_idx,3)==4 % sample == 4
-                resp_mat(trial_idx,6) = 6;
-            elseif resp_mat(trial_idx,3)==5
-                resp_mat(trial_idx,6) = 7;
-            elseif resp_mat(trial_idx,3)==6
-                resp_mat(trial_idx,6) = 4;
-            elseif resp_mat(trial_idx,3)==7
-                resp_mat(trial_idx,6) = 4; %5; 
-            elseif resp_mat(trial_idx,3)==3
-                resp_mat(trial_idx,6) = 5;
-            end
-        % if test was test 3
-        elseif resp_mat(trial_idx,4) == 3
-            if resp_mat(trial_idx,3)==4 % sample == 4
-                resp_mat(trial_idx,6) = 7;
-            elseif resp_mat(trial_idx,3)==5
-                resp_mat(trial_idx,6) = 8;
-            elseif resp_mat(trial_idx,3)==6
-                resp_mat(trial_idx,6) = 9; 
-            elseif resp_mat(trial_idx,3)==7
-                resp_mat(trial_idx,6) = 10; 
-            elseif resp_mat(trial_idx,3)==3 % sample 3
-                resp_mat(trial_idx,6) = 6; 
+        % for P4
+        else
+            % if test was 4
+            if resp_mat(trial_idx, 4) ~= 1
+                if resp_mat(trial_idx, 3) == 4
+                    resp_mat(trial_idx, 6) = 6;
+                elseif resp_mat(trial_idx, 3) == 6
+                    resp_mat(trial_idx, 6) = 4;
+                end
             end
         end
     end
@@ -116,7 +133,7 @@ end
 %% Initiate figure
 
 figure('Color','w','visible','on','Units','normalized','OuterPosition',...
-    [.2 .15 .45 .9])
+    [.2 .7 .7 3])
 drawnow
 % get(groot,'default')
 set(groot,{'DefaultAxesColor','DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor',...
@@ -137,6 +154,8 @@ end
 % plot(0,0,'LineStyle','--','LineWidth',1.5 ...
 %     ,'Color','k')
 leg_h2 = legend('3','4','5','6','7','Position',[.75 .85 .05 .01],'orientation','horizontal');
+leg_h2.Color ="none";
+leg_h2.TextColor = "k";
 title(leg_h2,'Sample');
 fontsize(16,"points")
 
@@ -144,7 +163,7 @@ fontsize(16,"points")
 %% Plot performance curves P1
 
 % Plot
-axes('Position',[.13 .7 .4 .18]);
+axes('Position',[.13 .8 .4 .18]);
 
 % Preallocation
 perf_all = nan(length(spl_nums),length(test_nums),length(sub_sets));  % nan(length(spl_nums),length(y_nums),length(sub_sets));
@@ -219,7 +238,7 @@ title('Pattern 1 (no subgroups)')
 %% Plot performance curves P2 (additiv)
 
 % Plot
-axes('Position',[.13 .4 .4 .18]);
+axes('Position',[.13 .55 .4 .18]);
 
 % Preallocation
 perf_all = nan(length(spl_nums),length(test_nums),length(sub_sets));  % nan(length(spl_nums),length(y_nums),length(sub_sets));
@@ -292,7 +311,7 @@ fontsize(16,"points")
 %% Plot performance curves P3 (multiplikativ)
 
 % Plot
-axes('Position',[.13 .1 .4 .18]);
+axes('Position',[.13 .3 .4 .18]);
 
 % Preallocation
 perf_all = nan(length(spl_nums),length(test_nums),length(sub_sets));  % nan(length(spl_nums),length(y_nums),length(sub_sets));
@@ -361,12 +380,77 @@ ylabel('Response frequency')
 title('Pattern 3 (multiplikativ)')
 fontsize(16,"points")
 
+%% Plot performance curves P4 (grouped vs. grouped)
+
+% Plot
+axes('Position',[.13 .05 .4 .18]);
+
+% Preallocation
+perf_all = nan(length(spl_nums),length(test_nums),length(sub_sets));  % nan(length(spl_nums),length(y_nums),length(sub_sets));
+
+% Loop over samples
+for spl = 1:1:length(spl_nums) %idx
+     
+    % Index all trials for current sample
+    sample = spl_nums(spl);
+    sample_idx = resp_mat(:,3)==sample;
+
+    % Loop over subsets/ patterns, currently only P1
+    for subs = 4 %1:1:3 %4 %1:1:1 
+        
+        % Current subset index
+        curr_idx = eval(sprintf('%s_idx & sample_idx;',sub_sets{subs}));
+        
+        % Loop over test1 numerosities
+        for test1 = 1:length(test_nums)
+            %Current answer numerosity
+            test1_idx = resp_mat(:,6) == test1;
+            
+            if sample==test1
+                % Match trials
+                perf_all(spl,test1,subs) = sum(curr_idx & test1_idx & correct_idx)...
+                    / ( sum(curr_idx & test1_idx & correct_idx)+sum(curr_idx & test1_idx & error_idx) );
+            else
+                % Nonmatch trials
+                perf_all(spl,test1,subs) = sum(curr_idx & test1_idx & error_idx)...
+                    / ( sum(curr_idx & test1_idx & correct_idx)+sum(curr_idx & test1_idx & error_idx) );
+            end
+        end
+        % Plot
+        hold on
+        p_idx = ~any(isnan(perf_all(spl,:,subs)),1);
+        % plot values of current sample and subset
+        plot(test_nums(p_idx),perf_all(spl,p_idx,subs),'Color',tc_col(spl,:),...
+            'LineWidth',1,'LineStyle',lstyles{subs},...
+            'Marker',symbols{subs},'MarkerSize',8,...
+            'MarkerFaceColor',tc_col(spl,:),'MarkerEdgeColor',tc_col(spl,:)); %plot
+
+        % plot average
+        av_perf = sum(correct_idx & curr_idx) / ( sum(curr_idx & error_idx ) + sum(curr_idx & correct_idx) );
+        % plot([sample],[av_perf],'p','MarkerFaceColor','k','MarkerSize',12);
+        average_all(spl,subs) = av_perf;
+    end
+end
+% Percent correct (for title)
+perc_corr = sum(correct_idx)/sum(correct_idx | error_idx)*100;
+
+% MIP
+
+%set(gca,'xscale','log'); %set log axes at end for all 
+set(gca,'Box','off','TickDir','out','YGrid','on','YTick',.2:.2:1,...
+    'YLim',[0 1],'XLim',[min(test_nums)-.25 ,max(test_nums)+.25],...
+    'XTick',test_nums,'XTickLabel',sprintfc('%d',test_nums))
+xlabel('Test 1')
+ylabel('Response frequency')
+title('Pattern 4 (grouped vs. grouped)')
+fontsize(16,"points")
+
 
 %% Plot average
 
 axes('Position',[.68 .43 .25 .18]);
 hold on
-for subs = 1:1:3
+for subs = 1:1:4
     plot(spl_nums, average_all(:,subs).', 'color', c_pattern{subs}, 'Marker',symbols{subs},...
         'MarkerSize',10,'LineStyle',lstyles{subs},'LineWidth',1);
 end
@@ -384,15 +468,16 @@ fontsize(16,"points")
 %% Legend
 
 axes('Position',[.0 .0 .0 .0]); % initiate axis
-for subs = 1:1:3
+for subs = 1:1:4
     plot(0,0, 'color', c_pattern{subs}, 'Marker',symbols{subs},...
         'MarkerSize',10,'LineStyle',lstyles{subs},'LineWidth',1);
     hold on
 end
 % plot(0,0,'LineStyle','--','LineWidth',1.5 ...
 %     ,'Color','k')
-leg_h2 = legend('P1','P2','P3','Position',[.75 .67 .1 .02],'orientation','horizontal');
+leg_h2 = legend('P1','P2','P3', 'P4','Position',[.75 .67 .1 .02],'orientation','horizontal');
 leg_h2.Color ="none";
+leg_h2.TextColor = "k";
 
 title(leg_h2,'Pattern');
 fontsize(16,"points")
@@ -466,12 +551,12 @@ hold on
 % fontsize(16,"points")
 
 %% Plot RT per sample (match trials only)
-RT_median = nan(length(spl_nums),3);
+RT_median = nan(length(spl_nums),4);
 
 for spl = 1:1:length(spl_nums) % Loop over samples
     sample = spl_nums(spl);
     sample_idx = resp_mat(:,3)==sample; %idx of current sample
-    for subs = 1:1:3 % loop over patterns
+    for subs = 1:1:4 % loop over patterns
         % index of trials of interest
         curr_idx = eval(sprintf('%s_idx & sample_idx & match_idx;',sub_sets{subs}));
         RTs = getreactiontimes(spk_data,25,41,...
@@ -480,7 +565,7 @@ for spl = 1:1:length(spl_nums) % Loop over samples
     end
 end
 
-for subs = 1:1:3
+for subs = 1:1:4
     plot(spl_nums + (subs-0.2)*0.1, RT_median(:,subs).', 'color', c_pattern{subs}, 'Marker',symbols{subs},...
         'MarkerSize',10,'LineStyle','none','LineWidth',1);
 end
