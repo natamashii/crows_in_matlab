@@ -35,7 +35,7 @@ counter = 0;    % for progressbar
 amount_img = 3;     % defines how many versions of one condition should be generated
 
 % numerosities of interest
-numbers = 10:10;
+numbers = 2:10;
 if pattern_type == "PR" || pattern_type == "Pr"
     numbers = 2:10;
 end
@@ -53,13 +53,13 @@ back_circ_c = [.5, .5, .5];     % grey colours
 angle_steps = 360;  % fine tuning of background circle
 
 % dot specifications
-rad_dot_limit = [.07, .15];   % radius limitations (based on control)
+rad_dot_limit = [.05, .14];   % radius limitations (based on control)
 area_limit = [.18, .2];   % limits of cumulative area of the dots
-density_limit = [.78, .91; .69, 20];
+density_limit = [.80, .86; .69, 20];
 
-subgroup_rad = .07;
+subgroup_rad = .12;
 
-% group radii: (4=2+2, 5=3+2, 6=2+2+2, 7=3+3+1, 8=2+2+2+2,s 9=3+3+3, 10=2+2+2+2+2)
+% group radii: (4=2+2, 5=3+2, 6=2+2+2, 7=3+3+1, 8=2+2+2+2, 9=3+3+3, 10=2+2+2+2+2)
 gr_dots_m = {[1], [2], [3], ...
     [2; 2], [3; 2], [2; 2; 2], [3; 3; 1], [2; 2; 2; 2], [3; 3; 3], [2; 2; 2; 2; 2]};
 gr_rad_m = {[subgroup_rad], [subgroup_rad], [subgroup_rad], ...
@@ -235,7 +235,6 @@ for stimulus = 1:size(numbers, 2)
 
             % validation: cumulative density control
             dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
-            disp(mean(dot_density) - mean(dot_radii))
             if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
                     (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                 check = true;
@@ -269,7 +268,7 @@ for stimulus = 1:size(numbers, 2)
         close
 
         counter = counter + 1;  % for progressbar
-        %progressbar(counter, size(numbers, 2) * amount_img)
+        progressbar(counter, size(numbers, 2) * amount_img)
     end
     if to_break
         break

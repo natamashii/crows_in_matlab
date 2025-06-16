@@ -26,7 +26,7 @@ while ~group_control
     if group_amount == 1
         group_control = true;
     else
-        min_group_dist = 5 * max(group_radii) + 2 * max(dot_radii);
+        min_group_dist = 3.5 * max(group_radii) + 2 * max(dot_radii);
         [group_distances, group_control] = get_distances(group_centers, min_group_dist);
     end
 end
