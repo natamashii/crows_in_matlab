@@ -34,7 +34,7 @@ pattern_type = "P" + input(prompt, "s");
 counter = 0;    % for progressbar
 amount_img = 3;     % defines how many versions of one condition should be generated
 
-% numerosities of interest
+% numerosities of interests
 numbers = 2:10;
 if pattern_type == "PR" || pattern_type == "Pr"
     numbers = 2:10;
