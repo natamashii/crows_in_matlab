@@ -18,8 +18,8 @@ rho_al = 2.7;   % in g/cm^3
 rho_pb = 11.34; % in g/cm^3
 
 % insert their values here
-N_al = [16577, 6828, 2826, 670, 583, 593, 537, 496, 466, 371];
-N_pb = [1275, 1177, 1032, 959, 726, 613, 510, 390, 289, 165];
+N_al = [17303, 5322, 2641, 658, 627, 539, 541, 513, 486, 164];
+N_pb = [1237, 1172, 970, 899, 765, 597, 525, 325, 237, 132];
 
 % 1a) n_mess & n_korr Aluminium
 n_mess_al = zeros(size(N_al));
@@ -29,6 +29,7 @@ for N = 1:size(N_al, 2)
     n_korr_al(N) = (N_al(N) / t_al(N)) / (1 - ((N_al(N) / t_al(N)) * tau_0 * 10^(-6)));
 end
 
+n_korr_al = [286.766, 88.72041, 44.02679, 10.96919, 10.4524, 8.9854, 9.018741, 8.551967, 8.101863, 6.068062];
 % ln(n_i/n_1) Aluminium
 ln_nin1_al = zeros(size(N_al));
 for N = 1:size(N_al, 2)
