@@ -1,5 +1,8 @@
 function corr_resp = respmat_corr(resp_mat, numerosities)
 
+% Notes: might be efficienter if I rewrite this solely with logical
+% indexing...
+
 % function to correct the response matrix values
 
 % col 1: stimulus type (standard (1) or control (2))
@@ -27,23 +30,31 @@ for trial_idx = 1:size(resp_mat, 1)
         resp_mat(trial_idx, 3) = 3; 
     end
 
-    % write sicth column
+    % write sixth column
     % for match trials
     if resp_mat(trial_idx, 4) == 0
         resp_mat(trial_idx, 6) = resp_mat(trial_idx, 3); 
 
     % for nonmatch trials
     else 
-        % get sample number in current trial
-        sample = resp_mat(trial_idx, 3);
-        sample_row = find(numerosities(:, 1) == sample);
-        % get corresponding test number
-        test_cl = resp_mat(trial_idx, 4);
-
-
-    end
+        % for exp 2: case P4
+        if resp_mat(trial_idx, 2) == 4
+            if resp_mat(trial_idx, 3) == 4
+                resp_mat(trial_idx, 6) = 6;
+            elseif resp_mat(trial_idx, 3) == 6
+                resp_mat(trial_idx, 6) = 4;
+            end
+        % for all other cases
+        else
+            % get sample number in current trial
+            sample = resp_mat(trial_idx, 3);
+            % identify test number for current trial in numerosities matrix
+            test_nr = numerosities(numerosities(:, 1) == sample, ...
+                resp_mat(trial_idx, 4) + 1);
+            resp_mat(trial_idx, 6) = test_nr;
+        end
     end
 end
 
-
+corr_resp = resp_mat;
 end
