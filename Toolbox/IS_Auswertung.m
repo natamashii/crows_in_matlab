@@ -2,6 +2,18 @@ clc
 clear
 close all
 
+% units
+% rho_al, rho_pb = g/cm^3
+% t_al, t_pb = s
+% tau_0 = mu s
+% x_al, x_pb = mm
+% n_mess_al, n_korr_al, n1, n_mess_pb, n_korr_pb = 1/s
+% d_betamax = mm
+% n_gamma_max, n_ges, n_beta_max = 1/s
+% mu_al, mu_pb = 1/cm
+% mu_rho = cm^2/g
+% d_half_pb = mm
+
 % pre allocation
 data = struct;
 
@@ -29,7 +41,6 @@ for N = 1:size(N_al, 2)
     n_korr_al(N) = (N_al(N) / t_al(N)) / (1 - ((N_al(N) / t_al(N)) * tau_0 * 10^(-6)));
 end
 
-n_korr_al = [286.766, 88.72041, 44.02679, 10.96919, 10.4524, 8.9854, 9.018741, 8.551967, 8.101863, 6.068062];
 % ln(n_i/n_1) Aluminium
 ln_nin1_al = zeros(size(N_al));
 for N = 1:size(N_al, 2)
@@ -74,17 +85,17 @@ xlabel("x [mm]")
 ylabel("ln(ni/n1)")
 hold off
 
-m1 = p1(1);
+m1 = p1(1);     % in 1/mm
 y0_1 = p1(2);
-m2 = p2(1);
+m2 = p2(1);     % in 1/mm
 y0_2 = p2(2);
 
 % 1c) Interpolation to find d_beta,max
 d_betamax = (y - y0_1) / m1;
 
 % 1d) mu/rho
-mu_al = -m2 * 10;
-mu_rho = mu_al/rho_al;
+mu_al = -m2 * 10;   % in 1/cm
+mu_rho = mu_al/rho_al;  % in cm^2/g
 
 % 2 Nachweiswahrscheinlichkeit
 n_gamma_max = exp(y0_2) * n1;
@@ -150,15 +161,15 @@ pb_plot_reg.Color = "blue";
 xlabel("x [mm]")
 ylabel("ln(ni/n1)")
 
-m1 = p_pb(1);
+m1 = p_pb(1);     % in 1/mm
 y0_1 = p_pb(2);
 
 % 3 b) Halbwertsdicke
 d_half_pb = (y - y0_1) / m1;
 
 % 3c) Schwächungskoeffizient
-mu_pb = -m1 * 10;
-mu_rho = mu_pb/rho_pb;
+mu_pb = -m1 * 10;     % in 1/cm
+mu_rho = mu_pb/rho_pb;  % in cm^2/g
 
 data.x_pb = x_pb;
 data.t_pb = t_pb;

@@ -25,7 +25,16 @@ to_correct = false; % if response matrices shall be corrected
 % pre allocation
 all_resp_mat = {};
 all_resp_mat_patterns = {};
-all_resp_mat_nums = {};
+all_resp_mat_nums_correct = {};
+all_resp_mat_nums_total = {};
+all_resp_mat_nums_perc = {};
+sum_behaviour = zeros(3, 3, size(numerosities, 1), size(numerosities, 2));
+% dim 1 = version to compute (1 = sum of perc, 2 = sums of correct, 3 = sums of total)
+% dim 2 = pattern (1 = P1, 2 = P2, 3 = P3)
+% dim 3 = sample (3-7)
+% dim 4 = corresponding test (1 = match, 2 = test 1, 3 = test 2, 4 = test
+% 3)
+perc_behaviour = zeros(3, 3, size(numerosities, 1), size(numerosities, 2));
 
 %% Correct Response Matrix
 if to_correct
@@ -69,7 +78,7 @@ filelist = dir(fullfile(exp_path, '*.mat'));  % list of all response matrices
 names = {filelist.name};
 
 % iterate over all files
-for idx = 1:1
+for idx = 1:length(names)
     % load data
     curr_file = names{idx};
     curr_resp = load([exp_path, curr_file]).corr_resp;
@@ -85,26 +94,65 @@ for idx = 1:1
         all_resp_mat_patterns{idx, pattern} = resp_mat_pat;
         % extract it into each num
         % pre allocation
-        number_table = zeros(size(numerosities));
+        number_table_correct = zeros(size(numerosities));
+        number_table_total = zeros(size(numerosities));
+        number_table_perc = zeros(size(numerosities));
         % iterate over sample numbers
         for sample_idx = 1:size(numerosities, 1)
             sample = numerosities(sample_idx, 1);   % curr sample
-            resp_mat_samp = resp_mat_pat(resp_mat_pat(:, 3) == sample);
+            resp_mat_samp = resp_mat_pat(resp_mat_pat(:, 3) == sample, :);
             rel_nums = numerosities(sample_idx, :);
-            for num = 1:size(rel_nums)
+            for num = 1:size(rel_nums, 2)
                 % get relevant rows
-                relevant_rows = resp_mat_samp(resp_mat_samp(:, 6) == rel_nums(num));
+                relevant_rows = resp_mat_samp(resp_mat_samp(:, 6) == rel_nums(num), :);
                 % identify how many correct ones there are
-                correct_trials = relevant_rows(relevant_rows(:, 5) == 0);
-                number_table(sample_idx, num) = size(correct_trials, 1) / size(relevant_rows, 1);
+                correct_trials = relevant_rows(relevant_rows(:, 5) == 0, :);
+                number_table_correct(sample_idx, num) = size(correct_trials, 1);
+                number_table_total(sample_idx, num) = size(relevant_rows, 1);
+                number_table_perc(sample_idx, num) = size(correct_trials, 1) / size(relevant_rows, 1);
+                % add to overview arrays
+                sum_behaviour(1, pattern, sample_idx, num) = ...
+                    sum_behaviour(1, pattern, sample_idx, num) + ...
+                    number_table_perc(sample_idx, num);
+                sum_behaviour(2, pattern, sample_idx, num) = ...
+                    sum_behaviour(2, pattern, sample_idx, num) + ...
+                    number_table_correct(sample_idx, num);
+                sum_behaviour(3, pattern, sample_idx, num) = ...
+                    sum_behaviour(3, pattern, sample_idx, num) + ...
+                    number_table_correct(sample_idx, num);
             end
         end
-        all_resp_mat_nums{idx, pattern} = number_table; % store the number table for current file
+        all_resp_mat_nums_correct{idx, pattern} = number_table_correct; % store the number table for current file
+        all_resp_mat_nums_total{idx, pattern} = number_table_total; % store the number table for current file
+        all_resp_mat_nums_perc{idx, pattern} = number_table_perc; % store the number table for current file
     end
 end
 
 % iterate over it again and take mean of each little version
+% do i take mean over all percentages or sum the correct & total trials and
+% divide this?
 
+% no i should iterate over cell and then use mean() and std() for
+% distribution of percs and 
+% i think i can only take mean of percs since the amount of correct trials
+% depend on amount of total trials...
+% guess im a bit stoopid and should go home now...
+% and maybe i shouldnt use 4d arrays and instead cells cuz this makes
+% dimension reduction shitty again...
+
+
+% iterate over patterns
+for pattern = 1:size(all_resp_mat_patterns, 2)
+    % iterate over samples
+    for sample_idx = 1:size(numerosities, 1)
+        % iterate over sample-tests
+        for num = 1:size(numerosities, 2)
+            % Average computation
+            perc_behaviour(1, pattern, sample_idx, num) = ...
+                sum_behaviour(1, pattern, sample_idx, num) / size(all_resp_mat, 2);
+        end
+    end
+end
 
 
 
