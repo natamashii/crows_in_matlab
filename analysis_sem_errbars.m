@@ -25,28 +25,6 @@ to_save = true; % if result shall be saved
 to_correct = false; % if response matrices shall be corrected
 
 % pre allocation
-all_resp_mat = {};
-all_resp_mat_patterns = {};
-all_resp_mat_nums_correct = {};
-all_resp_mat_nums_total = {};
-all_resp_mat_nums_perc = {};
-sum_behaviour = cell(3, length(patterns{current_exp}));
-perc_behaviour = cell(3, length(patterns{current_exp}));
-
-% add 2D-array to each cell entry
-for entry = 1:numel(sum_behaviour)
-    sum_behaviour{entry} = zeros(size(numerosities, 1), size(numerosities, 2));
-    perc_behaviour{entry} = zeros(size(numerosities, 1), size(numerosities, 2));
-end
-
-%sum_behaviour = zeros(3, 3, size(numerosities, 1), size(numerosities, 2));
-% dim 1 = version to compute (1 = sum of perc, 2 = sums of correct, 3 = sums of total)
-% dim 2 = pattern (1 = P1, 2 = P2, 3 = P3)
-% dim 3 = sample (3-7)
-% dim 4 = corresponding test (1 = match, 2 = test 1, 3 = test 2, 4 = test
-% 3)
-%perc_behaviour = zeros(3, 3, size(numerosities, 1), size(numerosities, 2));
-
 placeholder = zeros(6, 3, size(numerosities, 1), size(numerosities, 2));
 mean_perf = zeros(3, size(numerosities, 1), size(numerosities, 2));
 std_perf = zeros(3, 3, size(numerosities, 1), size(numerosities, 2));
@@ -109,7 +87,6 @@ for idx = 1:length(names)
     curr_file = names{idx};
     curr_resp = load([exp_path, curr_file]).corr_resp;
     % store in resp mat cell
-    all_resp_mat{idx} = curr_resp;
 
     % divide into Patterns
     amount_patterns = unique(curr_resp(:, 2));
@@ -117,7 +94,6 @@ for idx = 1:length(names)
     
     for pattern = 1:length(amount_patterns)
         resp_mat_pat = curr_resp(curr_resp(:, 2) == pattern, :);
-        all_resp_mat_patterns{idx, pattern} = resp_mat_pat;
         % extract it into each num
         % pre allocation
         number_table_correct = zeros(size(numerosities));
@@ -139,16 +115,6 @@ for idx = 1:length(names)
                 number_table_correct(sample_idx, num) = size(correct_trials, 1);
                 number_table_total(sample_idx, num) = size(relevant_rows, 1);
                 number_table_perc(sample_idx, num) = size(correct_trials, 1) / size(relevant_rows, 1);
-                % add to overview arrays
-                sum_behaviour{1, pattern}(sample_idx, num) = ...
-                    sum_behaviour{1, pattern}(sample_idx, num) + ...
-                    number_table_perc(sample_idx, num);
-                sum_behaviour{2, pattern}(sample_idx, num) = ...
-                    sum_behaviour{2, pattern}(sample_idx, num) + ...
-                    number_table_correct(sample_idx, num);
-                sum_behaviour{3, pattern}(sample_idx, num) = ...
-                    sum_behaviour{3, pattern}(sample_idx, num) + ...
-                    number_table_correct(sample_idx, num);
             end
             % take average of all test numbers for current sample
             o_mean_perf(idx, pattern, sample_idx) = ...
@@ -158,9 +124,6 @@ for idx = 1:length(names)
             o_sem_perf(idx, pattern, sample_idx) = ...
                 std(number_table_perc(sample_idx, :)) / sqrt(size(number_table_perc, 2));
         end
-        all_resp_mat_nums_correct{idx, pattern} = number_table_correct; % store the number table for current file
-        all_resp_mat_nums_total{idx, pattern} = number_table_total; % store the number table for current file
-        all_resp_mat_nums_perc{idx, pattern} = number_table_perc; % store the number table for current file
     end
 end
 
@@ -244,6 +207,7 @@ set(0,'defaultfigurecolor',[1 1 1])
 
 fig = figure();
 set(gcf,'Color',[1 1 1])
+set(gca, 'Color', [1 1 1])
 
 tiled = tiledlayout(fig, 1, 3);
 tiled.TileSpacing = "loose";
@@ -263,24 +227,19 @@ for pattern = 1:size(all_resp_mat_patterns, 2)
     for sample_idx = 1:size(mean_perf, 2)
         % sort numerosities in ascending order
         [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
-        error_up = squeeze(std_perf(2, pattern, sample_idx, :));
-        error_down = squeeze(std_perf(3, pattern, sample_idx, :));
+        error_up = squeeze(sem_perf(2, pattern, sample_idx, :));
+        error_down = squeeze(sem_perf(3, pattern, sample_idx, :));
+        error = squeeze(sem_perf(1, pattern, sample_idx, :));
         values = squeeze(mean_perf(pattern, sample_idx, :));
         % Plot Error shading
-        error_shade = fill([nums_sort, ...
-            fliplr(nums_sort)], ...
-            [error_down(sort_idx)', ...
-            fliplr(error_up(sort_idx)')], ...
-            colours_numbers{sample_idx});
-        error_shade.FaceAlpha = .3;
-        error_shade.EdgeColor = "none";
-        error_shade.DisplayName = "none";
+        err = errorbar(nums_sort, values(sort_idx), error(sort_idx));
+        err.Color = colours_numbers{sample_idx};
     end
     for sample_idx = 1:size(mean_perf, 2)
         % sort numerosities in ascending order
         [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
-        error_up = squeeze(std_perf(2, pattern, sample_idx, :));
-        error_down = squeeze(std_perf(3, pattern, sample_idx, :));
+        error_up = squeeze(sem_perf(2, pattern, sample_idx, :));
+        error_down = squeeze(sem_perf(3, pattern, sample_idx, :));
         values = squeeze(mean_perf(pattern, sample_idx, :));
         % plot mean line
         plot_pattern = plot(nums_sort, ...
@@ -309,7 +268,7 @@ leg.TextColor = "k";
 
 % Save figure
 fig.Renderer = "painters";
-fig_name = 'Mean_STD_humans_all_patterns.png';
+fig_name = 'Mean_SEM_humans_all_patterns.png';
 saveas(fig, [figure_path, fig_name], 'png')
 
 shg
@@ -339,24 +298,19 @@ for sample_idx = 1:size(mean_perf, 2)
     for pattern = 1:size(all_resp_mat_patterns, 2)
         % sort numerosities in ascending order
         [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
-        error_up = squeeze(std_perf(2, pattern, sample_idx, :));
-        error_down = squeeze(std_perf(3, pattern, sample_idx, :));
+        error_up = squeeze(sem_perf(2, pattern, sample_idx, :));
+        error_down = squeeze(sem_perf(3, pattern, sample_idx, :));
+        error = squeeze(sem_perf(1, pattern, sample_idx, :));
         values = squeeze(mean_perf(pattern, sample_idx, :));
         % Plot Error shading
-        error_shade = fill([nums_sort, ...
-            fliplr(nums_sort)], ...
-            [error_down(sort_idx)', ...
-            fliplr(error_up(sort_idx)')], ...
-            colours_pattern{pattern});
-        error_shade.FaceAlpha = .3;
-        error_shade.EdgeColor = "none";
-        error_shade.DisplayName = "none";
+        err = errorbar(nums_sort, values(sort_idx), error(sort_idx));
+        err.Color = colours_pattern{pattern};
     end
     for pattern = 1:size(all_resp_mat_patterns, 2)
         % sort numerosities in ascending order
         [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
-        error_up = squeeze(std_perf(2, pattern, sample_idx, :));
-        error_down = squeeze(std_perf(3, pattern, sample_idx, :));
+        error_up = squeeze(sem_perf(2, pattern, sample_idx, :));
+        error_down = squeeze(sem_perf(3, pattern, sample_idx, :));
         values = squeeze(mean_perf(pattern, sample_idx, :));
         % plot mean line
         plot_pattern = plot(nums_sort, ...
@@ -384,10 +338,9 @@ leg.Location = "bestoutside";
 leg.Box = "off";
 leg.TextColor = "k";
 
-
 % Save figure
 fig2.Renderer = "painters";
-fig_name = 'Mean_STD_humans_all_patterns_each_num.png';
+fig_name = 'Mean_SEM_humans_all_patterns_each_num.png';
 saveas(fig2, [figure_path, fig_name], 'png')
 
 shg
@@ -405,18 +358,13 @@ leg_patch = [];
 leg_label = strings();
 
 % Plot Error Shade
-error_down = squeeze(avg_std_perf(3, :, :));
-error_up = squeeze(avg_std_perf(2, :, :));
+error_down = squeeze(avg_sem_perf(3, :, :));
+error_up = squeeze(avg_sem_perf(2, :, :));
+error = squeeze(avg_sem_perf(1, :, :));
 % iterate over patterns
 for pattern = 1:size(all_resp_mat_patterns, 2)
-    error_shade = fill([numerosities(:, 1)', ...
-            fliplr(numerosities(:, 1)')], ...
-            [error_down(pattern, :), ...
-            fliplr(error_up(pattern, :))], ...
-            colours_pattern{pattern});
-        error_shade.FaceAlpha = .3;
-        error_shade.EdgeColor = "none";
-        error_shade.DisplayName = "none";
+    err = errorbar(numerosities(:, 1), avg_mean_perf(pattern, :), error(pattern, :));
+    err.Color = colours_pattern{pattern};
 end
 
 % Plot Mean Performance
@@ -447,7 +395,7 @@ hold off
 
 % Save figure
 fig3.Renderer = "painters";
-fig_name = 'Mean_STD_humans_avg_performance.png';
+fig_name = 'Mean_SEM_humans_avg_performance.png';
 saveas(fig3, [figure_path, fig_name], 'png')
 
 shg

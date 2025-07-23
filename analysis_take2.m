@@ -244,6 +244,7 @@ set(0,'defaultfigurecolor',[1 1 1])
 
 fig = figure();
 set(gcf,'Color',[1 1 1])
+set(gca, 'Color', [1 1 1])
 
 tiled = tiledlayout(fig, 1, 3);
 tiled.TileSpacing = "loose";
@@ -265,16 +266,11 @@ for pattern = 1:size(all_resp_mat_patterns, 2)
         [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
         error_up = squeeze(std_perf(2, pattern, sample_idx, :));
         error_down = squeeze(std_perf(3, pattern, sample_idx, :));
+        error = squeeze(std_perf(1, pattern, sample_idx, :));
         values = squeeze(mean_perf(pattern, sample_idx, :));
         % Plot Error shading
-        error_shade = fill([nums_sort, ...
-            fliplr(nums_sort)], ...
-            [error_down(sort_idx)', ...
-            fliplr(error_up(sort_idx)')], ...
-            colours_numbers{sample_idx});
-        error_shade.FaceAlpha = .3;
-        error_shade.EdgeColor = "none";
-        error_shade.DisplayName = "none";
+        err = errorbar(nums_sort, values(sort_idx), error(sort_idx));
+        err.Color = colours_numbers{sample_idx};
     end
     for sample_idx = 1:size(mean_perf, 2)
         % sort numerosities in ascending order
@@ -341,16 +337,11 @@ for sample_idx = 1:size(mean_perf, 2)
         [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
         error_up = squeeze(std_perf(2, pattern, sample_idx, :));
         error_down = squeeze(std_perf(3, pattern, sample_idx, :));
+        error = squeeze(std_perf(1, pattern, sample_idx, :));
         values = squeeze(mean_perf(pattern, sample_idx, :));
         % Plot Error shading
-        error_shade = fill([nums_sort, ...
-            fliplr(nums_sort)], ...
-            [error_down(sort_idx)', ...
-            fliplr(error_up(sort_idx)')], ...
-            colours_pattern{pattern});
-        error_shade.FaceAlpha = .3;
-        error_shade.EdgeColor = "none";
-        error_shade.DisplayName = "none";
+        err = errorbar(nums_sort, values(sort_idx), error(sort_idx));
+        err.Color = colours_pattern{pattern};
     end
     for pattern = 1:size(all_resp_mat_patterns, 2)
         % sort numerosities in ascending order
@@ -384,7 +375,6 @@ leg.Location = "bestoutside";
 leg.Box = "off";
 leg.TextColor = "k";
 
-
 % Save figure
 fig2.Renderer = "painters";
 fig_name = 'Mean_STD_humans_all_patterns_each_num.png';
@@ -407,16 +397,11 @@ leg_label = strings();
 % Plot Error Shade
 error_down = squeeze(avg_std_perf(3, :, :));
 error_up = squeeze(avg_std_perf(2, :, :));
+error = squeeze(avg_std_perf(1, :, :));
 % iterate over patterns
 for pattern = 1:size(all_resp_mat_patterns, 2)
-    error_shade = fill([numerosities(:, 1)', ...
-            fliplr(numerosities(:, 1)')], ...
-            [error_down(pattern, :), ...
-            fliplr(error_up(pattern, :))], ...
-            colours_pattern{pattern});
-        error_shade.FaceAlpha = .3;
-        error_shade.EdgeColor = "none";
-        error_shade.DisplayName = "none";
+    err = errorbar(numerosities(:, 1), avg_mean_perf(pattern, :), error(pattern, :));
+    err.Color = colours_pattern{pattern};
 end
 
 % Plot Mean Performance
