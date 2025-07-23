@@ -1,404 +1,283 @@
+clc
 clear
 close all
-clc
 
-%% Pre definition
+% Script for sorting behavioural data
+
+% Note
+% so far, condition & standard stimuli trials thrown together (must be checked beforehand!!)
+
+%% Pre Definition
 % Path definition
 base_path = 'D:\MasterThesis\analysis\data\';
 figure_path = 'D:\MasterThesis\figures\';
 spk_folderpath = [base_path, 'spk\'];
 rsp_mat_folderpath = [base_path, 'response_matrices\'];
+rsp_time_folderpath = [base_path, 'response_latencies\'];
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
-current_who = 1;    % set who to analyze
-current_exp = 2;    % set which experiment to analyze
+curr_who = 1;    % set who to analyze
+curr_exp = 2;    % set which experiment to analyze
 
 % all numerosities relevant
 numerosities = [3, 4, 5, 6, 7; % sample
     2, 2, 3, 3, 3;  % test 1 numbers
-    5, 6, 7, 4, 4;  % test 2 numbers 
+    5, 6, 7, 4, 4;  % test 2 numbers
     6, 7, 8, 9, 10]';  % test 3 numbers
 patterns = {{'P1', 'P2', 'P3', 'PR'}, {'P1', 'P2', 'P3'}};
 
-
 to_save = true; % if result shall be saved
-to_correct = false; % if response matrices shall be corrected
+to_correct = true; % if response matrices shall be corrected
 
-% pre allocation
-placeholder = zeros(6, 3, size(numerosities, 1), size(numerosities, 2));
-mean_perf = zeros(3, size(numerosities, 1), size(numerosities, 2));
-std_perf = zeros(3, 3, size(numerosities, 1), size(numerosities, 2));
-conf_perf = zeros(3, 3, size(numerosities, 1), size(numerosities, 2));
-sem_perf = zeros(3, 3, size(numerosities, 1), size(numerosities, 2));
+% for Plotting
+colours_pattern = {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; [0.1211 0.5195 0.6289]};
+colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...
+    [0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; [0.6350 0.0780 0.1840]};
+format = 'png';
+error_plot = {'STD'; 'SEM'};
+plot_font = 12;
 
-o_mean_perf = zeros(6, length(patterns{current_exp}), size(numerosities, 1));
-o_std_perf = zeros(6, length(patterns{current_exp}), size(numerosities, 1));
-o_sem_perf = zeros(6, length(patterns{current_exp}), size(numerosities, 1));
-o_conf_perf = zeros(6, length(patterns{current_exp}), size(numerosities, 1));
-
-avg_mean_perf = zeros(length(patterns{current_exp}), size(numerosities, 1));
-avg_std_perf = zeros(3, length(patterns{current_exp}), size(numerosities, 1));
-avg_sem_perf = zeros(3, length(patterns{current_exp}), size(numerosities, 1));
-avg_conf_perf = zeros(3, length(patterns{current_exp}), size(numerosities, 1));
 
 %% Correct Response Matrix
 if to_correct
     % get file names
-    path = [spk_folderpath, who_analysis{current_who}]; % adapt path
-    filelist = dir(fullfile(path, '*.spk'));  % list of all spk files
-    names = {filelist.name};
+    path = [spk_folderpath, who_analysis{curr_who}]; % adapt path
+    filelist_rsp = dir(fullfile(path, '*.spk'));  % list of all spk files
+    names_rsp = {filelist_rsp.name};
 
     % iterate over files
-    for idx = 1:length(names)
-        %for idx = 1:1   %placeholder for debugging
-        placeholder_name = 'U250708';   %placeholder for debugging
+    for idx = 1:length(names_rsp)
         % load data
-        curr_file = names{idx}; % current file
-        %curr_file = placeholder_name;
-        curr_spk = spk_read([path curr_file]); % current spike data
+        curr_file_rsp = names_rsp{idx}; % current file
+        curr_spk = spk_read([path curr_file_rsp]); % current spike data
         curr_resp = getresponsematrix(curr_spk); % current response matrix
         % correct the response matrix
         corr_resp = respmat_corr(curr_resp, numerosities);
 
+        % get reaction times
+        curr_react = NaN(size(curr_resp, 1), 1);
+
+        % get indices of all not abunded trials (or only correct ones if
+        % this doesnt work) (yep it doesnt work with some failed trials for
+        % whatever reason
+        [rel_idx, ~] = find(corr_resp(:, 5) == 0);
+        curr_reacts = getreactiontimes(curr_spk, 25, 41, rel_idx)'; % in s
+        curr_reacts = curr_reacts * 1000; % in ms
+        curr_react(rel_idx) = curr_reacts;
+
         % save the corrected response matrix
         if to_save
-            save(fullfile(rsp_mat_folderpath, [curr_file, '_resp.mat']), 'corr_resp');
+            save(fullfile([rsp_mat_folderpath, who_analysis{curr_who}], [curr_file_rsp, '_resp.mat']), 'corr_resp');
+            save(fullfile([rsp_time_folderpath, who_analysis{curr_who}], [curr_file_rsp, '_react.mat']), 'curr_react');
         end
     end
 end
 
-%% Sum Average Performance for each Pattern in Humans
-% for now: just ignore division into standard & control lol
+%% Sum Average Performance for each Pattern
+% Get Data: Response Matrices
+path_resp = [rsp_mat_folderpath, who_analysis{curr_who}]; % adapt path
+filelist_rsp = dir(path_resp);  % list of all data & subfolders
+subfolders_rsp = filelist_rsp([filelist_rsp(:).isdir]); % extract subfolders
+subfolders_rsp = {subfolders_rsp(3:end).name};  % list of subfolder names (experiments)
 
-% Get Data
-path = [rsp_mat_folderpath, who_analysis{current_who}]; % adapt path
-filelist = dir(path);  % list of all data & subfolders
-subfolders = filelist([filelist(:).isdir]); % extract subfolders
-subfolders = {subfolders(3:end).name};  % list of subfolder names (experiments)
+exp_path_resp = [path_resp, subfolders_rsp{curr_exp}, '\'];	% path with data of current experiment
 
-exp_path = [path, subfolders{current_exp}, '\'];
+filelist_rsp = dir(fullfile(exp_path_resp, '*.mat'));  % list of all response matrices
+names_rsp = {filelist_rsp.name};	% file names
 
-filelist = dir(fullfile(exp_path, '*.mat'));  % list of all response matrices
-names = {filelist.name};
+% Get Data: Response Latencies
+path_react = [rsp_time_folderpath, who_analysis{curr_who}]; % adapt path
+filelist_react = dir(path_react);  % list of all data & subfolders
+subfolders_react = filelist_react([filelist_react(:).isdir]); % extract subfolders
+subfolders_react = {subfolders_react(3:end).name};  % list of subfolder names (experiments)
+
+exp_path_react = [path_react, subfolders_react{curr_exp}, '\'];	% path with data of current experiment
+
+filelist_react = dir(fullfile(exp_path_react, '*.mat'));  % list of all response matrices
+names_react = {filelist_react.name};	% file names
+
+% Pre allocation
+% performance for each cond
+% dim 1: subject/session ; dim 2: pattern ; dim 3: samples ; dim 4: test number
+performances = zeros(length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+reaction_times = cell(length(names_react), length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+
+% mean & error over test numbers, for each subject/session, pattern, sample
+mean_perf_s = zeros(length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1));
+mean_RT_s = zeros(length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1));
+error_perf_s = zeros(2, length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
+error_RT_s = zeros(2, length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
+
+% mean & error over subjects/sessions & test numbers, for each pattern, sample
+mean_perf = zeros(length(patterns{curr_exp}), size(numerosities, 1));
+mean_RT = zeros(length(patterns{curr_exp}), size(numerosities, 1));
+error_perf = zeros(2, length(patterns{curr_exp}), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
+error_RT = zeros(2, length(patterns{curr_exp}), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
 
 % iterate over all files
-for idx = 1:length(names)
-    % load data
-    curr_file = names{idx};
-    curr_resp = load([exp_path, curr_file]).corr_resp;
-    % store in resp mat cell
+for idx = 1:length(names_rsp)
+    % load response matrix
+    curr_file_rsp = names_rsp{idx};
+    curr_file_react = names_react{idx};
+    curr_resp = load([exp_path_resp, curr_file_rsp]).corr_resp;
+    curr_react = load([exp_path_react, curr_file_react]).curr_react;
 
-    % divide into Patterns
-    amount_patterns = unique(curr_resp(:, 2));
-    amount_patterns = amount_patterns(1:end - 1);   % remove abunded trials for now
-    
-    for pattern = 1:length(amount_patterns)
-        resp_mat_pat = curr_resp(curr_resp(:, 2) == pattern, :);
-        % extract it into each num
-        % pre allocation
-        number_table_correct = zeros(size(numerosities));
-        number_table_total = zeros(size(numerosities));
-        number_table_perc = zeros(size(numerosities));
-        % iterate over sample numbers
+    % iterate over each pattern
+    for pattern = 1:length(patterns{curr_exp})
+        % extract trials of current pattern
+
+        % iterate over samples
         for sample_idx = 1:size(numerosities, 1)
-            sample = numerosities(sample_idx, 1);   % curr sample
-            resp_mat_samp = resp_mat_pat(resp_mat_pat(:, 3) == sample, :);
-            rel_nums = numerosities(sample_idx, :);
-            for num = 1:size(rel_nums, 2)
-                % get relevant rows
-                relevant_rows = resp_mat_samp(resp_mat_samp(:, 6) == rel_nums(num), :);
-                % identify how many correct ones there are
-                correct_trials = relevant_rows(relevant_rows(:, 5) == 0, :);
-                performance = size(correct_trials, 1) / size(relevant_rows, 1);
-                placeholder(idx, pattern, sample_idx, num) = performance;
+            rel_nums = numerosities(sample_idx, :);	% sample & test numbers
 
-                number_table_correct(sample_idx, num) = size(correct_trials, 1);
-                number_table_total(sample_idx, num) = size(relevant_rows, 1);
-                number_table_perc(sample_idx, num) = size(correct_trials, 1) / size(relevant_rows, 1);
+            % iterate over test numbers
+            for test_idx = 1:size(numerosities, 2)
+                % DEBUG
+                curr_trials = curr_resp(curr_resp(:, 2) == pattern & ...
+                    curr_resp(:, 3) == rel_nums(1) & ... 
+                    curr_resp(:, 6) == rel_nums(test_idx), :);
+
+                % get correct trials
+                corr_trials = curr_trials(curr_trials(:, 5) == 0, :);
+
+                % get indices of those trials
+                rel_idx = find(curr_resp(:, 2) == pattern & ...
+                    curr_resp(:, 3) == rel_nums(1) & ...
+                    curr_resp(:, 5) == 0 & ...
+                    curr_resp(:, 6) == rel_nums(test_idx)); 
+
+                % get performance
+                perf_trials = size(corr_trials, 1) / size(curr_trials, 1);
+                performances(idx, pattern, sample_idx, test_idx) = perf_trials;
+
+                % get reaction time
+                reaction_times{idx, pattern, sample_idx, test_idx} = [curr_react(rel_idx)];
             end
-            % take average of all test numbers for current sample
-            o_mean_perf(idx, pattern, sample_idx) = ...
-                mean(number_table_perc(sample_idx, :));
-            o_std_perf(idx, pattern, sample_idx) = ...
-                std(number_table_perc(sample_idx, :));
-            o_sem_perf(idx, pattern, sample_idx) = ...
-                std(number_table_perc(sample_idx, :)) / sqrt(size(number_table_perc, 2));
+
+            % concat RTs for all test numbers for current subject/session,
+            % pattern & sample
+            RT_test_nums = [reaction_times{idx, pattern, sample_idx, :}];
+
+            % calculate overall performance/RT for current sample in current pattern & subject/session
+            mean_perf_s(idx, pattern, sample_idx) = ...
+                mean(performances(idx, pattern, sample_idx, :));
+            mean_RT_s(idx, pattern, sample_idx) = ...
+                mean(RT_test_nums, "omitnan");
+            % calculate corresponding error: STD
+            error_perf_s(1, idx, pattern, sample_idx) = ...
+        		std(performances(idx, pattern, sample_idx, :));
+            error_RT_s(1, idx, pattern, sample_idx) = ...
+                std(RT_test_nums, [], "omitnan");
+            % calculate corresponding error: SEM
+            error_perf_s(1, idx, pattern, sample_idx) = ...
+        		std(performances(idx, pattern, sample_idx, :)) / ...
+        		sqrt(length(performances(idx, pattern, sample_idx, :)));
+            error_RT_s(2, idx, pattern, sample_idx) = ...
+                std(RT_test_nums, [], "omitnan") / ...
+                sqrt(numel(RT_test_nums));
         end
     end
 end
 
-
-
-% conf interval
-% 68–95–99.7 rule: 95% ~ 2* std
-% this for normal distribution
-% for t distribution: 95% confidence interval and degrees of freedpn (n -
-% 1) t = 2.015
-
+% calculate average performance/RT for each pattern & sample
+% take mean over subjects/sessions & test numbers
 
 % iterate over patterns
-for pattern = 1:size(all_resp_mat_patterns, 2)
+for pattern = 1:length(patterns{curr_exp})
+
     % iterate over samples
     for sample_idx = 1:size(numerosities, 1)
-        % iterate over sample-tests
-        for num = 1:size(numerosities, 2)
-            % Average computation
-            mean_perf(pattern, sample_idx, num) = ...
-                mean(placeholder(:, pattern, sample_idx, num));
-            std_perf(1, pattern, sample_idx, num) = ...
-                std(placeholder(:, pattern, sample_idx, num));
-            std_perf(2, pattern, sample_idx, num) = ...
-                mean(placeholder(:, pattern, sample_idx, num)) + ...
-                std(placeholder(:, pattern, sample_idx, num));
-            std_perf(3, pattern, sample_idx, num) = ...
-                mean(placeholder(:, pattern, sample_idx, num)) - ...
-                std(placeholder(:, pattern, sample_idx, num));
-            sem_perf(1, pattern, sample_idx, num) = ...
-                std(placeholder(:, pattern, sample_idx, num)) / ...
-                sqrt(size(placeholder, 1));
-            sem_perf(2, pattern, sample_idx, num) = ...
-                mean(placeholder(:, pattern, sample_idx, num)) + ...
-                (std(placeholder(:, pattern, sample_idx, num)) / ...
-                sqrt(size(placeholder, 1)));
-            sem_perf(3, pattern, sample_idx, num) = ...
-                mean(placeholder(:, pattern, sample_idx, num)) - ...
-                (std(placeholder(:, pattern, sample_idx, num)) / ...
-                sqrt(size(placeholder, 1)));
-        end
-        % overall performance for each sample
-        avg_mean_perf(pattern, sample_idx) = ...
-            mean(o_mean_perf(:, pattern, sample_idx));
-        avg_std_perf(1, pattern, sample_idx) = ...
-            std(o_mean_perf(:, pattern, sample_idx));
-        avg_std_perf(2, pattern, sample_idx) = ...
-            mean(o_mean_perf(:, pattern, sample_idx)) + ...
-            std(o_mean_perf(:, pattern, sample_idx));
-        avg_std_perf(3, pattern, sample_idx) = ...
-            mean(o_mean_perf(:, pattern, sample_idx)) - ...
-            std(o_mean_perf(:, pattern, sample_idx));
-        % NOTE: should I take std/sem of mean performances per person or
-        % std/sem of each performance dot of each person?
-        avg_sem_perf(1, pattern, sample_idx) = ...
-            std(o_mean_perf(:, pattern, sample_idx)) / sqrt(size(o_mean_perf, 1));
-        avg_sem_perf(1, pattern, sample_idx) = ...
-            mean(o_mean_perf(:, pattern, sample_idx)) + ...
-            (std(o_mean_perf(:, pattern, sample_idx)) / sqrt(size(o_mean_perf, 1)));
-        avg_sem_perf(1, pattern, sample_idx) = ...
-            mean(o_mean_perf(:, pattern, sample_idx)) - ...
-            (std(o_mean_perf(:, pattern, sample_idx)) / sqrt(size(o_mean_perf, 1)));
+        % concat RTs for all test numbers & subject/session, for each
+        % pattern & sample
+        RT_test_nums_s = [reaction_times{:, pattern, sample_idx, :}];
+
+        % calculate average over subjects/sessions & test numbers
+        mean_perf(pattern, sample_idx) = ...
+            mean(performances(:, pattern, sample_idx, :), "all");
+        mean_RT(pattern, sample_idx) = ...
+            mean(RT_test_nums_s, "omitnan");
+        % calculate corresponding error: STD
+        error_perf(1, pattern, sample_idx) = ...
+    		std(performances(:, pattern, sample_idx, :), [], "all");
+        error_RT(1, pattern, sample_idx) = ...
+            std(RT_test_nums_s, [], "omitnan");
+    	% calculate corresponding error: SEM
+    	error_perf(2, pattern, sample_idx) = ...
+    		std(performances(:, pattern, sample_idx, :), [], "all") ...
+    		/ sqrt(numel(performances(:, pattern, sample_idx, :)));
+        error_RT(2, pattern, sample_idx) = ...
+            std(RT_test_nums_s, [], "omitnan") / sqrt(numel(RT_test_nums_s));
     end
 end
 
+%% Plot
+
+% pre allocation
+
+% Mean Performance for Each Pattern
+set(0, 'defaultfigurecolor', [1 1 1])
 
 
 
 
 
+% plot STD & SEM
+for er = 1:length(error_plot)
+    fig1 = figure();
+    set(gcf, 'Color', [1 1 1])
 
-% Plot
-% as all in one plot? or three next to each other?
-format = 'svg';
-colours_pattern = {[1 0 1]; [0 1 0]; [0 0 1]};
-colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...
-    [0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; [0.6350 0.0780 0.1840]};
-
-% 3 different plots, each with avg match non-match
-set(0,'defaultfigurecolor',[1 1 1])
-
-fig = figure();
-set(gcf,'Color',[1 1 1])
-set(gca, 'Color', [1 1 1])
-
-tiled = tiledlayout(fig, 1, 3);
-tiled.TileSpacing = "loose";
-tiled.Padding = "compact";
-
-
-
-% iterate over patterns
-for pattern = 1:size(all_resp_mat_patterns, 2)
-    ax_pattern = nexttile(tiled);
-    hold on
-    set(gca, 'Color', [1 1 1])
-    set(gca,'XColor','k','YColor','k');
+    % pre allocation
     leg_patch = [];
     leg_label = strings();
-    % iterate over samples and plot each
-    for sample_idx = 1:size(mean_perf, 2)
-        % sort numerosities in ascending order
-        [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
-        error_up = squeeze(sem_perf(2, pattern, sample_idx, :));
-        error_down = squeeze(sem_perf(3, pattern, sample_idx, :));
-        error = squeeze(sem_perf(1, pattern, sample_idx, :));
-        values = squeeze(mean_perf(pattern, sample_idx, :));
-        % Plot Error shading
-        err = errorbar(nums_sort, values(sort_idx), error(sort_idx));
-        err.Color = colours_numbers{sample_idx};
-    end
-    for sample_idx = 1:size(mean_perf, 2)
-        % sort numerosities in ascending order
-        [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
-        error_up = squeeze(sem_perf(2, pattern, sample_idx, :));
-        error_down = squeeze(sem_perf(3, pattern, sample_idx, :));
-        values = squeeze(mean_perf(pattern, sample_idx, :));
-        % plot mean line
-        plot_pattern = plot(nums_sort, ...
-            values(sort_idx));
-        plot_pattern.Color = colours_numbers{sample_idx};
+    % iterate over patterns/subplots
+    for pattern = 1:length(patterns{curr_exp})
+        hold on
+        set(gca, 'Color', [1 1 1])
+        set(gca, 'XColor', 'k', 'YColor', 'k');
+        
+        % plot error
+        err_plot = errorbar(numerosities(:, 1)', mean_perf(pattern, :), ...
+            squeeze(error_perf(er, pattern, :)));
+        err_plot.Color = colours_pattern{pattern};
+        err_plot.CapSize = 10;
+        err_plot.LineWidth = 1.5;
+
+        % plot avg performance
+        plot_pattern = plot(numerosities(:, 1)', mean_perf(pattern, :));
         plot_pattern.LineStyle = "-";
-        plot_pattern.LineWidth = 2;
+        plot_pattern.LineWidth = 1.5;
         plot_pattern.Marker = "o";
-        plot_pattern.MarkerFaceColor = colours_numbers{sample_idx};
-        plot_pattern.MarkerEdgeColor = "none";
-        plot_pattern.DisplayName = num2str(numerosities(sample_idx, 1));
-        % for legend
-        leg_patch(end + 1) = plot_pattern;
-        leg_label(sample_idx) = num2str(numerosities(sample_idx, 1));
-    end
-    ylim([-0.1 1.1])
-    xlim([1.9 10.1])
-    hold off
-end
-
-% create legend
-leg = legend(leg_patch, leg_label);
-leg.Location = "bestoutside";
-leg.Box = "off";
-leg.TextColor = "k";
-
-% Save figure
-fig.Renderer = "painters";
-fig_name = 'Mean_SEM_humans_all_patterns.png';
-saveas(fig, [figure_path, fig_name], 'png')
-
-shg
-
-
-
-
-%% Figure: each subplot with 1 sample, all patterns
-set(0,'defaultfigurecolor',[1 1 1])
-
-fig2 = figure();
-set(gcf,'Color',[1 1 1])
-
-tiled = tiledlayout(fig2, 1, 5);
-tiled.TileSpacing = "loose";
-tiled.Padding = "compact";
-
-% iterate over samples
-for sample_idx = 1:size(mean_perf, 2)
-    ax_pattern = nexttile(tiled);
-    hold on
-    set(gca, 'Color', [1 1 1])
-    set(gca,'XColor','k','YColor','k');
-    leg_patch = [];
-    leg_label = strings();
-    % iterate over patterns & plot error shade
-    for pattern = 1:size(all_resp_mat_patterns, 2)
-        % sort numerosities in ascending order
-        [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
-        error_up = squeeze(sem_perf(2, pattern, sample_idx, :));
-        error_down = squeeze(sem_perf(3, pattern, sample_idx, :));
-        error = squeeze(sem_perf(1, pattern, sample_idx, :));
-        values = squeeze(mean_perf(pattern, sample_idx, :));
-        % Plot Error shading
-        err = errorbar(nums_sort, values(sort_idx), error(sort_idx));
-        err.Color = colours_pattern{pattern};
-    end
-    for pattern = 1:size(all_resp_mat_patterns, 2)
-        % sort numerosities in ascending order
-        [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
-        error_up = squeeze(sem_perf(2, pattern, sample_idx, :));
-        error_down = squeeze(sem_perf(3, pattern, sample_idx, :));
-        values = squeeze(mean_perf(pattern, sample_idx, :));
-        % plot mean line
-        plot_pattern = plot(nums_sort, ...
-            values(sort_idx));
         plot_pattern.Color = colours_pattern{pattern};
-        plot_pattern.LineStyle = "-";
-        plot_pattern.LineWidth = 2;
-        plot_pattern.Marker = "o";
         plot_pattern.MarkerFaceColor = colours_pattern{pattern};
         plot_pattern.MarkerEdgeColor = "none";
-        plot_pattern.DisplayName = string(patterns{current_exp}{pattern});
+        
         % for legend
         leg_patch(end + 1) = plot_pattern;
-        leg_label(pattern) = string(patterns{current_exp}{pattern});
+        leg_label(pattern) = patterns{curr_exp}(pattern);
+
+        % Subfigure Adjustments
+        ylim([-0.1 1.1])
+        xlim([2.9 7.1])
+        xticks(numerosities(:, 1))
+        xticklabels(num2str(numerosities(:, 1)))
+        xlabel("Sample", "FontSize", plot_font)
+        ylabel("Response Frequency", "FontSize", plot_font)
+        hold off
     end
-    ylim([-0.1 1.1])
-    xlim([1.9 10.1])
-    hold off
+    % Add legend
+    leg = legend(leg_patch, leg_label);
+    leg.Location = "bestoutside";
+    leg.Box = "off";
+    leg.TextColor = "k";
+    leg.FontSize = plot_font;
+    title(leg, 'Pattern', 'FontSize', plot_font)
 
+    % figure title
+    title(['Mean Performance of ' who_analysis{curr_who}(1:end-1) ', with ' error_plot{er}], 'FontSize', plot_font, 'Color', 'k')
+
+    % save figure
+    fig1.Renderer = "painters";
+    fig_name = ['avg_perf_' who_analysis{curr_who}(1:end-1) '_' error_plot{er} '.' format];
+    saveas(fig1, [figure_path, fig_name], format)
 end
 
-% create legend
-leg = legend(leg_patch, leg_label);
-leg.Location = "bestoutside";
-leg.Box = "off";
-leg.TextColor = "k";
-
-% Save figure
-fig2.Renderer = "painters";
-fig_name = 'Mean_SEM_humans_all_patterns_each_num.png';
-saveas(fig2, [figure_path, fig_name], 'png')
-
-shg
-
-
-%% Figure: Mean performances for each Sample & Pattern
-set(0,'defaultfigurecolor',[1 1 1])
-
-fig3 = figure();
-set(gcf,'Color',[1 1 1])
-hold on
-set(gca, 'Color', [1 1 1])
-set(gca,'XColor','k','YColor','k');
-leg_patch = [];
-leg_label = strings();
-
-% Plot Error Shade
-error_down = squeeze(avg_sem_perf(3, :, :));
-error_up = squeeze(avg_sem_perf(2, :, :));
-error = squeeze(avg_sem_perf(1, :, :));
-% iterate over patterns
-for pattern = 1:size(all_resp_mat_patterns, 2)
-    err = errorbar(numerosities(:, 1), avg_mean_perf(pattern, :), error(pattern, :));
-    err.Color = colours_pattern{pattern};
-end
-
-% Plot Mean Performance
-% iterate over patterns
-for pattern = 1:size(all_resp_mat_patterns, 2)
-    plot_pattern = plot(numerosities(:, 1), avg_mean_perf(pattern, :));
-    plot_pattern.Color = colours_pattern{pattern};
-    plot_pattern.LineStyle = "-";
-    plot_pattern.LineWidth = 2;
-    plot_pattern.Marker = "o";
-    plot_pattern.MarkerFaceColor = colours_pattern{pattern};
-    plot_pattern.MarkerEdgeColor = "none";
-    plot_pattern.DisplayName = string(patterns{current_exp}{pattern});
-    % for legend
-    leg_patch(end + 1) = plot_pattern;
-    leg_label(pattern) = string(patterns{current_exp}{pattern});
-end
-
-
-% create legend
-leg = legend(leg_patch, leg_label);
-leg.Location = "bestoutside";
-leg.TextColor = "k";
-leg.Box = "off";
-ylim([-0.1 1.1])
-xlim([3 7])
-hold off
-
-% Save figure
-fig3.Renderer = "painters";
-fig_name = 'Mean_SEM_humans_avg_performance.png';
-saveas(fig3, [figure_path, fig_name], 'png')
-
-shg
-
-
-%% repeat all of this shit but make it with error balken statt shade
