@@ -33,7 +33,7 @@ to_correct = true; % if response matrices shall be corrected
 colours_pattern = {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; [0.1211 0.5195 0.6289]};
 colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...
     [0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; [0.6350 0.0780 0.1840]};
-format = 'png';
+format = 'svg';
 error_plot = {'STD'; 'SEM'};
 plot_font = 12;
 
@@ -156,7 +156,7 @@ for idx = 1:length(names_rsp)
 
             % concat RTs for all test numbers for current subject/session,
             % pattern & sample
-            RT_test_nums = [reaction_times{idx, pattern, sample_idx, :}];
+            RT_test_nums = vertcat(reaction_times{idx, pattern, sample_idx, :});
 
             % calculate overall performance/RT for current sample in current pattern & subject/session
             mean_perf_s(idx, pattern, sample_idx) = ...
@@ -189,24 +189,24 @@ for pattern = 1:length(patterns{curr_exp})
     for sample_idx = 1:size(numerosities, 1)
         % concat RTs for all test numbers & subject/session, for each
         % pattern & sample
-        RT_test_nums_s = [reaction_times{:, pattern, sample_idx, :}];
+        RT_test_nums = vertcat(reaction_times{:, pattern, sample_idx, :});
 
         % calculate average over subjects/sessions & test numbers
         mean_perf(pattern, sample_idx) = ...
             mean(performances(:, pattern, sample_idx, :), "all");
         mean_RT(pattern, sample_idx) = ...
-            mean(RT_test_nums_s, "omitnan");
+            mean(RT_test_nums, "omitnan");
         % calculate corresponding error: STD
         error_perf(1, pattern, sample_idx) = ...
     		std(performances(:, pattern, sample_idx, :), [], "all");
         error_RT(1, pattern, sample_idx) = ...
-            std(RT_test_nums_s, [], "omitnan");
+            std(RT_test_nums, [], "omitnan");
     	% calculate corresponding error: SEM
     	error_perf(2, pattern, sample_idx) = ...
     		std(performances(:, pattern, sample_idx, :), [], "all") ...
     		/ sqrt(numel(performances(:, pattern, sample_idx, :)));
         error_RT(2, pattern, sample_idx) = ...
-            std(RT_test_nums_s, [], "omitnan") / sqrt(numel(RT_test_nums_s));
+            std(RT_test_nums, [], "omitnan") / sqrt(numel(RT_test_nums));
     end
 end
 
@@ -215,16 +215,19 @@ end
 % pre allocation
 
 % Mean Performance for Each Pattern
-set(0, 'defaultfigurecolor', [1 1 1])
-
+set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
 
 
 
 
 % plot STD & SEM
 for er = 1:length(error_plot)
-    fig1 = figure();
-    set(gcf, 'Color', [1 1 1])
+    fig1 = figure('Name', ...
+        [who_analysis{curr_who}(1:end-1) '_exp_' num2str(curr_exp)]);
+    set(gcf, 'Color', [1 1 1])  % set figure background to white (again)
+    % change figure size
+    pos = get(gcf, 'Position');
+    set(gcf, 'PaperPosition', [pos(1) pos(2) pos(3)/2 pos(4)/2])
 
     % pre allocation
     leg_patch = [];
