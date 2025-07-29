@@ -375,7 +375,6 @@ for er = 1:length(error_plot)
         set(gca, 'XColor', 'k', 'YColor', 'k')
 
         % plot error
-
         err_plot = errorbar(numerosities(:, 1)', mean_RT(pattern, :), ...
             squeeze(error_RT(er, pattern, :)), squeeze(error_RT(er, pattern, :)));
         err_plot.Color = colours_pattern{pattern};
@@ -566,13 +565,14 @@ for er = 1:length(error_plot)
     set(gcf, 'Color', [1 1 1])  % set figure background to white (again)
     % change figure size
     set(gcf, 'PaperUnits', 'points')
-    set(gcf, 'PaperPosition', [plot_pos(1) plot_pos(2) plot_pos(3)*3.5 plot_pos(4)/2])
+    set(gcf, 'PaperPosition', [plot_pos(1) plot_pos(2) plot_pos(3)*1.5 plot_pos(4)/2])
 
     % set subplots
-    tiled = tiledlayout(1, 5, "TileSpacing", "compact");
+    tiled = tiledlayout(1, 5, "TileSpacing", "tight");
     % pre allocation
     leg_patch = [];
     leg_label = strings();
+    axs_storage = {};
 
     % iterate over samples/subplots
     for sample_idx = 1:size(numerosities, 1)
@@ -611,31 +611,297 @@ for er = 1:length(error_plot)
             % for legend
             leg_patch(end + 1) = plot_pattern;
             leg_label(pattern) = patterns{curr_exp}(pattern);
-
-            % Subfigure Adjustments
-            ylim([-0.1 1.1])
-            xlim([1.9 10.1])
-            xticks(min(numerosities, [], "all"):1:max(numerosities, [], "all"))
-            xticklabels(num2str(min(numerosities, [], "all"):1:max(numerosities, [], "all")))
-            xlabel("Sample Numerosity", "FontSize", plot_font)
-            ylabel("Response Latency [ms]", "FontSize", plot_font)
-            hold off
         end
+        % Subfigure Adjustments
+        ylim([-0.1 1.1])
+        xlim([1.9 10.1])
+        xticks(min(numerosities, [], "all"):1:max(numerosities, [], "all"))
+        yticklabels([])
+        
+        axs_storage{sample_idx} = ax;
+        hold off
     end
     % Add legend
-    leg = legend(leg_patch, leg_label);
+    leg = legend(axs_storage{5}, leg_patch, leg_label);
     leg.Location = "bestoutside";
     leg.Box = "off";
     leg.TextColor = "k";
     leg.FontSize = plot_font;
     title(leg, 'Pattern', 'FontSize', plot_font)
 
+    % over all figure adjustments
     % figure title
-    title(['Mean Performance of ' who_analysis{curr_who}(1:end-1) ', Exp ' num2str(curr_exp) ', with ' error_plot{er}], 'FontSize', plot_font, 'Color', 'k')
+    title(axs_storage{3}, ['Mean Performance of ' who_analysis{curr_who}(1:end-1) ', Exp ' num2str(curr_exp) ', with ' error_plot{er}], 'FontSize', plot_font, 'Color', 'k')
+    % ylabel
+    ylabel(axs_storage{1}, "Performance", "FontSize", plot_font)
+    yticklabels(axs_storage{1}, num2str((0:0.2:1)'))
+    % xlabel
+    xlabel(axs_storage{3}, "Sample Numerosity", "FontSize", plot_font)
 
     % save figure
     fig5.Renderer = "painters";
-    fig_name = ['mean_perf_sample_' who_analysis{curr_who}(1:end-1) '_exp' num2str(curr_exp) '_CI.' format];
+    fig_name = ['mean_perf_sample_' who_analysis{curr_who}(1:end-1) '_exp' num2str(curr_exp) '_' error_plot{er} '.' format];
     saveas(fig5, [figure_path, fig_name], format)
-
 end
+
+% Mean Response Latency for each Pattern
+set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
+
+% plot STD & SEM
+for er = 1:length(error_plot)
+    fig6 = figure('Name', ...
+        [who_analysis{curr_who}(1:end-1) '_exp_' num2str(curr_exp)]);
+    set(gcf, 'Color', [1 1 1])  % set figure background to white (again)
+    % change figure size
+    set(gcf, 'PaperUnits', 'points')
+    set(gcf, 'PaperPosition', [plot_pos(1) plot_pos(2) plot_pos(3)*1.5 plot_pos(4)/2])
+
+    % set subplots
+    tiled = tiledlayout(1, 5, "TileSpacing", "tight");
+    % pre allocation
+    leg_patch = [];
+    leg_label = strings();
+    axs_storage = {};
+
+    % iterate over samples/subplots
+    for sample_idx = 1:size(numerosities, 1)
+        ax = nexttile;
+        % sort numerosities in ascending order 
+        [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
+        
+        % iterate over patterns
+        for pattern = 1:length(patterns{curr_exp})
+            hold on
+            set(gca, 'Color', [1 1 1])
+            set(gca, 'XColor', 'k', 'YColor', 'k')
+
+            % set values to plot
+            values = squeeze(mean_RT_s(pattern, sample_idx, :));
+            values = values(sort_idx);
+            er_values = squeeze(error_RT_s(er, pattern, sample_idx, :));
+            er_values = er_values(sort_idx);
+
+            % plot error
+            err_plot = errorbar(nums_sort, values, ...
+                er_values, er_values);
+            err_plot.Color = colours_pattern{pattern};
+            err_plot.CapSize = 5;
+            err_plot.LineWidth = 1;
+
+            % plot avg RT
+            plot_pattern = plot(nums_sort, values);
+            plot_pattern.LineStyle = "-";
+            plot_pattern.LineWidth = 1;
+            plot_pattern.Marker = "o";
+            plot_pattern.Color = colours_pattern{pattern};
+            plot_pattern.MarkerFaceColor = colours_pattern{pattern};
+            plot_pattern.MarkerEdgeColor = "none";
+
+            % for legend
+            leg_patch(end + 1) = plot_pattern;
+            leg_label(pattern) = patterns{curr_exp}(pattern);
+        end
+        % Subfigure Adjustments
+        ylim([200 600])
+        xlim([1.9 10.1])
+        xticks(min(numerosities, [], "all"):1:max(numerosities, [], "all"))
+        yticklabels([])
+        
+        axs_storage{sample_idx} = ax;
+        hold off
+    end
+    % Add legend
+    leg = legend(axs_storage{5}, leg_patch, leg_label);
+    leg.Location = "bestoutside";
+    leg.Box = "off";
+    leg.TextColor = "k";
+    leg.FontSize = plot_font;
+    title(leg, 'Pattern', 'FontSize', plot_font)
+
+    % over all figure adjustments
+    % figure title
+    title(axs_storage{3}, ['Mean Response Latency of ' who_analysis{curr_who}(1:end-1) ', Exp ' num2str(curr_exp) ', with ' error_plot{er}], 'FontSize', plot_font, 'Color', 'k')
+    % ylabel
+    ylabel(axs_storage{1}, "Response Latency [ms]", "FontSize", plot_font)
+    yticklabels(axs_storage{1}, num2str((0:0.2:1)'))
+    % xlabel
+    xlabel(axs_storage{3}, "Sample Numerosity", "FontSize", plot_font)
+
+    % save figure
+    fig6.Renderer = "painters";
+    fig_name = ['mean_RT_sample_' who_analysis{curr_who}(1:end-1) '_exp' num2str(curr_exp) '_' error_plot{er} '.' format];
+    saveas(fig6, [figure_path, fig_name], format)
+end
+
+% Median Response Latency with STD/ Confidence Interval
+set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
+
+% plot STD
+fig7 = figure('Name', ...
+    [who_analysis{curr_who}(1:end-1) '_exp_' num2str(curr_exp)]);
+set(gcf, 'Color', [1 1 1])  % set figure background to white (again)
+% change figure size
+set(gcf, 'PaperUnits', 'points')
+set(gcf, 'PaperPosition', [plot_pos(1) plot_pos(2) plot_pos(3)*1.5 plot_pos(4)/2])
+
+% set subplots
+tiled = tiledlayout(1, 5, "TileSpacing", "tight");
+% pre allocation
+leg_patch = [];
+leg_label = strings();
+axs_storage = {};
+
+% iterate over samples/subplots
+for sample_idx = 1:size(numerosities, 1)
+    ax = nexttile;
+    % sort numerosities in ascending order
+    [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
+
+    % iterate over patterns
+    for pattern = 1:length(patterns{curr_exp})
+        hold on
+        set(gca, 'Color', [1 1 1])
+        set(gca, 'XColor', 'k', 'YColor', 'k')
+
+        % set values to plot
+        values = squeeze(median_RT_s(pattern, sample_idx, :));
+        values = values(sort_idx);
+        er_values = squeeze(bootstrap_sem_s(1, pattern, sample_idx, :));
+        er_values = er_values(sort_idx);
+
+        % plot error
+        err_plot = errorbar(nums_sort, values, ...
+            er_values, er_values);
+        err_plot.Color = colours_pattern{pattern};
+        err_plot.CapSize = 5;
+        err_plot.LineWidth = 1;
+
+        % plot avg RT
+        plot_pattern = plot(nums_sort, values);
+        plot_pattern.LineStyle = "-";
+        plot_pattern.LineWidth = 1;
+        plot_pattern.Marker = "o";
+        plot_pattern.Color = colours_pattern{pattern};
+        plot_pattern.MarkerFaceColor = colours_pattern{pattern};
+        plot_pattern.MarkerEdgeColor = "none";
+
+        % for legend
+        leg_patch(end + 1) = plot_pattern;
+        leg_label(pattern) = patterns{curr_exp}(pattern);
+    end
+    % Subfigure Adjustments
+    ylim([200 600])
+    xlim([1.9 10.1])
+    xticks(min(numerosities, [], "all"):1:max(numerosities, [], "all"))
+    yticklabels([])
+
+    axs_storage{sample_idx} = ax;
+    hold off
+end
+% Add legend
+leg = legend(axs_storage{5}, leg_patch, leg_label);
+leg.Location = "bestoutside";
+leg.Box = "off";
+leg.TextColor = "k";
+leg.FontSize = plot_font;
+title(leg, 'Pattern', 'FontSize', plot_font)
+
+% over all figure adjustments
+% figure title
+title(axs_storage{3}, ['Median Response Latency of ' who_analysis{curr_who}(1:end-1) ', Exp ' num2str(curr_exp) ', with STD'], 'FontSize', plot_font, 'Color', 'k')
+% ylabel
+ylabel(axs_storage{1}, "Response Latency [ms]", "FontSize", plot_font)
+yticklabels(axs_storage{1}, num2str((0:0.2:1)'))
+% xlabel
+xlabel(axs_storage{3}, "Sample Numerosity", "FontSize", plot_font)
+
+% save figure
+fig7.Renderer = "painters";
+fig_name = ['median_RT_' who_analysis{curr_who}(1:end-1) '_exp' num2str(curr_exp) '_STD.' format];
+saveas(fig7, [figure_path, fig_name], format)
+
+% plot Confidence Interval
+fig8 = figure('Name', ...
+    [who_analysis{curr_who}(1:end-1) '_exp_' num2str(curr_exp)]);
+set(gcf, 'Color', [1 1 1])  % set figure background to white (again)
+% change figure size
+set(gcf, 'PaperUnits', 'points')
+set(gcf, 'PaperPosition', [plot_pos(1) plot_pos(2) plot_pos(3)*1.5 plot_pos(4)/2])
+
+% set subplots
+tiled = tiledlayout(1, 5, "TileSpacing", "tight");
+% pre allocation
+leg_patch = [];
+leg_label = strings();
+axs_storage = {};
+
+% iterate over samples/subplots
+for sample_idx = 1:size(numerosities, 1)
+    ax = nexttile;
+    % sort numerosities in ascending order
+    [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
+
+    % iterate over patterns
+    for pattern = 1:length(patterns{curr_exp})
+        hold on
+        set(gca, 'Color', [1 1 1])
+        set(gca, 'XColor', 'k', 'YColor', 'k')
+
+        % set values to plot
+        values = squeeze(median_RT_s(pattern, sample_idx, :));
+        values = values(sort_idx);
+        er_values_low = squeeze(bootstrap_sem_s(2, pattern, sample_idx, :));
+        er_values_low = er_values_low(sort_idx);
+        er_values_up = squeeze(bootstrap_sem_s(3, pattern, sample_idx, :));
+        er_values_up = er_values_up(sort_idx);
+
+        % plot error
+        err_plot = errorbar(nums_sort, values, ...
+            er_values_low, er_values_up);
+        err_plot.Color = colours_pattern{pattern};
+        err_plot.CapSize = 5;
+        err_plot.LineWidth = 1;
+
+        % plot avg RT
+        plot_pattern = plot(nums_sort, values);
+        plot_pattern.LineStyle = "-";
+        plot_pattern.LineWidth = 1;
+        plot_pattern.Marker = "o";
+        plot_pattern.Color = colours_pattern{pattern};
+        plot_pattern.MarkerFaceColor = colours_pattern{pattern};
+        plot_pattern.MarkerEdgeColor = "none";
+
+        % for legend
+        leg_patch(end + 1) = plot_pattern;
+        leg_label(pattern) = patterns{curr_exp}(pattern);
+    end
+    % Subfigure Adjustments
+    ylim([200 600])
+    xlim([1.9 10.1])
+    xticks(min(numerosities, [], "all"):1:max(numerosities, [], "all"))
+    yticklabels([])
+
+    axs_storage{sample_idx} = ax;
+    hold off
+end
+% Add legend
+leg = legend(axs_storage{5}, leg_patch, leg_label);
+leg.Location = "bestoutside";
+leg.Box = "off";
+leg.TextColor = "k";
+leg.FontSize = plot_font;
+title(leg, 'Pattern', 'FontSize', plot_font)
+
+% over all figure adjustments
+% figure title
+title(axs_storage{3}, ['Median Response Latency of ' who_analysis{curr_who}(1:end-1) ', Exp ' num2str(curr_exp) ', with 95% CI'], 'FontSize', plot_font, 'Color', 'k')
+% ylabel
+ylabel(axs_storage{1}, "Response Latency [ms]", "FontSize", plot_font)
+yticklabels(axs_storage{1}, num2str((0:0.2:1)'))
+% xlabel
+xlabel(axs_storage{3}, "Sample Numerosity", "FontSize", plot_font)
+
+% save figure
+fig8.Renderer = "painters";
+fig_name = ['median_RT_' who_analysis{curr_who}(1:end-1) '_exp' num2str(curr_exp) '_CI.' format];
+saveas(fig8, [figure_path, fig_name], format)
