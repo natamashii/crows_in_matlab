@@ -17,15 +17,15 @@ rsp_mat_folderpath = [base_path, 'response_matrices\'];
 rsp_time_folderpath = [base_path, 'response_latencies\'];
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
-curr_who = 1;    % set who to analyze
-curr_exp = 2;    % set which experiment to analyze
+curr_who = 3;    % set who to analyze
+curr_exp = 1;    % set which experiment to analyze
 
 % all numerosities relevant
 numerosities = [3, 4, 5, 6, 7; % sample
     2, 2, 3, 3, 3;  % test 1 numbers
     5, 6, 7, 4, 4;  % test 2 numbers
     6, 7, 8, 9, 10]';  % test 3 numbers
-patterns = {{'P1', 'P2', 'P3', 'PR'}, {'P1', 'P2', 'P3'}};
+patterns = {{'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}};
 
 to_save = true; % if result shall be saved
 to_correct = true; % if response matrices shall be corrected
@@ -35,18 +35,18 @@ colours_pattern = {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; [0.1211 0.519
 colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...
     [0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; [0.6350 0.0780 0.1840]};
 format = 'svg';
-error_plot = {'STD'; 'SEM'};
+error_plot = {{{'STD'; 'SEM'}, [-0.1 1.1], 'Performance', 'perf', 'Mean'; 
+    {'STD'; 'SEM'}, [200 600], 'Response Latency [ms]', 'RT', 'Mean'};
+    {{'STD'; 'CI'}, [-0.1 1.1], 'Performance', 'perf', 'Median'; 
+    {'STD'; 'CI'}, [200 600], 'Response Latency [ms]', 'RT', 'Median'}};
 plot_font = 12;
 plot_pos = [451, 259, 1146, 690];   % default PaperPosition size of figure
-
 
 n_boot = 10000;
 confidence_level = 0.95;      % For a 95% CI
 alpha = 1 - confidence_level;
 lower_percentile = alpha / 2;
 upper_percentile = (1 - alpha / 2);
-
-
 
 %% Correct Response Matrix
 if to_correct
@@ -82,6 +82,7 @@ if to_correct
         end
     end
 end
+
 
 %% Sum Average Performance for each Pattern
 % Get Data: Response Matrices
@@ -124,12 +125,16 @@ mean_RT = zeros(length(patterns{curr_exp}), size(numerosities, 1));
 error_perf = zeros(2, length(patterns{curr_exp}), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
 error_RT = zeros(2, length(patterns{curr_exp}), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
 
-
+% median & error over subjects/sessions, for each test number, pattern, sample
+median_perf = zeros(length(patterns{curr_exp}), size(numerosities, 1));
+median_perf_s = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+bootstrap_sem_perf = zeros(3, length(patterns{curr_exp}), size(numerosities, 1));
+bootstrap_sem_perf_s = zeros(3, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
 
 median_RT = zeros(length(patterns{curr_exp}), size(numerosities, 1));
 median_RT_s = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
-bootstrap_sem = zeros(3, length(patterns{curr_exp}), size(numerosities, 1));
-bootstrap_sem_s = zeros(3, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+bootstrap_sem_RT = zeros(3, length(patterns{curr_exp}), size(numerosities, 1));
+bootstrap_sem_RT_s = zeros(3, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
 
 % iterate over all files
 for idx = 1:length(names_rsp)
@@ -149,7 +154,6 @@ for idx = 1:length(names_rsp)
 
             % iterate over test numbers
             for test_idx = 1:size(numerosities, 2)
-                % DEBUG
                 curr_trials = curr_resp(curr_resp(:, 2) == pattern & ...
                     curr_resp(:, 3) == rel_nums(1) & ... 
                     curr_resp(:, 6) == rel_nums(test_idx), :);
@@ -180,7 +184,6 @@ end
 
 % iterate over patterns
 for pattern = 1:length(patterns{curr_exp})
-
     % iterate over samples
     for sample_idx = 1:size(numerosities, 1)
         % concat RTs for all test numbers & subject/session, for each
@@ -190,6 +193,8 @@ for pattern = 1:length(patterns{curr_exp})
         % calculate average over subjects/sessions & test numbers
         mean_perf(pattern, sample_idx) = ...
             mean(performances(:, pattern, sample_idx, :), "all");
+        median_perf(pattern, sample_idx) = ...
+            median(performances(:, pattern, sample_idx, :), "all");
         mean_RT(pattern, sample_idx) = ...
             mean(RT_test_nums, "omitnan");
         median_RT(pattern, sample_idx) = ...
@@ -204,31 +209,41 @@ for pattern = 1:length(patterns{curr_exp})
     		std(performances(:, pattern, sample_idx, :), [], "all") ...
     		/ sqrt(numel(performances(:, pattern, sample_idx, :)));
         error_RT(2, pattern, sample_idx) = ...
-            std(RT_test_nums, [], "omitnan") / sqrt(numel(RT_test_nums));
+            std(RT_test_nums, [], "omitnan") / sqrt(sum(~isnan(RT_test_nums)));
 
         % add bootstrap
-        bootstrap_median = zeros(n_boot, 1);
+        bootstrap_median_RT = zeros(n_boot, 1);
+        bootstrap_median_perf = zeros(n_boot, 1);
         % resample n-th times
         for b_idx = 1:n_boot
             % generate random indices
-            resample_idx = randi(length(RT_test_nums), length(RT_test_nums), 1);
+            resample_idx_RT = randi(length(RT_test_nums), length(RT_test_nums), 1);
+            resample_idx_perf = randi(numel(performances(:, pattern, sample_idx, :)), ...
+                numel(performances(:, pattern, sample_idx, :)), 1);
 
             % make bootstrap sample
-            bootstrap_sample = RT_test_nums(resample_idx);
+            bootstrap_sample_RT = RT_test_nums(resample_idx_RT);
+            bootstrap_sample_perf = performances(resample_idx_perf);
 
             % calculate median of current bootstrap sample
-            bootstrap_median(b_idx) = median(bootstrap_sample);
+            bootstrap_median_RT(b_idx) = median(bootstrap_sample_RT, "omitnan");
+            bootstrap_median_perf(b_idx) = median(bootstrap_sample_perf, "omitnan");
         end
         % bootstrap statistics
-        bootstrap_sem(1, pattern, sample_idx) = std(bootstrap_median);
+        bootstrap_sem_perf(1, pattern, sample_idx) = std(bootstrap_median_perf);
+        bootstrap_sem_RT(1, pattern, sample_idx) = std(bootstrap_median_RT);
 
         % confidence interval
-        sorted_bootstrap_median = sort(bootstrap_median);   % sort the shit
-        bootstrap_sem(2, pattern, sample_idx) = median_RT(pattern, sample_idx) - ...
-            prctile(sorted_bootstrap_median, lower_percentile);
-        bootstrap_sem(3, pattern, sample_idx) = median_RT(pattern, sample_idx) - ... 
-            prctile(sorted_bootstrap_median, upper_percentile);
-
+        sorted_bootstrap_median_RT = sort(bootstrap_median_RT);   % sort the shit
+        sorted_bootstrap_median_perf = sort(bootstrap_median_perf);
+        bootstrap_sem_RT(2, pattern, sample_idx) = median_RT(pattern, sample_idx) - ...
+            prctile(sorted_bootstrap_median_RT, lower_percentile);
+        bootstrap_sem_RT(3, pattern, sample_idx) = median_RT(pattern, sample_idx) - ... 
+            prctile(sorted_bootstrap_median_RT, upper_percentile);
+        bootstrap_sem_perf(2, pattern, sample_idx) = median_perf(pattern, sample_idx) - ...
+            prctile(sorted_bootstrap_median_perf, lower_percentile);
+        bootstrap_sem_perf(3, pattern, sample_idx) = median_perf(pattern, sample_idx) - ...
+            prctile(sorted_bootstrap_median_perf, upper_percentile);
         
         % iterate over test numbers
         for test_idx = 1:size(numerosities, 2)
@@ -241,6 +256,8 @@ for pattern = 1:length(patterns{curr_exp})
                 mean(performances(:, pattern, sample_idx, test_idx), "all");
             mean_RT_s(pattern, sample_idx, test_idx) = ...
                 mean(RT_test_nums, "omitnan");
+            median_perf_s(pattern, sample_idx, test_idx) = ...
+                median(performances(:, pattern, sample_idx, test_idx), "all");
             median_RT_s(pattern, sample_idx, test_idx) = ...
                 median(RT_test_nums, "omitnan");
             % calculate corresponding error: STD
@@ -253,81 +270,227 @@ for pattern = 1:length(patterns{curr_exp})
         		std(performances(:, pattern, sample_idx, test_idx), [], "all") ...
         		/ sqrt(numel(performances(:, pattern, sample_idx, test_idx)));
             error_RT_s(2, pattern, sample_idx, test_idx) = ...
-                std(RT_test_nums, [], "omitnan") / sqrt(numel(RT_test_nums));
+                std(RT_test_nums, [], "omitnan") / sqrt(sum(~isnan(RT_test_nums)));
 
             % add bootstrap
-            bootstrap_median = zeros(n_boot, 1);
+            bootstrap_median_RT = zeros(n_boot, 1);
+            bootstrap_median_perf = zeros(n_boot, 1);
+
             % resample n-th times
             for b_idx = 1:n_boot
                 % generate random indices
-                resample_idx = randi(length(RT_test_nums), length(RT_test_nums), 1);
+                resample_idx_RT = randi(length(RT_test_nums), length(RT_test_nums), 1);
+                resample_idx_perf = randi(numel(performances(:, pattern, sample_idx, test_idx)), ...
+                    numel(performances(:, pattern, sample_idx, test_idx)), 1);
 
                 % make bootstrap sample
-                bootstrap_sample = RT_test_nums(resample_idx);
+                bootstrap_sample_RT = RT_test_nums(resample_idx_RT);
+                bootstrap_sample_perf = performances(resample_idx_perf);
 
                 % calculate median of current bootstrap sample
-                bootstrap_median(b_idx) = median(bootstrap_sample);
+                bootstrap_median_RT(b_idx) = median(bootstrap_sample_RT, "omitnan");
+                bootstrap_median_perf(b_idx) = median(bootstrap_median_perf, "omitnan");
             end
             % bootstrap statistics
-            bootstrap_sem_s(1, pattern, sample_idx, test_idx) = std(bootstrap_median);
+            bootstrap_sem_RT_s(1, pattern, sample_idx, test_idx) = std(bootstrap_median_RT, [], "omitnan");
+            bootstrap_sem_perf_s(1, pattern, sample_idx, test_idx) = std(bootstrap_median_perf, [], "omitnan");
 
             % confidence interval
-            sorted_bootstrap_median = sort(bootstrap_median);   % sort the shit
-            bootstrap_sem_s(2, pattern, sample_idx, test_idx) = median_RT_s(pattern, sample_idx, test_idx) - ...
-                prctile(sorted_bootstrap_median, lower_percentile);
-            bootstrap_sem_s(3, pattern, sample_idx, test_idx) = median_RT_s(pattern, sample_idx, test_idx) - ...
-                prctile(sorted_bootstrap_median, upper_percentile);
-
+            sorted_bootstrap_median_RT = sort(bootstrap_median_RT);   % sort the shit
+            sorted_bootstrap_median_perf = sort(bootstrap_median_perf);
+            bootstrap_sem_RT_s(2, pattern, sample_idx, test_idx) = ...
+                median_RT_s(pattern, sample_idx, test_idx) - ...
+                prctile(sorted_bootstrap_median_RT, lower_percentile);
+            bootstrap_sem_RT_s(3, pattern, sample_idx, test_idx) = ...
+                median_RT_s(pattern, sample_idx, test_idx) - ...
+                prctile(sorted_bootstrap_median_RT, upper_percentile);
+            bootstrap_sem_perf_s(2, pattern, sample_idx, test_idx) = ...
+                median_perf_s(pattern, sample_idx, test_idx) - ...
+                prctile(sorted_bootstrap_median_perf, lower_percentile);
+            bootstrap_sem_perf_s(3, pattern, sample_idx, test_idx) = ...
+                median_perf_s(pattern, sample_idx, test_idx) - ...
+                prctile(sorted_bootstrap_median_perf, upper_percentile);
         end
-
     end
 end
 
-%% Plot
+%% Plot: Correct Trials Match & Non-Match TOGETHER
 set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
 
 % pre definition
+values = {mean_perf, median_perf; mean_RT, median_RT};
+% cols: mean/median, rows: performance/RT
+error_values = {{error_perf(1, :, :), error_perf(1, :, :); ...
+    error_perf(2, :, :), error_perf(2, :, :)}, ...
+    {bootstrap_sem_perf(1, :, :), bootstrap_sem_perf(1, :, :); ...
+    bootstrap_sem_perf(2, :, :), bootstrap_sem_perf(3, :, :)};
+    {error_RT(1, :, :), error_RT(1, :, :); ...
+    error_RT(2, :, :), error_RT(2, :, :)}, ...
+    {bootstrap_sem_RT(1, :, :), bootstrap_sem_RT(1, :, :); ...
+    bootstrap_sem_RT(2, :, :), bootstrap_sem_RT(3, :, :)}};
 
+% mean or median
+for m = 1:length(error_plot)
+    % performance or response latency
+    for p = 1:size(error_plot{m}, 1)
+        % error type
+        for er = 1:size(error_plot{m}{p, 1}, 1)
+            fig = figure();
+            % Figure Adjustments
+            set(gcf, 'Color', [1 1 1])  % set figure background to white (again)
+            % change figure size
+            set(gcf, 'PaperUnits', 'points')
+            set(gcf, 'PaperPosition', [plot_pos(1) plot_pos(2) plot_pos(3)/2 plot_pos(4)/2])
+            % figure title
+            fig_title = title([error_plot{m}{p, 5} ' ' ...
+                char(error_plot{m}{p, 3}) ...
+                ' of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
+                num2str(curr_exp) ', with ' char(error_plot{m}{p, 1}{er})]);
+            fig_title.FontSize = plot_font;
+            fig_title.Color = "k";
+            
+            % create subplot
+            [ax, leg_patch, leg_label] = plot_first(numerosities(:, 1)', ...
+                values{p, m}, ...
+                squeeze(error_values{p, m}{er, 1}), ...
+                squeeze(error_values{p, m}{er, 2}), ...
+                patterns, curr_exp, colours_pattern, plot_font);
 
-% Mean Performance for Each Pattern with STD
+            % Subplot Adjustments
+            ax.YLim = error_plot{m}{p, 2};
+            ylabel(ax, error_plot{m}{p, 3});
 
-fig = figure();
+            % Add Legend
+            leg = legend(leg_patch, leg_label);
+            leg.Location = "bestoutside";
+            leg.Box = "off";
+            leg.TextColor = "k";
+            leg.FontSize = plot_font;
+            title(leg, 'Pattern', 'FontSize', plot_font)
 
-[ax, leg_patch, leg_label] = plot_first(numerosities(:, 1)', mean_perf, ...
-    squeeze(error_perf(1, :, :)), squeeze(error_perf(1, :, :)), ...
-    patterns, curr_exp, colours_pattern, plot_font);
+            % save figure
+            fig.Renderer = "painters";
+            fig_name = [error_plot{m}{p, 5}, '_' error_plot{m}{p, 4} ...
+                '_' who_analysis{curr_who}(1:end-1) '_exp' ...
+                num2str(curr_exp) '_' char(error_plot{m}{p, 1}{er}) '.' format];
+                saveas(fig, [figure_path, fig_name], format)
 
-% Subplot Adjustments
-ax.YLim = [-0.1 1.1];
-ax.XLim = [2.9 7.1];
-ax.XTick = numerosities(:, 1);
-ax.XTickLabel = num2str(numerosities(:, 1));
-ax.XLabel = "Sample Numerosity";
-ax.XLabel.FontSize = plot_font;
-ax.YLabel = "Performance";
-ax.YLabel.FontSize = plot_font;
+        end
+    end
+end
 
-% Add Legend
-leg = legend(leg_patch, leg_label);
-leg.Location = "bestoutside";
-leg.Box = "off";
-leg.TextColor = "k";
-leg.FontSize = plot_font;
-title(leg, 'Pattern', 'FontSize', plot_font)
+%% Plot: Correct Trials Match & Non-Match INDIVIDUALLY
 
-% Figure Adjustments        TO FUNCTION
-set(gcf, 'Color', [1 1 1])  % set figure background to white (again)
-% change figure size
-set(gcf, 'PaperUnits', 'points')
-set(gcf, 'PaperPosition', [plot_pos(1) plot_pos(2) plot_pos(3)/2 plot_pos(4)/2])
-% figure title
-fig_title = title(['Mean Performance of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
-    num2str(curr_exp) ', with ' error_plot{er}]);
-fig_title.FontSize = plot_font;
-fig_title.Color = "k";
+set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
 
-% save figure
-fig.Renderer = "painters";
-fig_name = ['mean_perf_' who_analysis{curr_who}(1:end-1) '_exp' ...
-    num2str(curr_exp) '_' error_plot{er} '.' format];
-saveas(fig, [figure_path, fig_name], format)
+% pre definition
+values = {mean_perf_s, median_perf_s; mean_RT_s, median_RT_s};
+% cols: mean/median, rows: performance/RT
+error_values = {{error_perf_s(1, :, :, :), error_perf_s(1, :, :, :); ...
+    error_perf_s(2, :, :, :), error_perf_s(2, :, :, :)}, ...
+    {bootstrap_sem_perf_s(1, :, :, :), bootstrap_sem_perf_s(1, :, :, :); ...
+    bootstrap_sem_perf_s(2, :, :, :), bootstrap_sem_perf_s(3, :, :, :)};
+    {error_RT_s(1, :, :, :), error_RT_s(1, :, :, :); ...
+    error_RT_s(2, :, :, :), error_RT_s(2, :, :, :)}, ...
+    {bootstrap_sem_RT_s(1, :, :, :), bootstrap_sem_RT_s(1, :, :, :); ...
+    bootstrap_sem_RT_s(2, :, :, :), bootstrap_sem_RT_s(3, :, :, :)}};
+
+% mean or median
+for m = 1:length(error_plot)
+    % performance or response latency
+    for p = 1:size(error_plot{m}, 1)
+        % error type
+        for er = 1:size(error_plot{m}{p, 1}, 1)
+            fig = figure();
+            tiled = tiledlayout(fig, 1, size(numerosities, 1));
+            tiled.TileSpacing = "compact";
+            tiled.Padding = "compact";
+
+            % Figure Adjustments
+            set(gcf, 'Color', [1 1 1])  % set figure background to white (again)
+            % change figure size
+            set(gcf, 'PaperUnits', 'points')
+            set(gcf, 'PaperPosition', ...
+                [plot_pos(1) plot_pos(2) plot_pos(3)*1.5 plot_pos(4)/2])
+            % figure title
+            fig_title = title(tiled, [error_plot{m}{p, 5} ' ' ...
+                char(error_plot{m}{p, 3}) ...
+                ' of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
+                num2str(curr_exp) ', with ' char(error_plot{m}{p, 1}{er})]);
+            fig_title.FontSize = plot_font;
+            fig_title.Color = "k";
+            fig_title.FontWeight = "bold";
+
+            % pre allocation
+            subplots = {};
+
+            % iterate over Samples
+            for sample_idx = 1:size(numerosities, 1)
+                nexttile(tiled);
+
+                % sort numerosities in ascending order
+                [nums_sort, sort_idx] = sort(numerosities(sample_idx, :));
+                curr_vals = squeeze(values{p, m}(:, sample_idx, :));
+                error_down = squeeze(error_values{p, m}{er, 1}(:, :, sample_idx, :));
+                error_up = squeeze(error_values{p, m}{er, 2}(:, :, sample_idx, :));
+
+                % sort the values 
+                for pattern = 1:length(patterns{curr_exp})
+                    curr_vals(pattern, :) = curr_vals(pattern, sort_idx);
+                    error_down(pattern, :) = error_down(pattern, sort_idx);
+                    error_up(pattern, :) = error_up(pattern, sort_idx);
+                end
+
+                [ax, leg_patch, leg_label] = plot_first(nums_sort, ...
+                curr_vals, error_down, error_up, ...
+                patterns, curr_exp, colours_pattern, plot_font);
+
+                % Subplot Adjustments
+                ax.YLim = error_plot{m}{p, 2};
+                ax.XTick = 2:10;
+                ax.XTickLabel = num2str((2:10)');
+                ax.XLim = [1.5 10.5];
+                xlabel(ax, 'Test Numerosity', 'FontWeight', 'bold');    % set x-axis label
+                % set Subplot Title
+                title(ax, num2str(numerosities(sample_idx, 1)), ...
+                    'FontSize', plot_font, 'FontWeight', 'bold', 'Color', 'k')
+
+                % store subplots in cell
+                subplots{sample_idx} = ax;
+            end
+            ylabel(tiled, error_plot{m}{p, 3}, 'Color', 'k', 'FontSize', plot_font, 'FontWeight', 'bold')
+
+            % Add Legend
+            leg = legend(subplots{end}, leg_patch, leg_label);
+            leg.Location = "bestoutside";
+            leg.Box = "off";
+            leg.TextColor = "k";
+            leg.FontSize = plot_font;
+            title(leg, 'Pattern', 'FontSize', plot_font)
+
+            % save figure
+            fig.Renderer = "painters";
+            fig_name = ['sample_' error_plot{m}{p, 5}, '_' ...
+                error_plot{m}{p, 4} '_' ...
+                who_analysis{curr_who}(1:end - 1) '_exp' ...
+                num2str(curr_exp) '_' char(error_plot{m}{p, 1}{er}) '.' format];
+            saveas(fig, [figure_path, fig_name], format)
+        end
+    end
+end
+
+%% Plot: Correct Trials Matches only
+
+set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
+
+% pre definition
+values = {mean_perf_s, median_perf_s; mean_RT_s, median_RT_s};
+% cols: mean/median, rows: performance/RT
+error_values = {{error_perf_s(1, :, :, :), error_perf_s(1, :, :, :); ...
+    error_perf_s(2, :, :, :), error_perf_s(2, :, :, :)}, ...
+    {bootstrap_sem_perf_s(1, :, :, :), bootstrap_sem_perf_s(1, :, :, :); ...
+    bootstrap_sem_perf_s(2, :, :, :), bootstrap_sem_perf_s(3, :, :, :)};
+    {error_RT_s(1, :, :, :), error_RT_s(1, :, :, :); ...
+    error_RT_s(2, :, :, :), error_RT_s(2, :, :, :)}, ...
+    {bootstrap_sem_RT_s(1, :, :, :), bootstrap_sem_RT_s(1, :, :, :); ...
+    bootstrap_sem_RT_s(2, :, :, :), bootstrap_sem_RT_s(3, :, :, :)}};
