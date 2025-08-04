@@ -1,46 +1,31 @@
-function ax_pretty = prettify_plot(ax, x_lim, y_lim, x_label, x_ticks, y_label, y_ticks, ax_title)
+function [fig_pretty, fig_title_pretty] = prettify_plot(fig, plot_pos, fig_title, plot_font, add_legend, leg_patch, leg_label)
 
-% function to make subplot prettier
+% function to improve overall figure
 
-% pre allocation
-leg_patch = [];
-leg_labels = string();
+set(gcf, 'Color', [1 1 1])  % set figure background to white
 
-set(gca, 'Color', [1 1 1])	% set subplot background to white
-set(gca, 'XColor', 'k', 'YColor', 'k');
+% change figure size
+set(gcf, 'PaperUnits', 'points')
+set(gcf, 'PaperPosition', [plot_pos(1) plot_pos(2) plot_pos(3)/2 plot_pos(4)/2])
 
-% plot-specific adjustments
-switch ax_type
-    % normal line plot
-    case
-        ax.LineStyle = "-";
-        ax.LineWidth = 1.5;
-        ax.MarkerEdgeColor = "none";
+% figure title
+fig_title.FontSize = plot_font;
+fig_title.Color = "k";
+fig_title.FontWeight = "bold";
 
-        % errorbar
-    case
-        ax.CapSize = 10;
-        ax.LineWidth = 1.5;
-
-
-
-
-
+% Add legend if desired
+if add_legend
+    leg = legend(leg_patch, leg_label);
+    leg.Location = "bestoutside";
+    leg.Box = "off";
+    leg.TextColor = "k";
+    leg.FontSize = plot_font;
+    title(leg, 'Pattern', 'FontSize', plot_font)
 end
 
-% adjust axes
-xlim(x_lim)
-ylim(y_lim)
+fig.Renderer = "painters";
 
-
-xlabel(x_label)		% set subplot x axis label
-ylabel(y_label)		% set subplot y axis label
-
-xticks(x_ticks{1}, x_ticks{2})		% set subplot x axis ticks & ticklabels
-yticks(y_ticks{1}, y_ticks{2})		% set subplot y axis ticks & ticklabels
-
-title(ax_title)		% set subplot title
-
-ax_pretty = ax;
+fig_pretty = fig;  % Assign the modified figure to output
+fig_title_pretty = fig_title;  % Assign the modified title to output
 
 end
