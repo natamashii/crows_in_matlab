@@ -17,8 +17,8 @@ rsp_mat_folderpath = [base_path, 'response_matrices\'];
 rsp_time_folderpath = [base_path, 'response_latencies\'];
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
-curr_who = 2;    % set who to analyze
-curr_exp = 2;    % set which experiment to analyze
+curr_who = 3;    % set who to analyze
+curr_exp = 4;    % set which experiment to analyze
 % crows: 1 = exp 1 100 ms, 2 = exp 1 300 ms, 3 = exp 1 50 ms, 4 = exp 2 50
 % ms
 
@@ -31,7 +31,7 @@ patterns = {{'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', '
 
 to_save = true; % if result shall be saved
 to_correct = false; % if response matrices shall be corrected
-to_plot = {true, true, true};
+to_plot = {true, true, true, true};
 
 % for Plotting
 colours_pattern = {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; [0.1211 0.5195 0.6289]};
@@ -499,6 +499,101 @@ if to_plot{2}
 end
 %% Plot: Correct Trials Matches only
 if to_plot{3}
+    set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
+
+    % pre definition
+    values = {mean_perf_s(:, :, 1), median_perf_s(:, :, 1); ...
+        mean_RT_s(:, :, 1), median_RT_s(:, :, 1)};
+    % cols: mean/median, rows: performance/RT
+    error_values = {{error_perf_s(1, :, :, 1), error_perf_s(1, :, :, 1); ...
+        error_perf_s(2, :, :, 1), error_perf_s(2, :, :, 1)}, ...
+        {bootstrap_sem_perf_s(1, :, :, 1), bootstrap_sem_perf_s(1, :, :, 1); ...
+        bootstrap_sem_perf_s(2, :, :, 1), bootstrap_sem_perf_s(3, :, :, 1)};
+        {error_RT_s(1, :, :, 1), error_RT_s(1, :, :, 1); ...
+        error_RT_s(2, :, :, 1), error_RT_s(2, :, :, 1)}, ...
+        {bootstrap_sem_RT_s(1, :, :, 1), bootstrap_sem_RT_s(1, :, :, 1); ...
+        bootstrap_sem_RT_s(2, :, :, 1), bootstrap_sem_RT_s(3, :, :, 1)}};
+    jitter_dots = [-.2, 0, .2];
+
+    % mean or median
+    for m = 1:length(error_plot)
+        % performance or response latency
+        for p = 1:size(error_plot{m}, 1)
+            % error type
+            for er = 1:size(error_plot{m}{p, 1}, 1)
+                fig = figure();
+
+                % figure title
+                fig_title = title(['MATCHES: ' error_plot{m}{p, 5} ' ' ...
+                    char(error_plot{m}{p, 3}) ...
+                    ' of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
+                    num2str(curr_exp) ', with ' char(error_plot{m}{p, 1}{er})]);
+
+                % create subplot
+                [ax, dot_plots, leg_patch, leg_label] = plot_first(numerosities(:, 1)', ...
+                    jitter_dots, ...
+                    values{p, m}, ...
+                    squeeze(error_values{p, m}{er, 1}), ...
+                    squeeze(error_values{p, m}{er, 2}), ...
+                    patterns, curr_exp, colours_pattern, plot_font);
+
+                % Subplot Adjustments
+                ax.YLim = error_plot{m}{p, 2};
+                ax.YTick = error_plot{m}{p, 6};
+                ax.YTickLabel = num2str(error_plot{m}{p, 6});
+                ylabel(ax, error_plot{m}{p, 3});
+                for pattern = 1:length(dot_plots)
+                    dot_plots{pattern}.LineStyle = "none";
+                end
+
+                % Figure Adjustments
+                [fig_pretty, fig_title_pretty] = ...
+                    prettify_plot(fig, plot_pos, fig_title, plot_font, true, leg_patch, leg_label);
+
+                % save figure
+                fig_name = ['matches_' error_plot{m}{p, 5}, '_' ...
+                    error_plot{m}{p, 4} ...
+                    '_' who_analysis{curr_who}(1:end-1) '_exp' ...
+                    num2str(curr_exp) '_' char(error_plot{m}{p, 1}{er}) '.' format];
+                saveas(fig_pretty, [figure_path, fig_name], format)
+
+                close
+                counter = counter + 1;
+                progressbar(counter, total_amount)
+            end
+        end
+    end
+end
+
+
+%% Performance over Time
+
+% get mean performance session-wise
+time_perf = zeros(2, length(patterns{curr_exp}), size(performances, 1), size(numerosities, 1));
+time_perf_err = zeros(2, length(patterns{curr_exp}), size(performances, 1), size(numerosities, 1));
+
+% iterate over patterns
+for pattern = 1:length(patterns{curr_exp})
+    % iterate over sessions
+    for idx = 1:size(performances, 1)
+        % iterate over samples
+        for sample_idx = 1:size(numerosities, 1)
+            time_perf(1, pattern, idx, sample_idx) = ...
+                mean(performances(idx, pattern, sample_idx, :), "all");
+            time_perf(2, pattern, idx, sample_idx) = ...
+                median(performances(idx, pattern, sample_idx, :), "all");
+            time_perf_err(1, pattern, idx, sample_idx) = ...
+                std(performances(idx, pattern, sample_idx, :), [], "all");
+            time_perf_err(2, pattern, idx, sample_idx) = ...
+                std(performances(idx, pattern, sample_idx, :), [], "all") / ...
+                sqrt(numel(performances(idx, pattern, sample_idx, :)));
+        end
+    end
+end
+
+% plot
+
+if to_plot{4}
     set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
 
     % pre definition
