@@ -7,20 +7,31 @@ close all
 % Note
 % so far, condition & standard stimuli trials thrown together (must be checked beforehand!!)
 % maybe add response latency as 7th column lol
+% response matrix
+% col 1: stimulus type (standard (1) or control (2))
+% col 2: pattern type (P1, P2, P3, P4)
+% col 3: sample (3-7)
+% col 4: match or non-match (0 = match, 1 = test 1, 2 = test 2, 3 = test 3,
+% referring to Lena's table with test 1-3)
+% col 5: bird response evaluation (0 = correct, 1 = error by bird, 9 =
+% abundance by bird)
+% col 6: test numerosity (2-10)
+
+% Note: 9 in all columns for one row = abundance by bird
 
 %% Pre Definition
-% Path definition
-base_path = 'D:\MasterThesis\analysis\data\';
-figure_path = 'D:\MasterThesis\figures\';
-spk_folderpath = [base_path, 'spk\'];
-rsp_mat_folderpath = [base_path, 'response_matrices\'];
-rsp_time_folderpath = [base_path, 'response_latencies\'];
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
 curr_who = 3;    % set who to analyze
 curr_exp = 4;    % set which experiment to analyze
 % crows: 1 = exp 1 100 ms, 2 = exp 1 300 ms, 3 = exp 1 50 ms, 4 = exp 2 50
 % ms
+% Path definition
+base_path = 'D:\MasterThesis\analysis\data\';
+figure_path = ['D:\MasterThesis\figures\progress_250805\' who_analysis{curr_who}];
+spk_folderpath = [base_path, 'spk\'];
+rsp_mat_folderpath = [base_path, 'response_matrices\'];
+rsp_time_folderpath = [base_path, 'response_latencies\'];
 
 % all numerosities relevant
 numerosities = [3, 4, 5, 6, 7; % sample
@@ -30,8 +41,8 @@ numerosities = [3, 4, 5, 6, 7; % sample
 patterns = {{'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}};
 
 to_save = true; % if result shall be saved
-to_correct = false; % if response matrices shall be corrected
-to_plot = {true, true, true, true};
+to_correct = true; % if response matrices shall be corrected
+to_plot = {true, true, true, false};
 
 % for Plotting
 colours_pattern = {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; [0.1211 0.5195 0.6289]};
@@ -116,13 +127,14 @@ names_react = {filelist_react.name};	% file names
 % Pre allocation
 % performance for each cond
 % dim 1: subject/session ; dim 2: pattern ; dim 3: samples ; dim 4: test number
-performances = zeros(length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+performances = zeros(length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1));
+resp_freq = zeros(length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
 reaction_times = cell(length(names_react), length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
 
 % mean & error over subject/sessions, for each test number, pattern, sample
-mean_perf_s = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+mean_resp_freq = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
 mean_RT_s = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
-error_perf_s = zeros(2, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2)); % dim 1: 1 = STD, 2 = SEM
+error_resp_freq = zeros(2, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2)); % dim 1: 1 = STD, 2 = SEM
 error_RT_s = zeros(2, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2)); % dim 1: 1 = STD, 2 = SEM
 
 % mean & error over subjects/sessions & test numbers, for each pattern, sample
@@ -133,9 +145,9 @@ error_RT = zeros(2, length(patterns{curr_exp}), size(numerosities, 1)); % dim 1:
 
 % median & error over subjects/sessions, for each test number, pattern, sample
 median_perf = zeros(length(patterns{curr_exp}), size(numerosities, 1));
-median_perf_s = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+median_resp_freq = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
 bootstrap_sem_perf = zeros(3, length(patterns{curr_exp}), size(numerosities, 1));
-bootstrap_sem_perf_s = zeros(3, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+bootstrap_sem_resp_freq = zeros(3, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
 
 median_RT = zeros(length(patterns{curr_exp}), size(numerosities, 1));
 median_RT_s = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
@@ -162,29 +174,51 @@ for idx = 1:length(names_rsp)
             for test_idx = 1:size(numerosities, 2)
                 curr_trials = curr_resp(curr_resp(:, 2) == pattern & ...
                     curr_resp(:, 3) == rel_nums(1) & ...
+                    curr_resp(:, 5) ~= 9 & ...
                     curr_resp(:, 6) == rel_nums(test_idx), :);
 
                 % get correct trials
                 corr_trials = curr_trials(curr_trials(:, 5) == 0, :);
 
-                % get indices of those trials
+                % get error trials
+                err_trials = curr_trials(curr_trials(:, 5) == 1, :);
+
+                % compute response frequency
+                % match trials: subject hit to match (correct trials)
+                if test_idx == 1
+                    perf_trials = size(corr_trials, 1) / ...
+                        (size(corr_trials, 1) + size(err_trials, 1));
+                    resp_freq(idx, pattern, sample_idx, test_idx) = perf_trials;
+                % non-match trials: subject hit to non-match (error trials)
+                else
+                    perf_trials = size(err_trials, 1) / ...
+                        (size(corr_trials, 1) + size(err_trials, 1));
+                    resp_freq(idx, pattern, sample_idx, test_idx) = perf_trials;
+                end
+
+                % get reaction time
+                % get indices of correct trials
                 rel_idx = find(curr_resp(:, 2) == pattern & ...
                     curr_resp(:, 3) == rel_nums(1) & ...
                     curr_resp(:, 5) == 0 & ...
-                    curr_resp(:, 6) == rel_nums(test_idx));
-
-                % get performance
-                perf_trials = size(corr_trials, 1) / size(curr_trials, 1);
-                performances(idx, pattern, sample_idx, test_idx) = perf_trials;
-
-                % get reaction time
+                    curr_resp(:, 6) == rel_nums(test_idx)); 
                 reaction_times{idx, pattern, sample_idx, test_idx} = [curr_react(rel_idx)];
             end
+            % compute performance
+            curr_trials = curr_resp(curr_resp(:, 2) == pattern & ...
+                    curr_resp(:, 3) == rel_nums(1) & ...
+                    curr_resp(:, 5) ~= 9, :);
+            % get correct trials
+            corr_trials = curr_trials(curr_trials(:, 5) == 0, :);
+
+            performances(idx, pattern, sample_idx) = ...
+                size(corr_trials, 1) / size(curr_trials, 1);
+
         end
     end
 end
 
-% calculate average performance/RT for each pattern & sample
+%% calculate average performance/RT for each pattern & sample
 % take mean over subjects/sessions & test numbers
 
 
@@ -198,22 +232,22 @@ for pattern = 1:length(patterns{curr_exp})
 
         % calculate average over subjects/sessions & test numbers
         mean_perf(pattern, sample_idx) = ...
-            mean(performances(:, pattern, sample_idx, :), "all");
+            mean(performances(:, pattern, sample_idx), "all");
         median_perf(pattern, sample_idx) = ...
-            median(performances(:, pattern, sample_idx, :), "all");
+            median(performances(:, pattern, sample_idx), "all");
         mean_RT(pattern, sample_idx) = ...
             mean(RT_test_nums, "omitnan");
         median_RT(pattern, sample_idx) = ...
             median(RT_test_nums, "omitnan");
         % calculate corresponding error: STD
         error_perf(1, pattern, sample_idx) = ...
-            std(performances(:, pattern, sample_idx, :), [], "all");
+            std(performances(:, pattern, sample_idx), [], "all");
         error_RT(1, pattern, sample_idx) = ...
             std(RT_test_nums, [], "omitnan");
         % calculate corresponding error: SEM
         error_perf(2, pattern, sample_idx) = ...
-            std(performances(:, pattern, sample_idx, :), [], "all") ...
-            / sqrt(numel(performances(:, pattern, sample_idx, :)));
+            std(performances(:, pattern, sample_idx), [], "all") ...
+            / sqrt(numel(performances(:, pattern, sample_idx)));
         error_RT(2, pattern, sample_idx) = ...
             std(RT_test_nums, [], "omitnan") / sqrt(sum(~isnan(RT_test_nums)));
 
@@ -224,8 +258,8 @@ for pattern = 1:length(patterns{curr_exp})
         for b_idx = 1:n_boot
             % generate random indices
             resample_idx_RT = randi(length(RT_test_nums), length(RT_test_nums), 1);
-            resample_idx_perf = randi(numel(performances(:, pattern, sample_idx, :)), ...
-                numel(performances(:, pattern, sample_idx, :)), 1);
+            resample_idx_perf = randi(numel(performances(:, pattern, sample_idx)), ...
+                numel(performances(:, pattern, sample_idx)), 1);
 
             % make bootstrap sample
             bootstrap_sample_RT = RT_test_nums(resample_idx_RT);
@@ -258,23 +292,23 @@ for pattern = 1:length(patterns{curr_exp})
             RT_test_nums = vertcat(reaction_times{:, pattern, sample_idx, test_idx});
 
             % compute mean/median performance & RT over subjects/session
-            mean_perf_s(pattern, sample_idx, test_idx) = ...
-                mean(performances(:, pattern, sample_idx, test_idx), "all");
+            mean_resp_freq(pattern, sample_idx, test_idx) = ...
+                mean(resp_freq(:, pattern, sample_idx, test_idx), "all");
             mean_RT_s(pattern, sample_idx, test_idx) = ...
                 mean(RT_test_nums, "omitnan");
-            median_perf_s(pattern, sample_idx, test_idx) = ...
-                median(performances(:, pattern, sample_idx, test_idx), "all");
+            median_resp_freq(pattern, sample_idx, test_idx) = ...
+                median(resp_freq(:, pattern, sample_idx, test_idx), "all");
             median_RT_s(pattern, sample_idx, test_idx) = ...
                 median(RT_test_nums, "omitnan");
             % calculate corresponding error: STD
-            error_perf_s(1, pattern, sample_idx, test_idx) = ...
-                std(performances(:, pattern, sample_idx, test_idx), [], "all");
+            error_resp_freq(1, pattern, sample_idx, test_idx) = ...
+                std(resp_freq(:, pattern, sample_idx, test_idx), [], "all");
             error_RT_s(1, pattern, sample_idx, test_idx) = ...
                 std(RT_test_nums, [], "omitnan");
             % calculate corresponding error: SEM
-            error_perf_s(2, pattern, sample_idx, test_idx) = ...
-                std(performances(:, pattern, sample_idx, test_idx), [], "all") ...
-                / sqrt(numel(performances(:, pattern, sample_idx, test_idx)));
+            error_resp_freq(2, pattern, sample_idx, test_idx) = ...
+                std(resp_freq(:, pattern, sample_idx, test_idx), [], "all") ...
+                / sqrt(numel(resp_freq(:, pattern, sample_idx, test_idx)));
             error_RT_s(2, pattern, sample_idx, test_idx) = ...
                 std(RT_test_nums, [], "omitnan") / sqrt(sum(~isnan(RT_test_nums)));
 
@@ -286,12 +320,12 @@ for pattern = 1:length(patterns{curr_exp})
             for b_idx = 1:n_boot
                 % generate random indices
                 resample_idx_RT = randi(length(RT_test_nums), length(RT_test_nums), 1);
-                resample_idx_perf = randi(numel(performances(:, pattern, sample_idx, test_idx)), ...
-                    numel(performances(:, pattern, sample_idx, test_idx)), 1);
+                resample_idx_perf = randi(numel(resp_freq(:, pattern, sample_idx, test_idx)), ...
+                    numel(resp_freq(:, pattern, sample_idx, test_idx)), 1);
 
                 % make bootstrap sample
                 bootstrap_sample_RT = RT_test_nums(resample_idx_RT);
-                bootstrap_sample_perf = performances(resample_idx_perf);
+                bootstrap_sample_perf = resp_freq(resample_idx_perf);
 
                 % calculate median of current bootstrap sample
                 bootstrap_median_RT(b_idx) = median(bootstrap_sample_RT, "omitnan");
@@ -299,7 +333,7 @@ for pattern = 1:length(patterns{curr_exp})
             end
             % bootstrap statistics
             bootstrap_sem_RT_s(1, pattern, sample_idx, test_idx) = std(bootstrap_median_RT, [], "omitnan");
-            bootstrap_sem_perf_s(1, pattern, sample_idx, test_idx) = std(bootstrap_median_perf, [], "omitnan");
+            bootstrap_sem_resp_freq(1, pattern, sample_idx, test_idx) = std(bootstrap_median_perf, [], "omitnan");
 
             % confidence interval
             sorted_bootstrap_median_RT = sort(bootstrap_median_RT);   % sort the shit
@@ -310,11 +344,11 @@ for pattern = 1:length(patterns{curr_exp})
             bootstrap_sem_RT_s(3, pattern, sample_idx, test_idx) = ...
                 median_RT_s(pattern, sample_idx, test_idx) - ...
                 prctile(sorted_bootstrap_median_RT, upper_percentile);
-            bootstrap_sem_perf_s(2, pattern, sample_idx, test_idx) = ...
-                median_perf_s(pattern, sample_idx, test_idx) - ...
+            bootstrap_sem_resp_freq(2, pattern, sample_idx, test_idx) = ...
+                median_resp_freq(pattern, sample_idx, test_idx) - ...
                 prctile(sorted_bootstrap_median_perf, lower_percentile);
-            bootstrap_sem_perf_s(3, pattern, sample_idx, test_idx) = ...
-                median_perf_s(pattern, sample_idx, test_idx) - ...
+            bootstrap_sem_resp_freq(3, pattern, sample_idx, test_idx) = ...
+                median_resp_freq(pattern, sample_idx, test_idx) - ...
                 prctile(sorted_bootstrap_median_perf, upper_percentile);
 
             counter = counter + 1;
@@ -392,12 +426,12 @@ if to_plot{2}
     set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
 
     % pre definition
-    values = {mean_perf_s, median_perf_s; mean_RT_s, median_RT_s};
+    values = {mean_resp_freq, median_resp_freq; mean_RT_s, median_RT_s};
     % cols: mean/median, rows: performance/RT
-    error_values = {{error_perf_s(1, :, :, :), error_perf_s(1, :, :, :); ...
-        error_perf_s(2, :, :, :), error_perf_s(2, :, :, :)}, ...
-        {bootstrap_sem_perf_s(1, :, :, :), bootstrap_sem_perf_s(1, :, :, :); ...
-        bootstrap_sem_perf_s(2, :, :, :), bootstrap_sem_perf_s(3, :, :, :)};
+    error_values = {{error_resp_freq(1, :, :, :), error_resp_freq(1, :, :, :); ...
+        error_resp_freq(2, :, :, :), error_resp_freq(2, :, :, :)}, ...
+        {bootstrap_sem_resp_freq(1, :, :, :), bootstrap_sem_resp_freq(1, :, :, :); ...
+        bootstrap_sem_resp_freq(2, :, :, :), bootstrap_sem_resp_freq(3, :, :, :)};
         {error_RT_s(1, :, :, :), error_RT_s(1, :, :, :); ...
         error_RT_s(2, :, :, :), error_RT_s(2, :, :, :)}, ...
         {bootstrap_sem_RT_s(1, :, :, :), bootstrap_sem_RT_s(1, :, :, :); ...
@@ -502,13 +536,13 @@ if to_plot{3}
     set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
 
     % pre definition
-    values = {mean_perf_s(:, :, 1), median_perf_s(:, :, 1); ...
+    values = {mean_resp_freq(:, :, 1), median_resp_freq(:, :, 1); ...
         mean_RT_s(:, :, 1), median_RT_s(:, :, 1)};
     % cols: mean/median, rows: performance/RT
-    error_values = {{error_perf_s(1, :, :, 1), error_perf_s(1, :, :, 1); ...
-        error_perf_s(2, :, :, 1), error_perf_s(2, :, :, 1)}, ...
-        {bootstrap_sem_perf_s(1, :, :, 1), bootstrap_sem_perf_s(1, :, :, 1); ...
-        bootstrap_sem_perf_s(2, :, :, 1), bootstrap_sem_perf_s(3, :, :, 1)};
+    error_values = {{error_resp_freq(1, :, :, 1), error_resp_freq(1, :, :, 1); ...
+        error_resp_freq(2, :, :, 1), error_resp_freq(2, :, :, 1)}, ...
+        {bootstrap_sem_resp_freq(1, :, :, 1), bootstrap_sem_resp_freq(1, :, :, 1); ...
+        bootstrap_sem_resp_freq(2, :, :, 1), bootstrap_sem_resp_freq(3, :, :, 1)};
         {error_RT_s(1, :, :, 1), error_RT_s(1, :, :, 1); ...
         error_RT_s(2, :, :, 1), error_RT_s(2, :, :, 1)}, ...
         {bootstrap_sem_RT_s(1, :, :, 1), bootstrap_sem_RT_s(1, :, :, 1); ...
@@ -597,13 +631,13 @@ if to_plot{4}
     set(0, 'defaultfigurecolor', [1 1 1])  % set figure background to white
 
     % pre definition
-    values = {mean_perf_s(:, :, 1), median_perf_s(:, :, 1); ...
+    values = {mean_perf_s(:, :, 1), median_resp_freq(:, :, 1); ...
         mean_RT_s(:, :, 1), median_RT_s(:, :, 1)};
     % cols: mean/median, rows: performance/RT
-    error_values = {{error_perf_s(1, :, :, 1), error_perf_s(1, :, :, 1); ...
-        error_perf_s(2, :, :, 1), error_perf_s(2, :, :, 1)}, ...
-        {bootstrap_sem_perf_s(1, :, :, 1), bootstrap_sem_perf_s(1, :, :, 1); ...
-        bootstrap_sem_perf_s(2, :, :, 1), bootstrap_sem_perf_s(3, :, :, 1)};
+    error_values = {{error_resp_freq(1, :, :, 1), error_resp_freq(1, :, :, 1); ...
+        error_resp_freq(2, :, :, 1), error_resp_freq(2, :, :, 1)}, ...
+        {bootstrap_sem_resp_freq(1, :, :, 1), bootstrap_sem_resp_freq(1, :, :, 1); ...
+        bootstrap_sem_resp_freq(2, :, :, 1), bootstrap_sem_resp_freq(3, :, :, 1)};
         {error_RT_s(1, :, :, 1), error_RT_s(1, :, :, 1); ...
         error_RT_s(2, :, :, 1), error_RT_s(2, :, :, 1)}, ...
         {bootstrap_sem_RT_s(1, :, :, 1), bootstrap_sem_RT_s(1, :, :, 1); ...

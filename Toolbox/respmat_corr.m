@@ -25,6 +25,7 @@ for trial_idx = 1:size(resp_mat, 1)
     if resp_mat(trial_idx, 1) == 9
         continue
     end
+    
     % correction: 8 should be 3 (error by CORTEX or timing file?)
     if resp_mat(trial_idx, 3) == 8
         resp_mat(trial_idx, 3) = 3; 
