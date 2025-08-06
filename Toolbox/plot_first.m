@@ -1,4 +1,4 @@
-function [ax, dot_plots, leg_patch, leg_label] = plot_first(numbers, jitter_dots, values, err_down, err_up, patterns, curr_exp, colours, plot_font)
+function [ax, dot_plots, leg_patch, leg_label] = plot_first(numbers, jitter_dots, values, err_down, err_up, patterns, curr_exp, colours, plot_font, p)
 
 % function to create variations of the first plot
 
@@ -13,6 +13,12 @@ for pattern = 1:length(patterns{curr_exp})
     ax = gca;
 
     % Subplot Adjustments
+    ax.YGrid = "on";    % plot horizontal grid lines
+    % mark chance level in performance
+    if p == 1
+        chance_colour = ax.GridAlpha;
+        yline(0.5, 'LineStyle', ':', 'Alpha', chance_colour * 2)
+    end
     ax.Color = [1 1 1];     % set background colour to white
     ax.XColor = "k";    % set colour of axis to black
     ax.YColor = "k";    % set colour of axis to black

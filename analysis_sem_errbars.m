@@ -23,12 +23,12 @@ close all
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
 curr_who = 3;    % set who to analyze
-curr_exp = 4;    % set which experiment to analyze
+curr_exp = 1;    % set which experiment to analyze
 % crows: 1 = exp 1 100 ms, 2 = exp 1 300 ms, 3 = exp 1 50 ms, 4 = exp 2 50
 % ms
 % Path definition
 base_path = 'D:\MasterThesis\analysis\data\';
-figure_path = ['D:\MasterThesis\figures\progress_250805\' who_analysis{curr_who}];
+figure_path = ['D:\MasterThesis\figures\progress_250806\' who_analysis{curr_who}];
 spk_folderpath = [base_path, 'spk\'];
 rsp_mat_folderpath = [base_path, 'response_matrices\'];
 rsp_time_folderpath = [base_path, 'response_latencies\'];
@@ -43,16 +43,27 @@ patterns = {{'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', '
 to_save = true; % if result shall be saved
 to_correct = true; % if response matrices shall be corrected
 to_plot = {true, true, true, false};
+to_zoom = true;         % toggle to zoom in for RT plots
+fig_title = '';
 
 % for Plotting
 colours_pattern = {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; [0.1211 0.5195 0.6289]};
 colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...
     [0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; [0.6350 0.0780 0.1840]};
 format = 'svg';
-error_plot = {{{'STD'; 'SEM'}, [-0.1 1.1], 'Performance', 'perf', 'Mean', (0:0.2:1)';
-    {'STD'; 'SEM'}, [200 600], 'Response Latency [ms]', 'RT', 'Mean', (200:100:600)'};
-    {{'STD'; 'CI'}, [-0.1 1.1], 'Performance', 'perf', 'Median', (0:0.2:1)';
-    {'STD'; 'CI'}, [200 600], 'Response Latency [ms]', 'RT', 'Median', (200:100:600)'}};
+switch to_zoom
+    case true
+        error_plot = {{{'STD'; 'SEM'}, [-0.1 1.1], 'Performance', 'perf', 'Mean', (0:0.2:1)';
+            {'STD'; 'SEM'}, [100 350], 'Response Latency [ms]', 'RT', 'Mean', (100:50:350)'};
+            {{'STD'; 'CI'}, [-0.1 1.1], 'Performance', 'perf', 'Median', (0:0.2:1)';
+            {'STD'; 'CI'}, [100 350], 'Response Latency [ms]', 'RT', 'Median', (100:50:350)'}};
+    case false
+        error_plot = {{{'STD'; 'SEM'}, [-0.1 1.1], 'Performance', 'perf', 'Mean', (0:0.2:1)';
+            {'STD'; 'SEM'}, [200 600], 'Response Latency [ms]', 'RT', 'Mean', (200:100:600)'};
+            {{'STD'; 'CI'}, [-0.1 1.1], 'Performance', 'perf', 'Median', (0:0.2:1)';
+            {'STD'; 'CI'}, [200 600], 'Response Latency [ms]', 'RT', 'Median', (200:100:600)'}};
+end
+
 plot_font = 12;
 plot_pos = [451, 259, 1146, 690];   % default PaperPosition size of figure
 
@@ -382,10 +393,10 @@ if to_plot{1}
             for er = 1:size(error_plot{m}{p, 1}, 1)
                 fig = figure();
                 % figure title
-                fig_title = title([error_plot{m}{p, 5} ' ' ...
-                    char(error_plot{m}{p, 3}) ...
-                    ' of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
-                    num2str(curr_exp) ', with ' char(error_plot{m}{p, 1}{er})]);
+                % fig_title = title([error_plot{m}{p, 5} ' ' ...
+                %    char(error_plot{m}{p, 3}) ...
+                %    ' of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
+                %    num2str(curr_exp) ', with ' char(error_plot{m}{p, 1}{er})]);
 
                 % create subplot
                 [ax, dot_plots, leg_patch, leg_label] = plot_first(numerosities(:, 1)', ...
@@ -393,11 +404,11 @@ if to_plot{1}
                     values{p, m}, ...
                     squeeze(error_values{p, m}{er, 1}), ...
                     squeeze(error_values{p, m}{er, 2}), ...
-                    patterns, curr_exp, colours_pattern, plot_font);
+                    patterns, curr_exp, colours_pattern, plot_font, p);
 
                 % Figure Adjustments
                 [fig_pretty, fig_title_pretty] = ...
-                    prettify_plot(fig, plot_pos, fig_title, plot_font, true, leg_patch, leg_label);
+                    prettify_plot(fig, plot_pos, fig_title, plot_font, false, leg_patch, leg_label);
 
                 % Subplot Adjustments
                 ax.YLim = error_plot{m}{p, 2};
@@ -406,7 +417,7 @@ if to_plot{1}
                 for pattern = 1:length(dot_plots)
                     dot_plots{pattern}.LineStyle = "none";
                 end
-                ylabel(ax, error_plot{m}{p, 3});
+                % ylabel(ax, error_plot{m}{p, 3});
 
                 % save figure
                 fig_name = [error_plot{m}{p, 5}, '_' error_plot{m}{p, 4} ...
@@ -456,13 +467,13 @@ if to_plot{2}
                 set(gcf, 'PaperPosition', ...
                     [plot_pos(1) plot_pos(2) plot_pos(3)*1.5 plot_pos(4)/2])
                 % figure title
-                fig_title = title(tiled, [error_plot{m}{p, 5} ' ' ...
-                    char(error_plot{m}{p, 3}) ...
-                    ' of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
-                    num2str(curr_exp) ', with ' char(error_plot{m}{p, 1}{er})]);
-                fig_title.FontSize = plot_font;
-                fig_title.Color = "k";
-                fig_title.FontWeight = "bold";
+                %fig_title = title(tiled, [error_plot{m}{p, 5} ' ' ...
+                %    char(error_plot{m}{p, 3}) ...
+                %    ' of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
+                %    num2str(curr_exp) ', with ' char(error_plot{m}{p, 1}{er})]);
+                %fig_title.FontSize = plot_font;
+                %fig_title.Color = "k";
+                %fig_title.FontWeight = "bold";
 
                 % pre allocation
                 subplots = {};
@@ -487,7 +498,7 @@ if to_plot{2}
                     [ax, ~, leg_patch, leg_label] = plot_first(nums_sort, ...
                         jitter_dots, ...
                         curr_vals, error_down, error_up, ...
-                        patterns, curr_exp, colours_pattern, plot_font);
+                        patterns, curr_exp, colours_pattern, plot_font, p);
 
                     % Subplot Adjustments
                     ax.YLim = error_plot{m}{p, 2};
@@ -506,16 +517,16 @@ if to_plot{2}
                     subplots{sample_idx} = ax;
                 end
                 subplots{1}.YTickLabel = num2str(error_plot{m}{p, 6});
-                ylabel(tiled, error_plot{m}{p, 3}, 'Color', 'k', 'FontSize', plot_font, 'FontWeight', 'bold')
+                %ylabel(tiled, error_plot{m}{p, 3}, 'Color', 'k', 'FontSize', plot_font, 'FontWeight', 'bold')
 
                 % Figure Adjustments
                 % Add Legend
-                leg = legend(subplots{end}, leg_patch, leg_label);
-                leg.Location = "bestoutside";
-                leg.Box = "off";
-                leg.TextColor = "k";
-                leg.FontSize = plot_font;
-                title(leg, 'Pattern', 'FontSize', plot_font)
+                %leg = legend(subplots{end}, leg_patch, leg_label);
+                %leg.Location = "bestoutside";
+                %leg.Box = "off";
+                %leg.TextColor = "k";
+                %leg.FontSize = plot_font;
+                %title(leg, 'Pattern', 'FontSize', plot_font)
 
                 % save figure
                 fig_name = ['sample_' error_plot{m}{p, 5}, '_' ...
@@ -558,10 +569,10 @@ if to_plot{3}
                 fig = figure();
 
                 % figure title
-                fig_title = title(['MATCHES: ' error_plot{m}{p, 5} ' ' ...
-                    char(error_plot{m}{p, 3}) ...
-                    ' of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
-                    num2str(curr_exp) ', with ' char(error_plot{m}{p, 1}{er})]);
+                %fig_title = title(['MATCHES: ' error_plot{m}{p, 5} ' ' ...
+                %    char(error_plot{m}{p, 3}) ...
+                %    ' of ' who_analysis{curr_who}(1:end-1) ', Exp ' ...
+                %    num2str(curr_exp) ', with ' char(error_plot{m}{p, 1}{er})]);
 
                 % create subplot
                 [ax, dot_plots, leg_patch, leg_label] = plot_first(numerosities(:, 1)', ...
@@ -569,20 +580,20 @@ if to_plot{3}
                     values{p, m}, ...
                     squeeze(error_values{p, m}{er, 1}), ...
                     squeeze(error_values{p, m}{er, 2}), ...
-                    patterns, curr_exp, colours_pattern, plot_font);
+                    patterns, curr_exp, colours_pattern, plot_font, p);
 
                 % Subplot Adjustments
                 ax.YLim = error_plot{m}{p, 2};
                 ax.YTick = error_plot{m}{p, 6};
                 ax.YTickLabel = num2str(error_plot{m}{p, 6});
-                ylabel(ax, error_plot{m}{p, 3});
+                %ylabel(ax, error_plot{m}{p, 3});
                 for pattern = 1:length(dot_plots)
                     dot_plots{pattern}.LineStyle = "none";
                 end
 
                 % Figure Adjustments
                 [fig_pretty, fig_title_pretty] = ...
-                    prettify_plot(fig, plot_pos, fig_title, plot_font, true, leg_patch, leg_label);
+                    prettify_plot(fig, plot_pos, fig_title, plot_font, false, leg_patch, leg_label);
 
                 % save figure
                 fig_name = ['matches_' error_plot{m}{p, 5}, '_' ...
