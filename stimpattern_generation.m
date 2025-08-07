@@ -29,16 +29,14 @@ stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\';
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
 stim_type = input(prompt, "s");
-prompt = 'Which Pattern to create? r - random, 1 - equal distances, 2 - additive, 3 - multiplicative ';
+prompt = 'Which Pattern to create? r - random, 1 - equal distances, 2 - additive, 3 - multiplicative, A - arabic ';
 pattern_type = "P" + input(prompt, "s");
 counter = 0;    % for progressbar
 amount_img = 3;     % defines how many versions of one condition should be generated
 
 % numerosities of interests
 numbers = 2:10;
-if pattern_type == "PR" || pattern_type == "Pr"
-    numbers = 2:10;
-end
+
 check = false;  % boolean that toggles if every control is fulfilled
 to_break = false;   % boolean that toggles in case of mistyping stimulus type
 
@@ -214,6 +212,9 @@ for stimulus = 1:size(numbers, 2)
                         density_limit_spec = density_limit(2, :);
                         density_limit_spec(1) = density_limit_spec(1) - 1;
                     end
+                case {"Pa", "PA"}   % arabic numerals
+                    groupe_check = true;
+                    
                 otherwise
                     fprintf("Error. This is not a valid pattern type: ")
                     fprintf(pattern_type)

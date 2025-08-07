@@ -22,7 +22,7 @@ close all
 %% Pre Definition
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
-curr_who = 3;    % set who to analyze
+curr_who = 1;    % set who to analyze
 curr_exp = 1;    % set which experiment to analyze
 % crows: 1 = exp 1 100 ms, 2 = exp 1 300 ms, 3 = exp 1 50 ms, 4 = exp 2 50
 % ms
@@ -43,7 +43,7 @@ patterns = {{'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', '
 to_save = true; % if result shall be saved
 to_correct = true; % if response matrices shall be corrected
 to_plot = {true, true, true, false};
-to_zoom = true;         % toggle to zoom in for RT plots
+to_zoom = false;         % toggle to zoom in for RT plots
 fig_title = '';
 
 % for Plotting
