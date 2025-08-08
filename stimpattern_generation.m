@@ -213,8 +213,9 @@ for stimulus = 1:size(numbers, 2)
                         density_limit_spec(1) = density_limit_spec(1) - 1;
                     end
                 case {"Pa", "PA"}   % arabic numerals
-                    groupe_check = true;
-                    
+                    group_check = true;
+                    pattern_type = "PA";
+                    check = true;
                 otherwise
                     fprintf("Error. This is not a valid pattern type: ")
                     fprintf(pattern_type)
@@ -235,30 +236,40 @@ for stimulus = 1:size(numbers, 2)
             end
 
             % validation: cumulative density control
-            dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
-            if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
-                    (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
-                check = true;
-            elseif curr_num == 1
-                check = true;
-            end
-            if pattern_type == "PR" || pattern_type == "P1"
-                if mean(dot_density) >= density_limit_spec(1) && ...
-                    mean(dot_density) <= density_limit_spec(2)
+            if pattern_type ~= "PA"
+                dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
+                if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
+                        (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
                     check = true;
                 elseif curr_num == 1
                     check = true;
                 end
+                if pattern_type == "PR" || pattern_type == "P1"
+                    if mean(dot_density) >= density_limit_spec(1) && ...
+                            mean(dot_density) <= density_limit_spec(2)
+                        check = true;
+                    elseif curr_num == 1
+                        check = true;
+                    end
+                end
             end
             %check = true;
         end
-        if to_break
-            break
-        end
 
         % plot the dots
-        fig = plot_stim_pattern(angle_steps, winsize, rad_back, back_circ_c, ...
-            dot_pos, dot_radii);
+        if pattern_type ~= "PA"
+            fig = plot_stim_pattern(angle_steps, winsize, rad_back, back_circ_c, ...
+                dot_pos, dot_radii);
+        else
+            [fig, x, y] = plot_backcircle(angle_steps, winsize, rad_back*1.2, back_circ_c);
+
+            arab = text(-0.2, 0, num2str(curr_num));
+            arab.FontWeight = "bold";
+            arab.Color = "k";
+            arab.FontSize = 50;
+            markin = text([-0.75, -0.5, -0.25, 0, 0, 0, 0.25, 0.5, 0.75], [0, 0, 0, 0, 0.25, -0.25, 0, 0, 0], ".", "Color", "green");
+
+        end
 
         % save
         filename = strcat(stim_type, '_', pattern_type, '_', strcat(num2str(curr_num), num2str(img - 1)), '.bmp');
