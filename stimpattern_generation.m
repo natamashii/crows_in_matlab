@@ -79,6 +79,11 @@ gr_rad_a = {[subgroup_rad], [subgroup_rad], [subgroup_rad; subgroup_rad], ...
     [subgroup_rad; subgroup_rad; subgroup_rad], ...
     [subgroup_rad; subgroup_rad; subgroup_rad]};
 
+x_pos_arab = [-0.3, -0.3, ...
+    -0.35, -0.3, ...
+    -0.3, -0.25, ...
+    -0.3, -0.3, -0.65];
+
 % generate fixation stimulus (b_grey)
 [b_grey, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
 filename = 'B_grey.bmp';
@@ -263,7 +268,7 @@ for stimulus = 1:size(numbers, 2)
         else
             [fig, x, y] = plot_backcircle(angle_steps, winsize, rad_back*1.2, back_circ_c);
 
-            arab = text(-0.2, 0, num2str(curr_num));
+            arab = text(x_pos_arab(stimulus), 0, num2str(curr_num));
             arab.FontWeight = "bold";
             arab.Color = "k";
             arab.FontSize = 50;
