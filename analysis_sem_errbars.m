@@ -23,7 +23,7 @@ close all
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
 curr_who = 1;    % set who to analyze
-curr_exp = 1;    % set which experiment to analyze
+curr_exp = 3;    % set which experiment to analyze
 % crows: 1 = exp 1 100 ms, 2 = exp 1 300 ms, 3 = exp 1 50 ms, 4 = exp 2 50
 % ms
 % Path definition
@@ -101,7 +101,6 @@ if to_correct
         [rel_idx, ~] = find(corr_resp(:, 5) == 0);
         curr_reacts = getreactiontimes(curr_spk, 25, 41, rel_idx)'; % in s
         curr_reacts = curr_reacts * 1000; % in ms
-        curr_react(rel_idx) = curr_reacts;
 
         % save the corrected response matrix
         if to_save
