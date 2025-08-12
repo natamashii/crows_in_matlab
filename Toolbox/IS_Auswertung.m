@@ -30,8 +30,8 @@ rho_al = 2.7;   % in g/cm^3
 rho_pb = 11.34; % in g/cm^3
 
 % insert their values here
-N_al = [15290, 6140, 2562, 624, 549, 490, 506, 495, 410, 362];
-N_pb = [1228, 1024, 919, 937, 663, 588, 468, 340, 245, 117];
+N_al = [9894, 3161, 1715, 470, 448, 410, 392, 401, 330, 305];
+N_pb = [770, 706, 643, 567, 505, 395, 358, 245, 176, 98];
 
 % 1a) n_mess & n_korr Aluminium
 n_mess_al = zeros(size(N_al));
@@ -55,10 +55,10 @@ hold on
 
 
 % Regressionsgerade
-x1 = x_al(1:5);
-x2 = x_al(6:end);
-y1 = ln_nin1_al(1:5);
-y2 = ln_nin1_al(6:end);
+x1 = x_al(1:4);
+x2 = x_al(5:end);
+y1 = ln_nin1_al(1:4);
+y2 = ln_nin1_al(5:end);
 
 p1 = polyfit(x1, y1, 1);
 f1 = polyval(p1, x1);
