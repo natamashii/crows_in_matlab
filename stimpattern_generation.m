@@ -272,7 +272,7 @@ for stimulus = 1:size(numbers, 2)
             arab.FontWeight = "bold";
             arab.Color = "k";
             arab.FontSize = 50;
-            markin = text([-0.75, -0.5, -0.25, 0, 0, 0, 0.25, 0.5, 0.75], [0, 0, 0, 0, 0.25, -0.25, 0, 0, 0], ".", "Color", "green");
+            %markin = text([-0.75, -0.5, -0.25, 0, 0, 0, 0.25, 0.5, 0.75], [0, 0, 0, 0, 0.25, -0.25, 0, 0, 0], ".", "Color", "green");
 
         end
 
