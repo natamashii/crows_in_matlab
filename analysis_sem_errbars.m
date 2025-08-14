@@ -77,6 +77,7 @@ counter = 0;    % counter for progress bar
 total_amount = 84;
 
 %% Correct Response Matrix
+aa = {};
 if to_correct
     % get file names
     path = [spk_folderpath, who_analysis{curr_who}]; % adapt path
@@ -99,8 +100,8 @@ if to_correct
         % this doesnt work) (yep it doesnt work with some failed trials for
         % whatever reason
         [rel_idx, ~] = find(corr_resp(:, 5) == 0);
-        curr_reacts = getreactiontimes(curr_spk, 25, 41, rel_idx)'; % in s
-        curr_reacts = curr_reacts * 1000; % in ms
+        curr_react = getreactiontimes(curr_spk, 25, 41, rel_idx)'; % in s
+        curr_react = curr_react * 1000; % in ms
 
         % save the corrected response matrix
         if to_save
