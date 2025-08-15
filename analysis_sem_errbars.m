@@ -22,6 +22,7 @@ close all
 % col 5: bird response evaluation (0 = correct, 1 = error by bird, 9 =
 % abundance by bird)
 % col 6: test numerosity (2-10)
+% col 7: response latency in ms
 
 % Note: 9 in all columns for one row = abundance by bird
 
@@ -37,15 +38,14 @@ curr_exp = 1;    % set which experiment to analyze
 base_path = 'D:\MasterThesis\analysis\data\';
 figure_path = ['D:\MasterThesis\figures\progress_250814\' who_analysis{curr_who}];
 spk_folderpath = [base_path, 'spk\'];
-rsp_mat_folderpath = [base_path, 'response_matrices\'];
-rsp_time_folderpath = [base_path, 'response_latencies\'];
+rsp_mat_folderpath = [base_path, 'analysed\'];
 
 % all numerosities relevant
 numerosities = [3, 4, 5, 6, 7; % sample
     2, 2, 3, 3, 3;  % test 1 numbers
     5, 6, 7, 4, 4;  % test 2 numbers
     6, 7, 8, 9, 10]';  % test 3 numbers
-patterns = {{'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}, {'P1', 'P2', 'P3'}};
+patterns = {'P1', 'P2', 'P3'};
 
 % prompt to ask who to analyse
 prompt = ['Who do you wish to plot? ' ...
@@ -63,7 +63,7 @@ prompt = ['What do you wish to plot? ' ...
 %plot_type = input(prompt, "s");
 
 to_save = true; % if result shall be saved
-to_correct = false; % if response matrices shall be corrected
+to_correct = true; % if response matrices shall be corrected
 to_plot = {true, true, true, false};
 to_zoom = true;         % toggle to zoom in for RT plots
 
@@ -102,34 +102,33 @@ total_amount = 84;
 %% Correct Response Matrix
 if to_correct
     % get file names
-    path = [spk_folderpath, who_analysis{curr_who}]; % adapt path
-    filelist_rsp = dir(fullfile(path, '*.spk'));  % list of all spk files
+    spk_subject = [spk_folderpath, who_analysis{curr_who}]; % adapt path
+    filelist_spk = dir(spk_subject);  % list of all data & subfolders
+    subfolders_spk = filelist_spk([filelist_spk(:).isdir]); % extract subfolders
+    subfolders_spk = {subfolders_spk(3:end).name};  % list of subfolder names (experiments)
+
+    filelist_rsp = dir(fullfile([spk_subject subfolders_spk{curr_exp}], '*.spk'));  % list of all spk files
     names_rsp = {filelist_rsp.name};
 
     % iterate over files
     for idx = 1:length(names_rsp)
         % load data
         curr_file_rsp = names_rsp{idx}; % current file
-        curr_spk = spk_read([path curr_file_rsp]); % current spike data
+        curr_spk = spk_read([spk_subject, subfolders_spk{curr_exp} '\' curr_file_rsp]); % current spike data
         curr_resp = getresponsematrix(curr_spk); % current response matrix
         % correct the response matrix
         corr_resp = respmat_corr(curr_resp, numerosities);
 
         % get reaction times
-        curr_react = NaN(size(curr_resp, 1), 1);
-
-        % get indices of all not abunded trials (or only correct ones if
-        % this doesnt work) (yep it doesnt work with some failed trials for
-        % whatever reason
         [rel_idx, ~] = find(corr_resp(:, 5) == 0);
-        curr_reacts = getreactiontimes(curr_spk, 25, 41, rel_idx)'; % in s
-        curr_reacts = curr_reacts * 1000; % in ms
-        curr_react(rel_idx) = curr_reacts;
+        curr_react = getreactiontimes(curr_spk, 25, 41, rel_idx)'; % in s
+        curr_react = curr_react * 1000; % in ms
+        corr_resp(rel_idx, 7) = curr_react;
 
         % save the corrected response matrix
         if to_save
-            save(fullfile([rsp_mat_folderpath, who_analysis{curr_who}], [curr_file_rsp, '_resp.mat']), 'corr_resp');
-            save(fullfile([rsp_time_folderpath, who_analysis{curr_who}], [curr_file_rsp, '_react.mat']), 'curr_react');
+            save(fullfile([rsp_mat_folderpath, who_analysis{curr_who} subfolders_spk{curr_exp} '\'], ...
+                [curr_file_rsp, '_resp.mat']), 'corr_resp');
         end
     end
 end
@@ -160,32 +159,32 @@ names_react = {filelist_react.name};	% file names
 % Pre allocation
 % performance for each cond
 % dim 1: subject/session ; dim 2: pattern ; dim 3: samples ; dim 4: test number
-performances = zeros(length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1));
-resp_freq = zeros(length(names_rsp), length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
-reaction_times = cell(length(names_react), length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+performances = zeros(length(names_rsp), length(patterns), size(numerosities, 1));
+resp_freq = zeros(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
+reaction_times = cell(length(names_react), length(patterns), size(numerosities, 1), size(numerosities, 2));
 
 % mean & error over subject/sessions, for each test number, pattern, sample
-mean_resp_freq = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
-mean_RT_s = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
-error_resp_freq = zeros(2, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2)); % dim 1: 1 = STD, 2 = SEM
-error_RT_s = zeros(2, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2)); % dim 1: 1 = STD, 2 = SEM
+mean_resp_freq = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
+mean_RT_s = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
+error_resp_freq = zeros(2, length(patterns), size(numerosities, 1), size(numerosities, 2)); % dim 1: 1 = STD, 2 = SEM
+error_RT_s = zeros(2, length(patterns), size(numerosities, 1), size(numerosities, 2)); % dim 1: 1 = STD, 2 = SEM
 
 % mean & error over subjects/sessions & test numbers, for each pattern, sample
-mean_perf = zeros(length(patterns{curr_exp}), size(numerosities, 1));
-mean_RT = zeros(length(patterns{curr_exp}), size(numerosities, 1));
-error_perf = zeros(2, length(patterns{curr_exp}), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
-error_RT = zeros(2, length(patterns{curr_exp}), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
+mean_perf = zeros(length(patterns), size(numerosities, 1));
+mean_RT = zeros(length(patterns), size(numerosities, 1));
+error_perf = zeros(2, length(patterns), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
+error_RT = zeros(2, length(patterns), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
 
 % median & error over subjects/sessions, for each test number, pattern, sample
-median_perf = zeros(length(patterns{curr_exp}), size(numerosities, 1));
-median_resp_freq = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
-bootstrap_sem_perf = zeros(3, length(patterns{curr_exp}), size(numerosities, 1));
-bootstrap_sem_resp_freq = zeros(3, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+median_perf = zeros(length(patterns), size(numerosities, 1));
+median_resp_freq = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
+bootstrap_sem_perf = zeros(3, length(patterns), size(numerosities, 1));
+bootstrap_sem_resp_freq = zeros(3, length(patterns), size(numerosities, 1), size(numerosities, 2));
 
-median_RT = zeros(length(patterns{curr_exp}), size(numerosities, 1));
-median_RT_s = zeros(length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
-bootstrap_sem_RT = zeros(3, length(patterns{curr_exp}), size(numerosities, 1));
-bootstrap_sem_RT_s = zeros(3, length(patterns{curr_exp}), size(numerosities, 1), size(numerosities, 2));
+median_RT = zeros(length(patterns), size(numerosities, 1));
+median_RT_s = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
+bootstrap_sem_RT = zeros(3, length(patterns), size(numerosities, 1));
+bootstrap_sem_RT_s = zeros(3, length(patterns), size(numerosities, 1), size(numerosities, 2));
 
 % iterate over all files
 for idx = 1:length(names_rsp)
@@ -196,7 +195,7 @@ for idx = 1:length(names_rsp)
     curr_react = load([exp_path_react, curr_file_react]).curr_react;
 
     % iterate over each pattern
-    for pattern = 1:length(patterns{curr_exp})
+    for pattern = 1:length(patterns)
         % extract trials of current pattern
 
         % iterate over samples
@@ -256,7 +255,7 @@ end
 
 
 % iterate over patterns
-for pattern = 1:length(patterns{curr_exp})
+for pattern = 1:length(patterns)
     % iterate over samples
     for sample_idx = 1:size(numerosities, 1)
         % concat RTs for all test numbers & subject/session, for each

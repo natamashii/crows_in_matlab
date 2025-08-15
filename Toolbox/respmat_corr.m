@@ -13,11 +13,13 @@ function corr_resp = respmat_corr(resp_mat, numerosities)
 % col 5: bird response evaluation (0 = correct, 1 = error by bird, 9 =
 % abundance by bird)
 % col 6: test numerosity (2-10)
+% col 7: response latency in ms
 
 % Note: 9 in all columns for one row = abundance by bird
 
-% add sixth column
+% add sixth & seventh column
 resp_mat(:, 6) = 0;
+resp_mat(:, 7) = NaN;
 
 % iterating over trials
 for trial_idx = 1:size(resp_mat, 1)
