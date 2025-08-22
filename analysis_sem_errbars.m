@@ -53,14 +53,14 @@ prompt = ['Who do you wish to plot? ' ...
     ' \n 2 - Jello ' ...
     ' \n 3 - Uri ' ...
     ' \n 4 - Crows (Jello + Uri) '];
-%who_analysis = who_analysis{str2double(input(prompt, "s"))};
+who_analysis = who_analysis{str2double(input(prompt, "s"))};
 
 % prompt to ask what to analyse & to plot
 prompt = ['What do you wish to plot? ' ...
     ' \n 1 - mean/median of everything ' ...
     ' \n 2 - mean/median of matches only' ...
     ' \n 3 - mean/median for each test ("tuning curves") '];
-%plot_type = input(prompt, "s");
+plot_type = input(prompt, "s");
 
 to_save = true; % if result shall be saved
 to_correct = true; % if response matrices shall be corrected
@@ -101,60 +101,11 @@ total_amount = 84;
 
 %% Correct Response Matrix
 if to_correct
-    % get file names
-    spk_subject = [spk_folderpath, who_analysis{curr_who}]; % adapt path
-    filelist_spk = dir(spk_subject);  % list of all data & subfolders
-    subfolders_spk = filelist_spk([filelist_spk(:).isdir]); % extract subfolders
-    subfolders_spk = {subfolders_spk(3:end).name};  % list of subfolder names (experiments)
-
-    filelist_rsp = dir(fullfile([spk_subject subfolders_spk{curr_exp}], '*.spk'));  % list of all spk files
-    names_rsp = {filelist_rsp.name};
-
-    % iterate over files
-    for idx = 1:length(names_rsp)
-        % load data
-        curr_file_rsp = names_rsp{idx}; % current file
-        curr_spk = spk_read([spk_subject, subfolders_spk{curr_exp} '\' curr_file_rsp]); % current spike data
-        curr_resp = getresponsematrix(curr_spk); % current response matrix
-        % correct the response matrix
-        corr_resp = respmat_corr(curr_resp, numerosities);
-
-        % get reaction times
-        [rel_idx, ~] = find(corr_resp(:, 5) == 0);
-        curr_react = getreactiontimes(curr_spk, 25, 41, rel_idx)'; % in s
-        curr_react = curr_react * 1000; % in ms
-        corr_resp(rel_idx, 7) = curr_react;
-
-        % save the corrected response matrix
-        if to_save
-            save(fullfile([rsp_mat_folderpath, who_analysis{curr_who} subfolders_spk{curr_exp} '\'], ...
-                [curr_file_rsp, '_resp.mat']), 'corr_resp');
-        end
-    end
+    corr_resp(spk_folderpath, who_analysis{curr_who}, curr_exp);
 end
 
 %% Sum Average Performance for each Pattern
-% Get Data: Response Matrices
-path_resp = [rsp_mat_folderpath, who_analysis{curr_who}]; % adapt path
-filelist_rsp = dir(path_resp);  % list of all data & subfolders
-subfolders_rsp = filelist_rsp([filelist_rsp(:).isdir]); % extract subfolders
-subfolders_rsp = {subfolders_rsp(3:end).name};  % list of subfolder names (experiments)
 
-exp_path_resp = [path_resp, subfolders_rsp{curr_exp}, '\'];	% path with data of current experiment
-
-filelist_rsp = dir(fullfile(exp_path_resp, '*.mat'));  % list of all response matrices
-names_rsp = {filelist_rsp.name};	% file names
-
-% Get Data: Response Latencies
-path_react = [rsp_time_folderpath, who_analysis{curr_who}]; % adapt path
-filelist_react = dir(path_react);  % list of all data & subfolders
-subfolders_react = filelist_react([filelist_react(:).isdir]); % extract subfolders
-subfolders_react = {subfolders_react(3:end).name};  % list of subfolder names (experiments)
-
-exp_path_react = [path_react, subfolders_react{curr_exp}, '\'];	% path with data of current experiment
-
-filelist_react = dir(fullfile(exp_path_react, '*.mat'));  % list of all response matrices
-names_react = {filelist_react.name};	% file names
 
 % Pre allocation
 % performance for each cond
