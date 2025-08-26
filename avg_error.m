@@ -1,5 +1,8 @@
 function penis = avg_error()
 
+% Pre allocation
+
+
 % function to compute average/median, their errors & such stuff
 
 % Get Data
@@ -23,5 +26,9 @@ exp_path_react = [path_react, subfolders_react{curr_exp}, '\'];	% path with data
 
 filelist_react = dir(fullfile(exp_path_react, '*.mat'));  % list of all response matrices
 names_react = {filelist_react.name};	% file names
+
+
+
+
 
 end
