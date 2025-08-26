@@ -105,7 +105,13 @@ if to_correct
 end
 
 %% Sum Average Performance for each Pattern
+[performances, resp_freq, rec_times] = ...
+    sort_behav(rsp_mat_folderpath, who_analysis, curr_exp, numerosities, patterns);
 
+% Mean
+
+
+%% 
 
 % Pre allocation
 % performance for each cond
