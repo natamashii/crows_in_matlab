@@ -29,7 +29,6 @@ close all
 %% Pre Definition
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
-curr_who = 3;    % set who to analyze
 curr_exp = 1;    % set which experiment to analyze
 % crows: 1 = exp 1 100ms, 2 = exp 1 300ms, 3 = exp 1 50ms, 4 = exp 2 50ms
 % humans: 1 = exp 1 50ms, 2 = exp 2 50ms, 3 = exp 3 50ms
@@ -101,7 +100,7 @@ total_amount = 84;
 
 %% Correct Response Matrix
 if to_correct
-    corr_resp(spk_folderpath, who_analysis{curr_who}, curr_exp);
+    corr_resp(spk_folderpath, who_analysis, curr_exp);
 end
 
 %% Sum Average Performance for each Pattern
