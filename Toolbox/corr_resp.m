@@ -1,4 +1,4 @@
-function corr_resp(spk_folderpath, who_analysis, curr_exp)
+function corr_resp(rsp_mat_folderpath, spk_folderpath, who_analysis, curr_exp, numerosities)
 
 % function to correct response matrices & add sixth column for test numerosity & add seventh column for reaction times
 

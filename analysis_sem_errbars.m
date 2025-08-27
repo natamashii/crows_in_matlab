@@ -29,15 +29,9 @@ close all
 %% Pre Definition
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
-curr_exp = 1;    % set which experiment to analyze
+curr_exp = 4;    % set which experiment to analyze
 % crows: 1 = exp 1 100ms, 2 = exp 1 300ms, 3 = exp 1 50ms, 4 = exp 2 50ms
 % humans: 1 = exp 1 50ms, 2 = exp 2 50ms, 3 = exp 3 50ms
-
-% Path definition
-base_path = 'D:\MasterThesis\analysis\data\';
-figure_path = ['D:\MasterThesis\figures\progress_250814\' who_analysis{curr_who}];
-spk_folderpath = [base_path, 'spk\'];
-rsp_mat_folderpath = [base_path, 'analysed\'];
 
 % all numerosities relevant
 numerosities = [3, 4, 5, 6, 7; % sample
@@ -60,6 +54,12 @@ prompt = ['What do you wish to plot? ' ...
     ' \n 2 - mean/median of matches only' ...
     ' \n 3 - mean/median for each test ("tuning curves") '];
 plot_type = input(prompt, "s");
+
+% Path definition
+base_path = 'D:\MasterThesis\analysis\data\';
+figure_path = ['D:\MasterThesis\figures\progress_250814\' who_analysis];
+spk_folderpath = [base_path, 'spk\'];
+rsp_mat_folderpath = [base_path, 'analysed\'];
 
 to_save = true; % if result shall be saved
 to_correct = true; % if response matrices shall be corrected
@@ -100,7 +100,7 @@ total_amount = 84;
 
 %% Correct Response Matrix
 if to_correct
-    corr_resp(spk_folderpath, who_analysis, curr_exp);
+    corr_resp(rsp_mat_folderpath, spk_folderpath, who_analysis, curr_exp, numerosities);
 end
 
 %% Sum Average Performance for each Pattern
