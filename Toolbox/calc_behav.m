@@ -4,15 +4,19 @@ function [avg_data, err_data] = ...
 % Function to compute mean/avg + error of behaviour
 
 % pre allocation
-avg_data = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
-err_data = zeros(2, length(patterns), size(numerosities, 1), size(numerosities, 2));
+if in_detail    % divided in each test numerosity tested
+    avg_data = zeros(length(patterns), size(numerosities, 1));
+    err_data = zeros(2, length(patterns), size(numerosities, 1));
+else
+    avg_data = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
+    err_data = zeros(2, length(patterns), size(numerosities, 1, size(numerosities, 2)));
+end
 
 % iterate over patterns
 for pattern = 1:length(patterns)
     % iterate over samples
     for sample_idx = 1:size(numerosities, 1)
-        if in_detail
-
+        if in_detail    % divided in each test numerosity tested
             % iterate over test numbers
             for test_idx = 1:size(numerosities, 2)
         
@@ -42,9 +46,7 @@ for pattern = 1:length(patterns)
             err_data(2, pattern, sample_idx, :) = std(to_analyse, [], "omitnan") ...
                 / sqrt(sum(~isnan(to_analyse)));
         elseif strcmp(err_type, 'CI')
-            lower_percentile = alpha / 2;
-            upper_percentile = (1- alpha) / 2;
-            bootstrap_median = zeros(n_boot, 1);
+            
             % resample n_boot times
             for b_idx = 1:n_boot
                 % generate random indices
