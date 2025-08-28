@@ -29,7 +29,8 @@ close all
 %% Pre Definition
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
-curr_exp = 4;    % set which experiment to analyze
+what_analysis = {'performance'; 'response frequency'; 'reaction times'};
+curr_exp = 1;    % set which experiment to analyze
 % crows: 1 = exp 1 100ms, 2 = exp 1 300ms, 3 = exp 1 50ms, 4 = exp 2 50ms
 % humans: 1 = exp 1 50ms, 2 = exp 2 50ms, 3 = exp 3 50ms
 
@@ -48,6 +49,8 @@ prompt = ['Who do you wish to plot? ' ...
     ' \n 4 - Crows (Jello + Uri) '];
 who_analysis = who_analysis{str2double(input(prompt, "s"))};
 
+% prompt to ask for experiment
+
 % prompt to ask what to analyse & to plot
 prompt = ['What do you wish to plot? ' ...
     ' \n 1 - mean/median of everything ' ...
@@ -62,7 +65,7 @@ spk_folderpath = [base_path, 'spk\'];
 rsp_mat_folderpath = [base_path, 'analysed\'];
 
 to_save = true; % if result shall be saved
-to_correct = true; % if response matrices shall be corrected
+to_correct = false; % if response matrices shall be corrected
 to_plot = {true, true, true, false};
 to_zoom = true;         % toggle to zoom in for RT plots
 
@@ -142,69 +145,6 @@ median_RT_s = zeros(length(patterns), size(numerosities, 1), size(numerosities, 
 bootstrap_sem_RT = zeros(3, length(patterns), size(numerosities, 1));
 bootstrap_sem_RT_s = zeros(3, length(patterns), size(numerosities, 1), size(numerosities, 2));
 
-% iterate over all files
-for idx = 1:length(names_rsp)
-    % load response matrix
-    curr_file_rsp = names_rsp{idx};
-    curr_file_react = names_react{idx};
-    curr_resp = load([exp_path_resp, curr_file_rsp]).corr_resp;
-    curr_react = load([exp_path_react, curr_file_react]).curr_react;
-
-    % iterate over each pattern
-    for pattern = 1:length(patterns)
-        % extract trials of current pattern
-
-        % iterate over samples
-        for sample_idx = 1:size(numerosities, 1)
-            rel_nums = numerosities(sample_idx, :);	% sample & test numbers
-
-            % iterate over test numbers
-            for test_idx = 1:size(numerosities, 2)
-                curr_trials = curr_resp(curr_resp(:, 2) == pattern & ...
-                    curr_resp(:, 3) == rel_nums(1) & ...
-                    curr_resp(:, 5) ~= 9 & ...
-                    curr_resp(:, 6) == rel_nums(test_idx), :);
-
-                % get correct trials
-                corr_trials = curr_trials(curr_trials(:, 5) == 0, :);
-
-                % get error trials
-                err_trials = curr_trials(curr_trials(:, 5) == 1, :);
-
-                % compute response frequency
-                % match trials: subject hit to match (correct trials)
-                if test_idx == 1
-                    perf_trials = size(corr_trials, 1) / ...
-                        (size(corr_trials, 1) + size(err_trials, 1));
-                    resp_freq(idx, pattern, sample_idx, test_idx) = perf_trials;
-                % non-match trials: subject hit to non-match (error trials)
-                else
-                    perf_trials = size(err_trials, 1) / ...
-                        (size(corr_trials, 1) + size(err_trials, 1));
-                    resp_freq(idx, pattern, sample_idx, test_idx) = perf_trials;
-                end
-
-                % get reaction time
-                % get indices of correct trials
-                rel_idx = find(curr_resp(:, 2) == pattern & ...
-                    curr_resp(:, 3) == rel_nums(1) & ...
-                    curr_resp(:, 5) == 0 & ...
-                    curr_resp(:, 6) == rel_nums(test_idx)); 
-                reaction_times{idx, pattern, sample_idx, test_idx} = [curr_react(rel_idx)];
-            end
-            % compute performance
-            curr_trials = curr_resp(curr_resp(:, 2) == pattern & ...
-                    curr_resp(:, 3) == rel_nums(1) & ...
-                    curr_resp(:, 5) ~= 9, :);
-            % get correct trials
-            corr_trials = curr_trials(curr_trials(:, 5) == 0, :);
-
-            performances(idx, pattern, sample_idx) = ...
-                size(corr_trials, 1) / size(curr_trials, 1);
-
-        end
-    end
-end
 
 %% calculate average performance/RT for each pattern & sample
 % take mean over subjects/sessions & test numbers
