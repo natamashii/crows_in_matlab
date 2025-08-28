@@ -4,11 +4,6 @@ function [performances, resp_freq, rec_times] = ...
 % function to load & extract performances/reaction times from response
 % matrices
 
-% Pre allocation
-performances = zeros();
-resp_freq = zeros();
-rec_times = zeros();
-
 % Get Data
 path_resp = [rsp_mat_folderpath, who_analysis]; % adapt path
 filelist_rsp = dir(path_resp);  % list of all data & subfolders
@@ -19,6 +14,15 @@ exp_path_resp = [path_resp, subfolders_rsp{curr_exp}, '\'];	% path with data of 
 
 filelist_rsp = dir(fullfile(exp_path_resp, '*.mat'));  % list of all response matrices
 names_rsp = {filelist_rsp.name};	% file names
+
+% Pre allocation
+% dim 0: individual subject/session
+% dim 1: pattern type
+% dim 2: sample 
+% dim 3: test numerosities
+performances = zeros(length(names_rsp), length(patterns), size(numerosities, 1));
+resp_freq = zeros(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
+rec_times = cell(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
 
 % iterate over all files
 for idx = 1:length(names_rsp)
@@ -57,8 +61,8 @@ for idx = 1:length(names_rsp)
                     resp_freq(idx, pattern, sample_idx, test_idx) = ...
                         size(corr_trials, 1) / ...
                         (size(corr_trials, 1) + size(err_trials, 1));
-                    rec_times(idx, pattern, sample_idx, test_idx) = ...
-                        [curr_react(corr_idx, 7)];
+                    rec_times{idx, pattern, sample_idx, test_idx} = ...
+                        [curr_resp(corr_idx, 7)];
                 % non-match trials: subject hit to non-match (error trials)
                 else
                     resp_freq(idx, pattern, sample_idx, test_idx) = ...
