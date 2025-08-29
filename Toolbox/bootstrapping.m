@@ -1,4 +1,5 @@
-function penis = bootstrapping(data, n_boot, alpha, in_detail, patterns, numerosities)
+function err_data = ...
+    bootstrapping(data, n_boot, alpha, in_detail, patterns, numerosities)
 
 % Function to calculate bootstrapping stuff
 
@@ -21,10 +22,54 @@ for pattern = 1:length(patterns)
         for test_idx = 1:size(numerosities, 2)
             if in_detail
                 bootstrap_median = zeros(n_boot, 1);
+                % resample n_boot times
+                for b_idx = 1:n_boot
+                    % generate random indices
+                    resample_idx = ...
+                        randi(numel(data(:, pattern, sample_idx, test_idx)), ...
+                        numel(data(:, pattern, sample_idx, test_idx)), 1);
+
+                    % bootstrap sample
+                    bootstrap_sample = data(resample_idx);
+
+                    % calculate median of current bootstrap sample
+                    bootstrap_median(b_idx) = median(bootstrap_sample);
+
+                    % sort the median vals
+                    sorted_bootstrap_median = sort(bootstrap_median);
+
+                    % get CIs
+                    err_data(1, pattern, sample_idx, test_idx) = ...
+                        prctile(sorted_bootstrap_median, lower_percentile);
+                    err_data(2, pattern, sample_idx, test_idx) = ...
+                        prctile(sorted_bootstrap_median, upper_percentile);
+                end
             end
         end
         if ~in_detail
             bootstrap_median = zeros(n_boot, 1);
+            % resample n_boot times
+            for b_idx = 1:n_boot
+                % generate random indices
+                resample_idx = ...
+                    randi(numel(data(:, pattern, sample_idx, :)), ...
+                    numel(data(:, pattern, sample_idx, :)), 1);
+
+                % bootstrap sample
+                bootstrap_sample = data(resample_idx);
+
+                % calculate median of current bootstrap sample
+                bootstrap_median(b_idx) = median(bootstrap_sample);
+
+                % sort the median vals
+                sorted_bootstrap_median = sort(bootstrap_median);
+
+                % get CIs
+                err_data(1, pattern, sample_idx) = ...
+                    prctile(sorted_bootstrap_median, lower_percentile);
+                err_data(2, pattern, sample_idx) = ...
+                    prctile(sorted_bootstrap_median, upper_percentile);
+            end
         end
     end
 end

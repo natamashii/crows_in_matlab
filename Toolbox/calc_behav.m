@@ -19,12 +19,24 @@ for pattern = 1:length(patterns)
         if in_detail    % divided in each test numerosity tested
             % iterate over test numbers
             for test_idx = 1:size(numerosities, 2)
+                % Reaction Time
+                if strcmp(data_type, 'reaction times')
+                    % concat RTs for all test numbers & subject/sessions
+                    to_analyse = vertcat(data{:, pattern, sample_idx, test_idx});
+                else
+                    to_analyse = data(:, pattern, sample_idx, test_idx);
+                end
+            
+
+
+
+
         
         % Reaction Time
         if strcmp(data_type, 'reaction times')
-            % concat RTsfor all test numbers & subject/sessions
+            % concat RTs for all test numbers & subject/sessions
             to_analyse = vertcat(data{:, pattern, sample_idx, :});
-        
+        % Performance
         else
             to_analyse = data(:, pattern, sample_idx);
         end
@@ -46,25 +58,8 @@ for pattern = 1:length(patterns)
             err_data(2, pattern, sample_idx, :) = std(to_analyse, [], "omitnan") ...
                 / sqrt(sum(~isnan(to_analyse)));
         elseif strcmp(err_type, 'CI')
-            
-            % resample n_boot times
-            for b_idx = 1:n_boot
-                % generate random indices
-                resample_idx = randi(numel(to_analyse), numel(to_analyse), 1);
-                
-                % bootstrap sample
-                bootstrap_sample = to_analyse(resample_idx);
-
-                % calculate median of current bootstrap sample
-                bootstrap_median(b_idx) = median(bootstrap_sample);
-
-                % sort the median vals
-                sorted_bootstrap_median = sort(bootstrap_median);
-
-                % get CIs
-                err_data(1, pattern, sample_idx)
-                
-            end
+            err_data = ...
+                bootstrapping(to_analyse, n_boot, alpha, in_detail, patterns, numerosities);
         end
 
 

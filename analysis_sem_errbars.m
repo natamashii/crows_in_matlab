@@ -3,6 +3,16 @@ clear
 close all
 
 % Script for sorting behavioural data
+% TODO
+% rewrite analysis stuff as functions
+% bootstrapping: more bootstrap statistic? some p value or such stuff?
+% rewrite plotting stuff as one function
+% DONE rewrite correction to one resp mat with RT
+% DONE rewrite sorting behaviour data as function
+% DONE rewrite data extraction from behaviour data as function
+% rewrite avg/median + error stuff as function
+% rewrite bootstrapping as one function
+
 
 % Note
 % so far, condition & standard stimuli trials thrown together (must be checked beforehand!!)
