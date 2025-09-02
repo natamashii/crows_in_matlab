@@ -1,12 +1,9 @@
 function [ax, dot_plots, leg_patch, leg_label] = ...
     plot_first(numerosities, jitter_dots, avg_data, err_down, err_up, ...
-    patterns, colours, plot_font, what_analysis, err_type)
+    patterns, colours, plot_font, what_analysis, err_type, linewidth, ...
+    linestyle, mrksz, capsize)
 
 % function to create variations of the first plot
-
-% pre definition
-capsize = 5;
-linewidth = 1;
 
 % pre allocation
 leg_patch = [];
@@ -17,6 +14,7 @@ dot_plots = {};
 for pattern = 1:length(patterns)
     hold on
     ax = gca;
+    axis padded
 
     % Subplot Adjustments
     ax.YGrid = "on";    % plot horizontal grid lines
@@ -44,20 +42,23 @@ for pattern = 1:length(patterns)
     x_vals  = numerosities(:, 1) + jitter_dots(pattern);
     
     % plot error
-    err_plot = errorbar(x_vals, avg_data(pattern, :)', err_down(pattern, :)', err_up(pattern, :)');
+    err_plot = errorbar(x_vals, avg_data(pattern, :)', ...
+        err_down(pattern, :)', err_up(pattern, :)');
     err_plot.LineStyle = "none";
     err_plot.Color = colours{pattern};
     err_plot.CapSize = capsize;
     err_plot.LineWidth = linewidth;
+    err_plot.MarkerSize = mrksz;
 
     % plot mean/median
     plot_pattern = plot(x_vals, avg_data(pattern, :));
-    plot_pattern.LineStyle = "--";
+    plot_pattern.LineStyle = linestyle;
     plot_pattern.LineWidth = linewidth;
     plot_pattern.Marker = "o";
     plot_pattern.Color = colours{pattern};
     plot_pattern.MarkerFaceColor = colours{pattern};
     plot_pattern.MarkerEdgeColor = "none";
+    plot_pattern.MarkerSize = mrksz;
     dot_plots{end + 1} = plot_pattern;
 
     % for legend

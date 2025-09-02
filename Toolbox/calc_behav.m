@@ -23,7 +23,7 @@ for pattern = 1:length(patterns)
                 % Reaction Time
                 if strcmp(data_type, 'Reaction Times')
                     % concat RTs for all test numbers & subject/sessions
-                    to_analyse = vertcat(data{:, pattern, sample_idx, test_idx});
+                    to_analyse = vertcat(data(:, pattern, sample_idx, test_idx));
                 % Performance
                 else
                     to_analyse = data(:, pattern, sample_idx, test_idx);
@@ -49,12 +49,15 @@ for pattern = 1:length(patterns)
                             std(to_analyse, [], "omitnan");
                     case 'SEM'
                         err_data(1, pattern, sample_idx, test_idx) = ...
-                            std(to_analyse, [], "omitnan") / sqrt(sum(~isnan(to_analyse)));
+                            std(to_analyse, [], "omitnan") / ...
+                            sqrt(sum(~isnan(to_analyse)));
                         err_data(2, pattern, sample_idx, test_idx) = ...
-                            std(to_analyse, [], "omitnan") / sqrt(sum(~isnan(to_analyse)));
+                            std(to_analyse, [], "omitnan") / ...
+                            sqrt(sum(~isnan(to_analyse)));
                     case 'CI'
                         err_data = ...
-                            bootstrapping(to_analyse, n_bot, alpha, in_detail, patterns, numerosities);
+                            bootstrapping(to_analyse, n_bot, alpha, ...
+                            in_detail, patterns, numerosities);
                 end
             end
         else
@@ -62,7 +65,7 @@ for pattern = 1:length(patterns)
             % Reaction Time
             if strcmp(data_type, 'Reaction Times')
                 % concat RTs for all test numbers & subject/sessions
-                to_analyse = vertcat(data{:, pattern, sample_idx, :});
+                to_analyse = vertcat(data(:, pattern, sample_idx, :));
                 % Performance
             else
                 to_analyse = data(:, pattern, sample_idx);

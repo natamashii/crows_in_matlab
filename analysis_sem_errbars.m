@@ -106,9 +106,13 @@ err_type = err_type{input(prompt)};
 
 % Path definition
 base_path = 'D:\MasterThesis\analysis\data\';
-figure_path = ['D:\MasterThesis\figures\progress_250814\' who_analysis];
+figure_path = ['D:\MasterThesis\figures\progress_since_250902\' who_analysis '\'];
 spk_folderpath = [base_path, 'spk\'];
 rsp_mat_folderpath = [base_path, 'analysed\'];
+
+filelist_spk = dir(figure_path);  % list of all data & subfolders
+subfolders = filelist_spk([filelist_spk(:).isdir]); % extract subfolders
+subfolders = {subfolders(3:end).name};  % list of subfolder names (experiments)
 
 to_save = true; % if result shall be saved
 to_correct = false; % if response matrices shall be corrected
@@ -135,12 +139,12 @@ upper_percentile = (1 - alpha / 2);
 counter = 0;    % counter for progress bar
 total_amount = 84;
 
-%% Correct Response Matrix
+% Correct Response Matrix
 if to_correct
     corr_resp(rsp_mat_folderpath, spk_folderpath, who_analysis, curr_exp, numerosities);
 end
 
-%% Sum Average Performance for each Pattern
+% Sum Average Performance for each Pattern
 [performances, resp_freq, rec_times] = ...
     sort_behav(rsp_mat_folderpath, who_analysis, curr_exp, numerosities, patterns);
 
@@ -154,12 +158,25 @@ end
 
 % Get individual data
 
-%% Plot: Overall
+% Plot: Overall
+mrksz = 10;
+linewidth = 2;
+plot_font = 14;
+in_detail = false;
+capsize = 10;
+jitterwidth = 0.25;
 
 fig = plot_stuff(performances, avg_data, err_data, numerosities, ...
     patterns, calc_type, err_type, what_analysis, who_analysis, ...
-    experiments{curr_exp}, plot_font, colours_pattern, plot_pos, in_detail);
+    experiments{curr_exp}, plot_font, colours_pattern, plot_pos, ...
+    in_detail, linewidth, "none", mrksz, capsize, jitterwidth);
 
+% save figure
+if to_save
+    fig_name = ['Overall_' calc_type '_' err_type '_' what_analysis '.' format];
+    adapt_path = [figure_path '\' subfolders{curr_exp} '\'];
+    saveas(fig, [adapt_path, fig_name], format)
+end
 
 %% Plot: Correct Trials Match & Non-Match TOGETHER
 if to_plot{1}
