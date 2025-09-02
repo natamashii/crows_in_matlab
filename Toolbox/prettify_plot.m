@@ -1,4 +1,6 @@
-function [fig_pretty, fig_title_pretty] = prettify_plot(fig, plot_pos, fig_title, plot_font, add_legend, leg_patch, leg_label)
+function [fig_pretty, fig_title_pretty] = ...
+    prettify_plot(fig, plot_pos, fig_title, plot_font, ...
+    add_legend, leg_patch, leg_label)
 
 % function to improve overall figure
 

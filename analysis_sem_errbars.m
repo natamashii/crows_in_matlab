@@ -3,6 +3,7 @@ clear
 close all
 
 % Script for sorting behavioural data
+
 % TODO
 % rewrite analysis stuff as functions
 % bootstrapping: more bootstrap statistic? some p value or such stuff?
@@ -12,6 +13,9 @@ close all
 % DONE rewrite data extraction from behaviour data as function
 % rewrite avg/median + error stuff as function
 % rewrite bootstrapping as one function
+% make plots with individual dots in background (like fish graphics)
+% save data (individual stuff and mean stuff)
+% make fig size variable
 
 
 % Note
@@ -39,8 +43,10 @@ close all
 %% Pre Definition
 
 who_analysis = {'humans\'; 'jello\'; 'uri\'};
-what_analysis = {'performance'; 'response frequency'; 'reaction times'};
-curr_exp = 1;    % set which experiment to analyze
+what_analysis = {'Performance'; 'Response Frequency'; 'Reaction Times'};
+calc_type = {'Mean', 'Median'};
+err_type = {'STD', 'SEM', 'CI'};
+
 % crows: 1 = exp 1 100ms, 2 = exp 1 300ms, 3 = exp 1 50ms, 4 = exp 2 50ms
 % humans: 1 = exp 1 50ms, 2 = exp 2 50ms, 3 = exp 3 50ms
 
@@ -60,6 +66,23 @@ prompt = ['Who do you wish to plot? ' ...
 who_analysis = who_analysis{str2double(input(prompt, "s"))};
 
 % prompt to ask for experiment
+if strcmp(who_analysis, 'humans\')
+    prompt = ['Which experiment do you wish to plot? ' ...
+        ' \n 1 - Experiment 1, 50 ms sample time ' ...
+        ' \n 2 - Experiment 2, 50 ms sample time ' ...
+        ' \n 3 - Experiment 3, 50 ms sample time '];
+    experiments = {'Experiment 1, 50 ms'; 'Experiment 2, 50 ms'; ...
+        'Experiment 3, 50 ms'};
+else
+    prompt = ['Which experiment do you wish to plot? ' ...
+        ' \n 1 - Experiment 1, 100 ms sample time ' ...
+        ' \n 2 - Experiment 1, 300 ms sample time ' ...
+        ' \n 3 - Experiment 1, 50 ms sample time ' ...
+        ' \n 4 - Experiment 2, 50 ms sample time '];
+    experiments = {'Experiment 1, 100 ms'; 'Experiment 1, 300 ms'; ...
+        'Experiment 1, 50 ms'; 'Experiment 2, 50 ms'};
+end
+curr_exp = input(prompt);
 
 % prompt to ask what to analyse
 prompt = ['What do you wish to analyse? '...
@@ -70,10 +93,16 @@ what_analysis = what_analysis{str2double(input(prompt, "s"))};
 
 % prompt to ask what to analyse & to plot
 prompt = ['What do you wish to plot? ' ...
-    ' \n 1 - mean/median of everything ' ...
-    ' \n 2 - mean/median of matches only' ...
-    ' \n 3 - mean/median for each test ("tuning curves") '];
-plot_type = input(prompt, "s");
+    ' \n 1 - Mean ' ...
+    ' \n 2 - Median '];
+calc_type = calc_type{input(prompt)};
+
+% prompt to ask for error type to plot
+prompt = ['With what type of error? ' ...
+    ' \n 1 - STD ' ...
+    ' \n 2 - SEM ' ...
+    ' \n 3 - CI '];
+err_type = err_type{input(prompt)};
 
 % Path definition
 base_path = 'D:\MasterThesis\analysis\data\';
@@ -84,27 +113,15 @@ rsp_mat_folderpath = [base_path, 'analysed\'];
 to_save = true; % if result shall be saved
 to_correct = false; % if response matrices shall be corrected
 to_plot = {true, true, true, false};
-to_zoom = true;         % toggle to zoom in for RT plots
+in_detail = false;
 
 % for Plotting
-colours_pattern = {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; [0.1211 0.5195 0.6289]};
+colours_pattern = ...
+    {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; [0.1211 0.5195 0.6289]};
 colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...
     [0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; [0.6350 0.0780 0.1840]};
 format = 'svg';
 fig_title = '';
-
-switch to_zoom
-    case true
-        error_plot = {{{'STD'; 'SEM'}, [-0.1 1.1], 'Performance', 'perf', 'Mean', (0:0.2:1)';
-            {'STD'; 'SEM'}, [100 350], 'Response Latency [ms]', 'RT', 'Mean', (100:50:350)'};
-            {{'STD'; 'CI'}, [-0.1 1.1], 'Performance', 'perf', 'Median', (0:0.2:1)';
-            {'STD'; 'CI'}, [100 350], 'Response Latency [ms]', 'RT', 'Median', (100:50:350)'}};
-    case false
-        error_plot = {{{'STD'; 'SEM'}, [-0.1 1.1], 'Performance', 'perf', 'Mean', (0:0.2:1)';
-            {'STD'; 'SEM'}, [200 600], 'Response Latency [ms]', 'RT', 'Mean', (200:100:600)'};
-            {{'STD'; 'CI'}, [-0.1 1.1], 'Performance', 'perf', 'Median', (0:0.2:1)';
-            {'STD'; 'CI'}, [200 600], 'Response Latency [ms]', 'RT', 'Median', (200:100:600)'}};
-end
 
 plot_font = 12;
 plot_pos = [451, 259, 1146, 690];   % default PaperPosition size of figure
@@ -128,179 +145,21 @@ end
     sort_behav(rsp_mat_folderpath, who_analysis, curr_exp, numerosities, patterns);
 
 % Mean
+[avg_data, err_data] = ...
+    calc_behav(performances, what_analysis, 'Mean', err_type, patterns, ...
+    numerosities, n_boot, alpha, in_detail);
+
+% Median
 
 
-%% 
+% Get individual data
 
-% Pre allocation
-% performance for each cond
-% dim 1: subject/session ; dim 2: pattern ; dim 3: samples ; dim 4: test number
-performances = zeros(length(names_rsp), length(patterns), size(numerosities, 1));
-resp_freq = zeros(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
-reaction_times = cell(length(names_react), length(patterns), size(numerosities, 1), size(numerosities, 2));
+%% Plot: Overall
 
-% mean & error over subject/sessions, for each test number, pattern, sample
-mean_resp_freq = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
-mean_RT_s = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
-error_resp_freq = zeros(2, length(patterns), size(numerosities, 1), size(numerosities, 2)); % dim 1: 1 = STD, 2 = SEM
-error_RT_s = zeros(2, length(patterns), size(numerosities, 1), size(numerosities, 2)); % dim 1: 1 = STD, 2 = SEM
+fig = plot_stuff(performances, avg_data, err_data, numerosities, ...
+    patterns, calc_type, err_type, what_analysis, who_analysis, ...
+    experiments{curr_exp}, plot_font, colours_pattern, plot_pos, in_detail);
 
-% mean & error over subjects/sessions & test numbers, for each pattern, sample
-mean_perf = zeros(length(patterns), size(numerosities, 1));
-mean_RT = zeros(length(patterns), size(numerosities, 1));
-error_perf = zeros(2, length(patterns), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
-error_RT = zeros(2, length(patterns), size(numerosities, 1)); % dim 1: 1 = STD, 2 = SEM
-
-% median & error over subjects/sessions, for each test number, pattern, sample
-median_perf = zeros(length(patterns), size(numerosities, 1));
-median_resp_freq = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
-bootstrap_sem_perf = zeros(3, length(patterns), size(numerosities, 1));
-bootstrap_sem_resp_freq = zeros(3, length(patterns), size(numerosities, 1), size(numerosities, 2));
-
-median_RT = zeros(length(patterns), size(numerosities, 1));
-median_RT_s = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
-bootstrap_sem_RT = zeros(3, length(patterns), size(numerosities, 1));
-bootstrap_sem_RT_s = zeros(3, length(patterns), size(numerosities, 1), size(numerosities, 2));
-
-
-%% calculate average performance/RT for each pattern & sample
-% take mean over subjects/sessions & test numbers
-
-
-% iterate over patterns
-for pattern = 1:length(patterns)
-    % iterate over samples
-    for sample_idx = 1:size(numerosities, 1)
-        % concat RTs for all test numbers & subject/session, for each
-        % pattern & sample
-        RT_test_nums = vertcat(reaction_times{:, pattern, sample_idx, :});
-
-        % calculate average over subjects/sessions & test numbers
-        mean_perf(pattern, sample_idx) = ...
-            mean(performances(:, pattern, sample_idx), "all");
-        median_perf(pattern, sample_idx) = ...
-            median(performances(:, pattern, sample_idx), "all");
-        mean_RT(pattern, sample_idx) = ...
-            mean(RT_test_nums, "omitnan");
-        median_RT(pattern, sample_idx) = ...
-            median(RT_test_nums, "omitnan");
-        % calculate corresponding error: STD
-        error_perf(1, pattern, sample_idx) = ...
-            std(performances(:, pattern, sample_idx), [], "all");
-        error_RT(1, pattern, sample_idx) = ...
-            std(RT_test_nums, [], "omitnan");
-        % calculate corresponding error: SEM
-        error_perf(2, pattern, sample_idx) = ...
-            std(performances(:, pattern, sample_idx), [], "all") ...
-            / sqrt(numel(performances(:, pattern, sample_idx)));
-        error_RT(2, pattern, sample_idx) = ...
-            std(RT_test_nums, [], "omitnan") / sqrt(sum(~isnan(RT_test_nums)));
-
-        % add bootstrap
-        bootstrap_median_RT = zeros(n_boot, 1);
-        bootstrap_median_perf = zeros(n_boot, 1);
-        % resample n-th times
-        for b_idx = 1:n_boot
-            % generate random indices
-            resample_idx_RT = randi(length(RT_test_nums), length(RT_test_nums), 1);
-            resample_idx_perf = randi(numel(performances(:, pattern, sample_idx)), ...
-                numel(performances(:, pattern, sample_idx)), 1);
-
-            % make bootstrap sample
-            bootstrap_sample_RT = RT_test_nums(resample_idx_RT);
-            bootstrap_sample_perf = performances(resample_idx_perf);
-
-            % calculate median of current bootstrap sample
-            bootstrap_median_RT(b_idx) = median(bootstrap_sample_RT, "omitnan");
-            bootstrap_median_perf(b_idx) = median(bootstrap_sample_perf, "omitnan");
-        end
-        % bootstrap statistics
-        bootstrap_sem_perf(1, pattern, sample_idx) = std(bootstrap_median_perf);
-        bootstrap_sem_RT(1, pattern, sample_idx) = std(bootstrap_median_RT);
-
-        % confidence interval
-        sorted_bootstrap_median_RT = sort(bootstrap_median_RT);   % sort the shit
-        sorted_bootstrap_median_perf = sort(bootstrap_median_perf);
-        bootstrap_sem_RT(2, pattern, sample_idx) = median_RT(pattern, sample_idx) - ...
-            prctile(sorted_bootstrap_median_RT, lower_percentile);
-        bootstrap_sem_RT(3, pattern, sample_idx) = median_RT(pattern, sample_idx) - ...
-            prctile(sorted_bootstrap_median_RT, upper_percentile);
-        bootstrap_sem_perf(2, pattern, sample_idx) = median_perf(pattern, sample_idx) - ...
-            prctile(sorted_bootstrap_median_perf, lower_percentile);
-        bootstrap_sem_perf(3, pattern, sample_idx) = median_perf(pattern, sample_idx) - ...
-            prctile(sorted_bootstrap_median_perf, upper_percentile);
-
-        % iterate over test numbers
-        for test_idx = 1:size(numerosities, 2)
-            % concat RTs for all subject/session, for each test number,
-            % pattern & sample
-            RT_test_nums = vertcat(reaction_times{:, pattern, sample_idx, test_idx});
-
-            % compute mean/median performance & RT over subjects/session
-            mean_resp_freq(pattern, sample_idx, test_idx) = ...
-                mean(resp_freq(:, pattern, sample_idx, test_idx), "all");
-            mean_RT_s(pattern, sample_idx, test_idx) = ...
-                mean(RT_test_nums, "omitnan");
-            median_resp_freq(pattern, sample_idx, test_idx) = ...
-                median(resp_freq(:, pattern, sample_idx, test_idx), "all");
-            median_RT_s(pattern, sample_idx, test_idx) = ...
-                median(RT_test_nums, "omitnan");
-            % calculate corresponding error: STD
-            error_resp_freq(1, pattern, sample_idx, test_idx) = ...
-                std(resp_freq(:, pattern, sample_idx, test_idx), [], "all");
-            error_RT_s(1, pattern, sample_idx, test_idx) = ...
-                std(RT_test_nums, [], "omitnan");
-            % calculate corresponding error: SEM
-            error_resp_freq(2, pattern, sample_idx, test_idx) = ...
-                std(resp_freq(:, pattern, sample_idx, test_idx), [], "all") ...
-                / sqrt(numel(resp_freq(:, pattern, sample_idx, test_idx)));
-            error_RT_s(2, pattern, sample_idx, test_idx) = ...
-                std(RT_test_nums, [], "omitnan") / sqrt(sum(~isnan(RT_test_nums)));
-
-            % add bootstrap
-            bootstrap_median_RT = zeros(n_boot, 1);
-            bootstrap_median_perf = zeros(n_boot, 1);
-
-            % resample n-th times
-            for b_idx = 1:n_boot
-                % generate random indices
-                resample_idx_RT = randi(length(RT_test_nums), length(RT_test_nums), 1);
-                resample_idx_perf = randi(numel(resp_freq(:, pattern, sample_idx, test_idx)), ...
-                    numel(resp_freq(:, pattern, sample_idx, test_idx)), 1);
-
-                % make bootstrap sample
-                bootstrap_sample_RT = RT_test_nums(resample_idx_RT);
-                bootstrap_sample_perf = resp_freq(resample_idx_perf);
-
-                % calculate median of current bootstrap sample
-                bootstrap_median_RT(b_idx) = median(bootstrap_sample_RT, "omitnan");
-                bootstrap_median_perf(b_idx) = median(bootstrap_median_perf, "omitnan");
-            end
-            % bootstrap statistics
-            bootstrap_sem_RT_s(1, pattern, sample_idx, test_idx) = std(bootstrap_median_RT, [], "omitnan");
-            bootstrap_sem_resp_freq(1, pattern, sample_idx, test_idx) = std(bootstrap_median_perf, [], "omitnan");
-
-            % confidence interval
-            sorted_bootstrap_median_RT = sort(bootstrap_median_RT);   % sort the shit
-            sorted_bootstrap_median_perf = sort(bootstrap_median_perf);
-            bootstrap_sem_RT_s(2, pattern, sample_idx, test_idx) = ...
-                median_RT_s(pattern, sample_idx, test_idx) - ...
-                prctile(sorted_bootstrap_median_RT, lower_percentile);
-            bootstrap_sem_RT_s(3, pattern, sample_idx, test_idx) = ...
-                median_RT_s(pattern, sample_idx, test_idx) - ...
-                prctile(sorted_bootstrap_median_RT, upper_percentile);
-            bootstrap_sem_resp_freq(2, pattern, sample_idx, test_idx) = ...
-                median_resp_freq(pattern, sample_idx, test_idx) - ...
-                prctile(sorted_bootstrap_median_perf, lower_percentile);
-            bootstrap_sem_resp_freq(3, pattern, sample_idx, test_idx) = ...
-                median_resp_freq(pattern, sample_idx, test_idx) - ...
-                prctile(sorted_bootstrap_median_perf, upper_percentile);
-
-            counter = counter + 1;
-            progressbar(counter, total_amount)
-        end
-    end
-end
 
 %% Plot: Correct Trials Match & Non-Match TOGETHER
 if to_plot{1}
