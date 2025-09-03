@@ -1,79 +1,38 @@
-function err_data = ...
-    bootstrapping(data, n_boot, alpha, in_detail, patterns, numerosities)
+function [low_err_data, up_err_data] = ...
+    bootstrapping(data, n_boot, alpha)
 
 % Function to calculate bootstrapping stuff
 
 % pre allocation
-if in_detail    % divided in each test numerosity tested
-    err_data = zeros(2, length(patterns), size(numerosities, 1));
-else
-    err_data = zeros(2, length(patterns), size(numerosities, 1), size(numerosities, 2));
-end
+bootstrap_median = zeros(n_boot, 1);
 
 % pre definition
 lower_percentile = alpha / 2;
-upper_percentile = (1- alpha) / 2;
+upper_percentile = 100 - (alpha / 2);
 
-% iterate over patterns
-for pattern = 1:length(patterns)
-    % iterate over samples
-    for sample_idx = 1:size(numerosities, 1)
-        % iterate over test numerosities
-        for test_idx = 1:size(numerosities, 2)
-            if in_detail
-                bootstrap_median = zeros(n_boot, 1);
-                % resample n_boot times
-                for b_idx = 1:n_boot
-                    % generate random indices
-                    resample_idx = ...
-                        randi(numel(data(:, pattern, sample_idx, test_idx)), ...
-                        numel(data(:, pattern, sample_idx, test_idx)), 1);
+% Median of data
+med_data = median(data, "omitnan");
 
-                    % bootstrap sample
-                    bootstrap_sample = data(resample_idx);
+% resample n_boot times
+for b_idx = 1:n_boot
+    % generate random indices
+    resample_idx = randi(numel(data), numel(data), 1);
 
-                    % calculate median of current bootstrap sample
-                    bootstrap_median(b_idx) = median(bootstrap_sample);
+    % bootstrap sample
+    bootstrap_sample = data(resample_idx);
 
-                    % sort the median vals
-                    sorted_bootstrap_median = sort(bootstrap_median);
+    % calculate median of current bootstrap sample
+    bootstrap_median(b_idx) = median(bootstrap_sample);
 
-                    % get CIs
-                    err_data(1, pattern, sample_idx, test_idx) = ...
-                        prctile(sorted_bootstrap_median, lower_percentile);
-                    err_data(2, pattern, sample_idx, test_idx) = ...
-                        prctile(sorted_bootstrap_median, upper_percentile);
-                end
-            end
-        end
-        if ~in_detail
-            bootstrap_median = zeros(n_boot, 1);
-            % resample n_boot times
-            for b_idx = 1:n_boot
-                % generate random indices
-                resample_idx = ...
-                    randi(numel(data(:, pattern, sample_idx, :)), ...
-                    numel(data(:, pattern, sample_idx, :)), 1);
+    % sort the median vals
+    sorted_bootstrap_median = sort(bootstrap_median);
 
-                % bootstrap sample
-                bootstrap_sample = data(resample_idx);
+    % get CIs
+    low_err_data = med_data - ...
+        prctile(sorted_bootstrap_median, lower_percentile);
+    up_err_data = prctile(sorted_bootstrap_median, upper_percentile) - ...
+        med_data;
 
-                % calculate median of current bootstrap sample
-                bootstrap_median(b_idx) = median(bootstrap_sample);
-
-                % sort the median vals
-                sorted_bootstrap_median = sort(bootstrap_median);
-
-                % get CIs
-                err_data(1, pattern, sample_idx) = ...
-                    prctile(sorted_bootstrap_median, lower_percentile);
-                err_data(2, pattern, sample_idx) = ...
-                    prctile(sorted_bootstrap_median, upper_percentile);
-            end
-        end
-    end
 end
-
-
 
 end

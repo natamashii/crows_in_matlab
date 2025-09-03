@@ -17,7 +17,7 @@ fig_title = title([calc_type ' ' what_analysis ' of ' ...
 
 % Plot single data points
 ax = plot_ind(numerosities, ind_data, jitter_dots, colours, ...
-    patterns, in_detail, mrksz);
+    patterns, in_detail, mrksz, what_analysis);
 
 
 % plot the stuff
@@ -36,7 +36,7 @@ ax = plot_ind(numerosities, ind_data, jitter_dots, colours, ...
 if strcmp(what_analysis, 'Reaction Times') && strcmp(who_analysis, 'humans')
     ax.YLim = [200 600];
 elseif strcmp(what_analysis, 'Reaction Times') && ~strcmp(who_analysis, 'humans')
-    ax.YLim = [100 350];
+    ax.YLim = [200 400];
 else
     ax.YLim = [0 1];
     ax.YTick = (0:0.2:1);

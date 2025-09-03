@@ -1,6 +1,6 @@
 function ax = ...
     plot_ind(numerosities, data, jitter_dots, ...
-    colours, patterns, in_detail, mrksz)
+    colours, patterns, in_detail, mrksz, data_type)
 
 % Function to plot individual data points of each subject/session
 
@@ -22,9 +22,17 @@ for pattern = 1:length(patterns)
         x_vals = x_vals + jitter_dots(pattern); % adjust with some jitter
 
         if in_detail
-            % iterate over test numbers
             for test_idx = 1:size(numerosities, 2)
-                dot_plot = swarmchart(x_vals, data(:, pattern, sample_idx, test_idx), mrksz * marker_factor);
+                % Reaction Time
+                if strcmp(data_type, 'Reaction Times')
+                    % concat RTs for all test numbers & subject/sessions
+                    data = vertcat(data{:, pattern, sample_idx, test_ind});
+                    % adjust x vals
+                    x_vals = ones(size(data, 1), 1);
+                    x_vals = x_vals + jitter_dots(pattern); % adjust with some jitter
+                end
+                dot_plot = swarmchart(x_vals, ...
+                    data(:, pattern, sample_idx, test_idx), mrksz * marker_factor);
                 dot_plot.XJitter = "density";
                 dot_plot.Marker = "o";
                 %dot_plot.MarkerFaceColor = colours{pattern};
@@ -33,7 +41,17 @@ for pattern = 1:length(patterns)
                 dot_plot.MarkerFaceAlpha = dot_alpha;
             end
         else
-            dot_data = mean(squeeze(data(:, pattern, sample_idx, :)), 2, "omitnan");
+            % Reaction Time
+            if strcmp(data_type, 'Reaction Times')
+                % pre allocation
+                dot_data = NaN(size(data, 1), 1);
+                % iterate over subjects
+                for sub_idx = 1:size(data, 1)
+                    % concat RTs for all test numbers & subject/sessions
+                    sub_data = vertcat(data{sub_idx, pattern, sample_idx, :});
+                    dot_data(sub_idx) = mean(sub_data, "omitnan");
+                end
+            end
             dot_plot = swarmchart(x_vals, dot_data, mrksz * marker_factor);
             dot_plot.XJitter = "randn";
             dot_plot.XJitterWidth = 0.4 * max(jitter_dots);

@@ -20,7 +20,7 @@ names_rsp = {filelist_rsp.name};	% file names
 % dim 1: pattern type
 % dim 2: sample 
 % dim 3: test numerosities
-performances = zeros(length(names_rsp), length(patterns), size(numerosities, 1));
+performances = zeros(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
 resp_freq = zeros(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
 rec_times = cell(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
 
@@ -55,14 +55,21 @@ for idx = 1:length(names_rsp)
                 % get error trials
                 err_trials = curr_trials(curr_trials(:, 5) == 1, :);
 
+                % sort reaction times
+                rec_times{idx, pattern, sample_idx, test_idx} = ...
+                        [curr_resp(corr_idx, 7)];
+
+                % sort performance
+                performances(idx, pattern, sample_idx, test_idx) = ...
+                    size(corr_trials, 1) / ...
+                    (size(corr_trials, 1) + size(err_trials, 1));
+
                 % compute response frequency
                 % match trials: subject hit to match (correct trials)
                 if test_idx == 1
                     resp_freq(idx, pattern, sample_idx, test_idx) = ...
                         size(corr_trials, 1) / ...
                         (size(corr_trials, 1) + size(err_trials, 1));
-                    rec_times{idx, pattern, sample_idx, test_idx} = ...
-                        [curr_resp(corr_idx, 7)];
                 % non-match trials: subject hit to non-match (error trials)
                 else
                     resp_freq(idx, pattern, sample_idx, test_idx) = ...
@@ -70,16 +77,6 @@ for idx = 1:length(names_rsp)
                         (size(corr_trials, 1) + size(err_trials, 1));
                 end
             end
-            
-            % compute performance
-            curr_trials = curr_resp(curr_resp(:, 2) == pattern & ...
-                    curr_resp(:, 3) == rel_nums(1) & ...
-                    curr_resp(:, 5) ~= 9, :);
-            % get correct trials
-            corr_trials = curr_trials(curr_trials(:, 5) == 0, :);
-
-            performances(idx, pattern, sample_idx) = ...
-                size(corr_trials, 1) / size(curr_trials, 1);
 
         end
     end

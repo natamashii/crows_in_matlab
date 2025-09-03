@@ -23,7 +23,7 @@ for pattern = 1:length(patterns)
                 % Reaction Time
                 if strcmp(data_type, 'Reaction Times')
                     % concat RTs for all test numbers & subject/sessions
-                    to_analyse = vertcat(data(:, pattern, sample_idx, test_idx));
+                    to_analyse = vertcat(data{:, pattern, sample_idx, test_idx});
                 % Performance
                 else
                     to_analyse = data(:, pattern, sample_idx, test_idx);
@@ -55,9 +55,9 @@ for pattern = 1:length(patterns)
                             std(to_analyse, [], "omitnan") / ...
                             sqrt(sum(~isnan(to_analyse)));
                     case 'CI'
-                        err_data = ...
-                            bootstrapping(to_analyse, n_bot, alpha, ...
-                            in_detail, patterns, numerosities);
+                        [err_data(1, pattern, sample_idx, test_idx), ...
+                            err_data(2, pattern, sample_idx, test_idx)] = ...
+                            bootstrapping(to_analyse, n_bot, alpha);
                 end
             end
         else
@@ -65,33 +65,35 @@ for pattern = 1:length(patterns)
             % Reaction Time
             if strcmp(data_type, 'Reaction Times')
                 % concat RTs for all test numbers & subject/sessions
-                to_analyse = vertcat(data(:, pattern, sample_idx, :));
-                % Performance
+                to_analyse = vertcat(data{:, pattern, sample_idx, :});
+
+            % Performance
             else
                 to_analyse = data(:, pattern, sample_idx);
             end
 
             % Calculate Mean/Median
             if strcmp(calc_type, 'Mean')
-                avg_data(pattern, sample_idx, :) = mean(to_analyse, "omitnan");
+                avg_data(pattern, sample_idx) = mean(to_analyse, "omitnan");
             elseif strcmp(calc_type, 'Median')
-                avg_data(pattern, sample_idx, :) = median(to_analyse, "omitnan");
+                avg_data(pattern, sample_idx) = median(to_analyse, "omitnan");
             else
                 error("Invalid calculation type specified. Use 'Mean' or 'Median', please.");
             end
 
             % Calculate Error
             if strcmp(err_type, 'STD')
-                err_data(1, pattern, sample_idx, :) = std(to_analyse, [], "omitnan");
-                err_data(2, pattern, sample_idx, :) = std(to_analyse, [], "omitnan");
+                err_data(1, pattern, sample_idx) = std(to_analyse, [], "omitnan");
+                err_data(2, pattern, sample_idx) = std(to_analyse, [], "omitnan");
             elseif strcmp(err_type, 'SEM')
-                err_data(1, pattern, sample_idx, :) = std(to_analyse, [], "omitnan") ...
+                err_data(1, pattern, sample_idx) = std(to_analyse, [], "omitnan") ...
                     / sqrt(sum(~isnan(to_analyse)));
-                err_data(2, pattern, sample_idx, :) = std(to_analyse, [], "omitnan") ...
+                err_data(2, pattern, sample_idx) = std(to_analyse, [], "omitnan") ...
                     / sqrt(sum(~isnan(to_analyse)));
             elseif strcmp(err_type, 'CI')
-                err_data = ...
-                    bootstrapping(to_analyse, n_boot, alpha, in_detail, patterns, numerosities);
+                [err_data(1, pattern, sample_idx), ...
+                    err_data(2, pattern, sample_idx)] = ...
+                    bootstrapping(to_analyse, n_boot, alpha);
             end
         end
     end
