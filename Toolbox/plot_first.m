@@ -18,14 +18,6 @@ for pattern = 1:length(patterns)
 
     % Subplot Adjustments
     ax.YGrid = "on";    % plot horizontal grid lines
-    
-    % mark chance level in performance
-    if ~strcmp(what_analysis, 'Reaction Times')
-        chance_colour = ax.GridAlpha;
-        yline(0.5, 'LineStyle', ':', 'Alpha', chance_colour * 3, ...
-            'LineWidth', linewidth, 'Color', 'k')
-    end
-    
     ax.Color = [1 1 1];     % set background colour to white
     ax.XColor = "k";    % set colour of axis to black
     ax.YColor = "k";    % set colour of axis to black
@@ -37,29 +29,44 @@ for pattern = 1:length(patterns)
     ax.XTickLabel = num2str(numerosities(:, 1));
     ax.XTickLabelRotation = 0;
     ax.XLim = [min(numerosities(:, 1)) - .5 max(numerosities(:, 1)) + .5];
-
     % Adjust x values with some jitter
     x_vals  = numerosities(:, 1) + jitter_dots(pattern);
     
-    % plot error
-    err_plot = errorbar(x_vals, avg_data(pattern, :)', ...
-        err_down(pattern, :)', err_up(pattern, :)');
-    err_plot.LineStyle = "none";
-    err_plot.Color = colours{pattern};
-    err_plot.CapSize = capsize;
-    err_plot.LineWidth = linewidth;
-    err_plot.MarkerSize = mrksz;
-
-    % plot mean/median
-    plot_pattern = plot(x_vals, avg_data(pattern, :));
-    plot_pattern.LineStyle = linestyle;
-    plot_pattern.LineWidth = linewidth;
-    plot_pattern.Marker = "o";
-    plot_pattern.Color = colours{pattern};
-    plot_pattern.MarkerFaceColor = colours{pattern};
-    plot_pattern.MarkerEdgeColor = "none";
-    plot_pattern.MarkerSize = mrksz;
-    dot_plots{end + 1} = plot_pattern;
+    % Plot Performance/Response Frequency
+    if strcmp(what_analysis, 'Reaction Times')
+        data_plot = boxchart(x_vals, avg_data(pattern, :)'
+        data_plot.BoxFaceColor = colours{pattern};
+        data_plot.BoxEdgeColor = colours{pattern};
+        data_plot.BoxFaceAlpha = 0.2;
+        data_plot.BoxMedianLineColor = colours{pattern};
+        data_plot.WhiskerLineColor = colours{pattern};
+        data_plot.LineWidth = linewidth;
+    else
+        % mark chance level in performance
+        chance_colour = ax.GridAlpha;
+        yline(0.5, 'LineStyle', ':', 'Alpha', chance_colour * 3, ...
+            'LineWidth', linewidth, 'Color', 'k')
+            
+        % plot error
+        err_plot = errorbar(x_vals, avg_data(pattern, :)', ...
+            err_down(pattern, :)', err_up(pattern, :)');
+        err_plot.LineStyle = "none";
+        err_plot.Color = colours{pattern};
+        err_plot.CapSize = capsize;
+        err_plot.LineWidth = linewidth;
+        err_plot.MarkerSize = mrksz;
+    
+        % plot mean/median
+        plot_pattern = plot(x_vals, avg_data(pattern, :));
+        plot_pattern.LineStyle = linestyle;
+        plot_pattern.LineWidth = linewidth;
+        plot_pattern.Marker = "o";
+        plot_pattern.Color = colours{pattern};
+        plot_pattern.MarkerFaceColor = colours{pattern};
+        plot_pattern.MarkerEdgeColor = "none";
+        plot_pattern.MarkerSize = mrksz;
+        dot_plots{end + 1} = plot_pattern;
+    end
 
     % for legend
     leg_patch(end + 1) = plot_pattern;
