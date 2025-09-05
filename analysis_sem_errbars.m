@@ -7,6 +7,7 @@ close all
 % TODO
 % divide standard/control stuff, save it separately (incl statistic shit
 % from that)
+% implement statistics
 % rewrite analysis stuff as functions
 % bootstrapping: more bootstrap statistic? some p value or such stuff?
 % rewrite plotting stuff as one function
@@ -15,9 +16,10 @@ close all
 % DONE rewrite data extraction from behaviour data as function
 % rewrite avg/median + error stuff as function
 % rewrite bootstrapping as one function
-% make plots with individual dots in background (like fish graphics)
+% DONE make plots with individual dots in background (like fish graphics)
 % save data (individual stuff and mean stuff)
 % make fig size variable
+% maybe time for birds
 
 
 % Note
@@ -48,6 +50,7 @@ who_analysis = {'humans\'; 'jello\'; 'uri\'};
 what_analysis = {'Performance'; 'Response Frequency'; 'Reaction Times'};
 calc_type = {'Mean', 'Median'};
 err_type = {'STD', 'SEM', 'CI'};
+focus_type = {'Overall', 'Matches', 'Single'};
 
 % crows: 1 = exp 1 100ms, 2 = exp 1 300ms, 3 = exp 1 50ms, 4 = exp 2 50ms
 % humans: 1 = exp 1 50ms, 2 = exp 2 50ms, 3 = exp 3 50ms
@@ -106,6 +109,13 @@ prompt = ['With what type of error? ' ...
     ' \n 3 - CI '];
 err_type = err_type{input(prompt)};
 
+% prompt to ask for which combination to plot
+prompt = ['What exactly do you wanna look at? ' ...
+    ' \n 1 - Overall (Match + Non-Match) ' ...
+    ' \n 2 - Matches ' ...
+    ' \n 3 - Behavioural Curves '];
+focus_type = focus_type{input(prompt)};
+
 % Path definition
 base_path = 'D:\MasterThesis\analysis\data\';
 figure_path = ['D:\MasterThesis\figures\progress_since_250902\' who_analysis '\'];
@@ -118,7 +128,6 @@ subfolders = {subfolders(3:end).name};  % list of subfolder names (experiments)
 
 to_save = true; % if result shall be saved
 to_correct = false; % if response matrices shall be corrected
-to_plot = {true, true, true, false};
 in_detail = false;
 
 % for Plotting
@@ -130,15 +139,19 @@ format = 'svg';
 fig_title = '';
 
 plot_font = 12;
-plot_pos = [451, 259, 1146, 690];   % default PaperPosition size of figure
+plot_pos = [21 29.7];   % default PaperPosition size of figure
+mrksz = 10;
+linewidth = 2;
+plot_font = 14;
+in_detail = false;
+capsize = 10;
+jitterwidth = 0.25;
 
 n_boot = 10000;
 confidence_level = 95;      % For a 95% CI
 alpha = 100 - confidence_level;
 
 
-counter = 0;    % counter for progress bar
-total_amount = 84;
 
 % Correct Response Matrix
 if to_correct
@@ -149,30 +162,44 @@ end
 [performances, resp_freq, rec_times] = ...
     sort_behav(rsp_mat_folderpath, who_analysis, curr_exp, numerosities, patterns);
 
-% Mean
-[avg_data, err_data] = ...
-    calc_behav(rec_times, what_analysis, calc_type, err_type, patterns, ...
-    numerosities, n_boot, alpha, in_detail);
 
-% Median
+% Get data depending on what to analyse
+switch what_analysis
+    case 'Performance'
+        [avg_data, err_data] = ...
+            calc_behav(performances, what_analysis, ...
+            calc_type, err_type, patterns, ...
+            numerosities, n_boot, alpha, focus_type);
+        ind_data = performances;
+    case 'Response Frequency'
+        [avg_data, err_data] = ...
+            calc_behav(resp_freq, what_analysis, ...
+            calc_type, err_type, patterns, ...
+            numerosities, n_boot, alpha, focus_type);
+        ind_data = resp_freq;
+    case 'Reaction Times'
+        [avg_data, err_data] = ...
+            calc_behav(rec_times, what_analysis, ...
+            calc_type, err_type, patterns, ...
+            numerosities, n_boot, alpha, focus_type);
+        ind_data = rec_times;
+end
+    
+
 
 
 % Plot: Overall
-mrksz = 10;
-linewidth = 2;
-plot_font = 14;
-in_detail = false;
-capsize = 10;
-jitterwidth = 0.25;
+fig = plot_stuff(ind_data, avg_data, err_data, numerosities, ...
+        patterns, calc_type, err_type, what_analysis, who_analysis(1:end-1), ...
+        experiments{curr_exp}, plot_font, colours_pattern, plot_pos, ...
+        in_detail, linewidth, "none", mrksz, capsize, jitterwidth, focus_type);
 
-fig = plot_stuff(rec_times, avg_data, err_data, numerosities, ...
-    patterns, calc_type, err_type, what_analysis, who_analysis(1:end-1), ...
-    experiments{curr_exp}, plot_font, colours_pattern, plot_pos, ...
-    in_detail, linewidth, "none", mrksz, capsize, jitterwidth);
+% Plot: Matches only
+
 
 % save figure
 if to_save
-    fig_name = ['Overall_' calc_type '_' err_type '_' what_analysis '.' format];
+    fig_name = [focus_type '_' calc_type '_' err_type '_' what_analysis '.' format];
     adapt_path = [figure_path '\' subfolders{curr_exp} '\'];
     saveas(fig, [adapt_path, fig_name], format)
 end

@@ -8,7 +8,7 @@ set(gcf, 'Color', [1 1 1])  % set figure background to white
 
 % change figure size
 set(gcf, 'PaperUnits', 'points')
-set(gcf, 'PaperPosition', [plot_pos(1) plot_pos(2) plot_pos(3)/2 plot_pos(4)/2])
+set(gcf, 'PaperSize', [plot_pos(1) plot_pos(2)])
 
 % figure title
 fig_title.FontSize = plot_font;

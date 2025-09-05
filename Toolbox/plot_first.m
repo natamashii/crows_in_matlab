@@ -1,7 +1,7 @@
 function [ax, dot_plots, leg_patch, leg_label] = ...
-    plot_first(numerosities, jitter_dots, avg_data, err_down, err_up, ...
+    plot_first(numerosities, jitter_dots, ind_data, avg_data, err_down, err_up, ...
     patterns, colours, plot_font, what_analysis, err_type, linewidth, ...
-    linestyle, mrksz, capsize)
+    linestyle, mrksz, capsize, in_detail, focus_type)
 
 % function to create variations of the first plot
 
@@ -34,13 +34,36 @@ for pattern = 1:length(patterns)
     
     % Plot Performance/Response Frequency
     if strcmp(what_analysis, 'Reaction Times')
-        data_plot = boxchart(x_vals, avg_data(pattern, :)'
-        data_plot.BoxFaceColor = colours{pattern};
-        data_plot.BoxEdgeColor = colours{pattern};
-        data_plot.BoxFaceAlpha = 0.2;
-        data_plot.BoxMedianLineColor = colours{pattern};
-        data_plot.WhiskerLineColor = colours{pattern};
-        data_plot.LineWidth = linewidth;
+        for sample_idx = 1:size(numerosities, 1)
+            switch focus_type
+                case 'Single'
+                    for test_idx = 1:size(numerosities, 2)
+                        % concat RTs for all test numbers & subject/sessions
+                        dot_data = vertcat(ind_data{:, pattern, sample_idx, test_ind});
+                        % adjust x vals
+                        x_vals = ones(size(dot_data, 1), 1);
+                        x_vals = (x_vals * numerosities(sample_idx, 1)) + jitter_dots(pattern);
+                    end
+                case 'Overall'
+                    y_vals = vertcat(ind_data{:, pattern, sample_idx, :});
+                case 'Matches'
+                    y_vals = vertcat(ind_data{:, pattern, sample_idx, 1});
+            end
+            % Adjust x values
+            x_vals = ones(size(y_vals, 1), 1);
+            x_vals = (x_vals * numerosities(sample_idx, 1)) + jitter_dots(pattern);
+            % Plot it
+            plot_pattern = boxchart(x_vals, y_vals);
+            plot_pattern.BoxFaceColor = colours{pattern};
+            plot_pattern.BoxEdgeColor = colours{pattern};
+            plot_pattern.BoxFaceAlpha = 0.2;
+            plot_pattern.BoxMedianLineColor = colours{pattern};
+            plot_pattern.WhiskerLineColor = colours{pattern};
+            plot_pattern.WhiskerLineStyle = "none";
+            plot_pattern.LineWidth = linewidth;
+            plot_pattern.MarkerStyle = "none";
+            plot_pattern.BoxWidth = plot_pattern.BoxWidth / 3;
+        end
     else
         % mark chance level in performance
         chance_colour = ax.GridAlpha;
@@ -69,6 +92,7 @@ for pattern = 1:length(patterns)
     end
 
     % for legend
+    dot_plots{end + 1} = plot_pattern;
     leg_patch(end + 1) = plot_pattern;
     leg_label(pattern) = patterns{pattern};
 

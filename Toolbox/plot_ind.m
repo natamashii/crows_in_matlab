@@ -50,8 +50,15 @@ for pattern = 1:length(patterns)
                     sub_data = vertcat(data{sub_idx, pattern, sample_idx, :});
                     dot_data(sub_idx) = mean(sub_data, "omitnan");
                 end
+                y_vals = vertcat(data{:, pattern, sample_idx, :});
+                x_vals = ones(size(y_vals, 1), 1);
+                x_vals = (x_vals * numerosities(sample_idx, 1)) + jitter_dots(pattern);
+            else
+                y_vals = reshape(squeeze(data(:, pattern, sample_idx, :)), 1, [])';
+                x_vals = ones(size(y_vals, 1), 1);
+                x_vals = (x_vals * numerosities(sample_idx, 1)) + jitter_dots(pattern);
             end
-            dot_plot = swarmchart(x_vals, dot_data, mrksz * marker_factor);
+            dot_plot = swarmchart(x_vals, y_vals, mrksz * marker_factor);
             dot_plot.XJitter = "randn";
             dot_plot.XJitterWidth = 0.4 * max(jitter_dots);
             dot_plot.Marker = "o";
