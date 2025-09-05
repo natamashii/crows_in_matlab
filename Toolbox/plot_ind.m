@@ -35,8 +35,7 @@ for pattern = 1:length(patterns)
                     data(:, pattern, sample_idx, test_idx), mrksz * marker_factor);
                 dot_plot.XJitter = "density";
                 dot_plot.Marker = "o";
-                %dot_plot.MarkerFaceColor = colours{pattern};
-                dot_plot.MarkerFaceColor = "k";
+                dot_plot.MarkerFaceColor = colours{pattern};
                 dot_plot.MarkerEdgeColor = "none";
                 dot_plot.MarkerFaceAlpha = dot_alpha;
             end
@@ -56,8 +55,7 @@ for pattern = 1:length(patterns)
             dot_plot.XJitter = "randn";
             dot_plot.XJitterWidth = 0.4 * max(jitter_dots);
             dot_plot.Marker = "o";
-            %dot_plot.MarkerFaceColor = colours{pattern};
-            dot_plot.MarkerFaceColor = "k";
+            dot_plot.MarkerFaceColor = colours{pattern};
             dot_plot.MarkerEdgeColor = "none";
             dot_plot.MarkerFaceAlpha = dot_alpha;
         end

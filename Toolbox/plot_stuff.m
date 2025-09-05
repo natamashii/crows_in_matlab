@@ -34,7 +34,7 @@ ax = plot_ind(numerosities, ind_data, jitter_dots, colours, ...
 
 % Subplot Adjustments
 if strcmp(what_analysis, 'Reaction Times') && strcmp(who_analysis, 'humans')
-    ax.YLim = [200 600];
+    ax.YLim = [250 500];
 elseif strcmp(what_analysis, 'Reaction Times') && ~strcmp(who_analysis, 'humans')
     ax.YLim = [200 400];
 else
