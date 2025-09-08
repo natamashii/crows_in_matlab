@@ -152,7 +152,6 @@ confidence_level = 95;      % For a 95% CI
 alpha = 100 - confidence_level;
 
 
-
 % Correct Response Matrix
 if to_correct
     corr_resp(rsp_mat_folderpath, spk_folderpath, who_analysis, curr_exp, numerosities);
@@ -188,11 +187,11 @@ end
 
 
 
-% Plot: Overall
+% Plot
 fig = plot_stuff(ind_data, avg_data, err_data, numerosities, ...
         patterns, calc_type, err_type, what_analysis, who_analysis(1:end-1), ...
         experiments{curr_exp}, plot_font, colours_pattern, plot_pos, ...
-        in_detail, linewidth, "none", mrksz, capsize, jitterwidth, focus_type);
+        linewidth, "none", mrksz, capsize, jitterwidth, focus_type);
 
 % Plot: Matches only
 

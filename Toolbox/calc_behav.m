@@ -7,7 +7,7 @@ function [avg_data, err_data] = ...
 % pre allocation
 if strcmp(focus_type, 'Single')    % divided in each test numerosity tested
     avg_data = zeros(length(patterns), size(numerosities, 1), size(numerosities, 2));
-    err_data = zeros(2, length(patterns), size(numerosities, 1, size(numerosities, 2)));
+    err_data = zeros(2, length(patterns), size(numerosities, 1), size(numerosities, 2));
 else
     avg_data = zeros(length(patterns), size(numerosities, 1));
     err_data = zeros(2, length(patterns), size(numerosities, 1));

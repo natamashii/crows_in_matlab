@@ -1,6 +1,6 @@
 function ax = ...
-    plot_ind(numerosities, data, jitter_dots, ...
-    colours, patterns, in_detail, mrksz, data_type)
+    plot_ind(numerosities, ind_data, jitter_dots, ...
+    colours, patterns, mrksz, data_type, focus_type)
 
 % Function to plot individual data points of each subject/session
 
@@ -14,58 +14,154 @@ for pattern = 1:length(patterns)
     ax = gca;
 
     ax.Color = [1 1 1];     % set background colour to white
- 
-    % iterate over each sample
-    for sample_idx = 1:size(numerosities, 1)
-        % set x values for each dot
-        x_vals = ones(size(data, 1), 1) * numerosities(sample_idx, 1);
-        x_vals = x_vals + jitter_dots(pattern); % adjust with some jitter
 
-        if in_detail
+    switch focus_type
+        case 'Single'
+            % iterate over test numbers
             for test_idx = 1:size(numerosities, 2)
-                % Reaction Time
-                if strcmp(data_type, 'Reaction Times')
+                % Reaction Times
+                if strcmp(what_analysis, 'Reaction Times')
                     % concat RTs for all test numbers & subject/sessions
-                    data = vertcat(data{:, pattern, sample_idx, test_ind});
+                    y_vals = ...
+                        vertcat(ind_data{:, pattern, sample_idx, test_idx});
+
                     % adjust x vals
-                    x_vals = ones(size(data, 1), 1);
-                    x_vals = x_vals + jitter_dots(pattern); % adjust with some jitter
+                    x_vals = ones(size(y_vals, 1), 1);
+                    x_vals = ...
+                        (x_vals * numerosities(sample_idx, test_idx)) + ...
+                        jitter_dots(pattern);
+
+                    % Plot
+                    dot_plot = swarmchart(x_vals, y_vals, mrksz * marker_factor);
+                    dot_plot.XJitter = "randn";
+                    dot_plot.XJitterWidth = 0.4 * max(jitter_dots);
+                    dot_plot.Marker = "o";
+                    dot_plot.MarkerFaceColor = colours{pattern};
+                    dot_plot.MarkerEdgeColor = "none";
+                    dot_plot.MarkerFaceAlpha = dot_alpha;
+                
+                else
+                    % set values
+                    y_vals = ind_data(:, pattern, sample_idx, test_idx);
+                    x_vals = ones(size(y_vals, 1), 1);
+                    x_vals = ...
+                        (x_vals * numerosities(sample_idx, test_idx)) + ...
+                        jitter_dots(pattern);
+
+                    % Mark Chance Level
+                    chance_colour = ax.GridAlpha;
+                    yline(0.5, 'LineStyle', ':', ...
+                        'Alpha', chance_colour * 3, ...
+                        'LineWidth', linewidth, 'Color', 'k')
+
+                    % Plot
+                    dot_plot = swarmchart(x_vals, y_vals, mrksz * marker_factor);
+                    dot_plot.XJitter = "randn";
+                    dot_plot.XJitterWidth = 0.4 * max(jitter_dots);
+                    dot_plot.Marker = "o";
+                    dot_plot.MarkerFaceColor = colours{pattern};
+                    dot_plot.MarkerEdgeColor = "none";
+                    dot_plot.MarkerFaceAlpha = dot_alpha;
+
                 end
-                dot_plot = swarmchart(x_vals, ...
-                    data(:, pattern, sample_idx, test_idx), mrksz * marker_factor);
-                dot_plot.XJitter = "density";
+            end
+        case 'Overall'
+            % Reaction Times
+            if strcmp(what_analysis, 'Reaction Times')
+                % iterate over samples
+                for sample_idx = 1:size(numerosities, 1)
+                    % concat RTs for all test numbers & subject/sessions
+                    y_vals = ...
+                        vertcat(ind_data{:, pattern, sample_idx, :});
+
+                    % adjust x vals
+                    x_vals = ones(size(y_vals, 1), 1);
+                    x_vals = ...
+                        (x_vals * numerosities(sample_idx, test_idx)) + ...
+                        jitter_dots(pattern);
+
+                    % Plot
+                    dot_plot = ...
+                        swarmchart(x_vals, y_vals, mrksz * marker_factor);
+                    dot_plot.XJitter = "randn";
+                    dot_plot.XJitterWidth = 0.4 * max(jitter_dots);
+                    dot_plot.Marker = "o";
+                    dot_plot.MarkerFaceColor = colours{pattern};
+                    dot_plot.MarkerEdgeColor = "none";
+                    dot_plot.MarkerFaceAlpha = dot_alpha;
+                end
+            else
+                % set values
+                y_vals = ind_data(:, pattern, sample_idx, :);
+                x_vals = ones(size(y_vals, 1), 1);
+                x_vals = ...
+                    (x_vals * numerosities(sample_idx, 1)) + ...
+                    jitter_dots(pattern);
+
+                % Mark Chance Level
+                chance_colour = ax.GridAlpha;
+                yline(0.5, 'LineStyle', ':', ...
+                    'Alpha', chance_colour * 3, ...
+                    'LineWidth', linewidth, 'Color', 'k')
+
+                % Plot
+                dot_plot = swarmchart(x_vals, y_vals, mrksz * marker_factor);
+                dot_plot.XJitter = "randn";
+                dot_plot.XJitterWidth = 0.4 * max(jitter_dots);
                 dot_plot.Marker = "o";
                 dot_plot.MarkerFaceColor = colours{pattern};
                 dot_plot.MarkerEdgeColor = "none";
                 dot_plot.MarkerFaceAlpha = dot_alpha;
             end
-        else
-            % Reaction Time
-            if strcmp(data_type, 'Reaction Times')
-                % pre allocation
-                dot_data = NaN(size(data, 1), 1);
-                % iterate over subjects
-                for sub_idx = 1:size(data, 1)
+
+        case 'Matches'
+            % Reaction Times
+            if strcmp(what_analysis, 'Reaction Times')
+                % iterate over samples
+                for sample_idx = 1:size(numerosities, 1)
                     % concat RTs for all test numbers & subject/sessions
-                    sub_data = vertcat(data{sub_idx, pattern, sample_idx, :});
-                    dot_data(sub_idx) = mean(sub_data, "omitnan");
+                    y_vals = ...
+                        vertcat(ind_data{:, pattern, sample_idx, test_idx});
+
+                    % adjust x vals
+                    x_vals = ones(size(y_vals, 1), 1);
+                    x_vals = ...
+                        (x_vals * numerosities(sample_idx, test_idx)) + ...
+                        jitter_dots(pattern);
+
+                    % Plot
+                    dot_plot = ...
+                        swarmchart(x_vals, y_vals, mrksz * marker_factor);
+                    dot_plot.XJitter = "randn";
+                    dot_plot.XJitterWidth = 0.4 * max(jitter_dots);
+                    dot_plot.Marker = "o";
+                    dot_plot.MarkerFaceColor = colours{pattern};
+                    dot_plot.MarkerEdgeColor = "none";
+                    dot_plot.MarkerFaceAlpha = dot_alpha;
                 end
-                y_vals = vertcat(data{:, pattern, sample_idx, :});
-                x_vals = ones(size(y_vals, 1), 1);
-                x_vals = (x_vals * numerosities(sample_idx, 1)) + jitter_dots(pattern);
             else
-                y_vals = reshape(squeeze(data(:, pattern, sample_idx, :)), 1, [])';
+                % set values
+                y_vals = ind_data(:, pattern, sample_idx, 1);
                 x_vals = ones(size(y_vals, 1), 1);
-                x_vals = (x_vals * numerosities(sample_idx, 1)) + jitter_dots(pattern);
+                x_vals = ...
+                    (x_vals * numerosities(sample_idx, 1)) + ...
+                    jitter_dots(pattern);
+
+                % Mark Chance Level
+                chance_colour = ax.GridAlpha;
+                yline(0.5, 'LineStyle', ':', ...
+                    'Alpha', chance_colour * 3, ...
+                    'LineWidth', linewidth, 'Color', 'k')
+
+                % Plot
+                dot_plot = swarmchart(x_vals, y_vals, mrksz * marker_factor);
+                dot_plot.XJitter = "randn";
+                dot_plot.XJitterWidth = 0.4 * max(jitter_dots);
+                dot_plot.Marker = "o";
+                dot_plot.MarkerFaceColor = colours{pattern};
+                dot_plot.MarkerEdgeColor = "none";
+                dot_plot.MarkerFaceAlpha = dot_alpha;
             end
-            dot_plot = swarmchart(x_vals, y_vals, mrksz * marker_factor);
-            dot_plot.XJitter = "randn";
-            dot_plot.XJitterWidth = 0.4 * max(jitter_dots);
-            dot_plot.Marker = "o";
-            dot_plot.MarkerFaceColor = colours{pattern};
-            dot_plot.MarkerEdgeColor = "none";
-            dot_plot.MarkerFaceAlpha = dot_alpha;
-        end
     end
 end
 
