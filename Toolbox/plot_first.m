@@ -33,8 +33,8 @@ for pattern = 1:length(patterns)
     switch focus_type
         case 'Single'
             % iterate over test numbers
-            for test_idx = 1:size(numerosities, 2)
-                if strcmp(what_analysis, 'Reaction Times')
+            if strcmp(what_analysis, 'Reaction Times')
+                for test_idx = 1:size(numerosities, 2)
                     % concat RTs for all test numbers & subject/sessions
                     y_vals = ...
                         vertcat(ind_data{:, pattern, sample_idx, test_idx});
@@ -57,42 +57,55 @@ for pattern = 1:length(patterns)
                         'LineWidth', linewidth, ...
                         'MarkerStyle', "none");
                     plot_pattern.BoxWidth = plot_pattern.BoxWidth / 3;
-                
-                else
-                    % set values
-                    y_vals = avg_data(pattern, sample_idx, test_idx);
-                    x_vals = ones(size(y_vals, 1), 1);
-                    x_vals = ...
-                        (x_vals * numerosities(sample_idx, test_idx)) + ...
-                        jitter_dots(pattern);
 
-                    % Mark Chance Level
-                    chance_colour = ax.GridAlpha;
-                    yline(0.5, 'LineStyle', ':', ...
-                        'Alpha', chance_colour * 3, ...
-                        'LineWidth', linewidth, 'Color', 'k')
-
-                    % plot error
-                    err_plot = errorbar(x_vals, ...
-                        y_vals, ...
-                        err_down(pattern, sample_idx, test_idx), ...
-                        err_up(pattern, sample_idx, test_idx), ...
-                        'LineStyle', 'none', 'Color', colours{pattern}, ...
-                        'LineWidth', linewidth, ...
-                        'Capsize', capsize, 'MarkerSize', mrksz);
-
-                    % plot mean/median
-                    plot_pattern = ...
-                        plot(x_vals, y_vals, ...
-                        'LineStyle', linestyle, 'LineWidth', linewidth, ...
-                        'Marker', 'o', 'Color', colours{pattern}, ...
-                        'MarkerFaceColor', colours{pattern}, ...
-                        'MarkerEdgeColor', 'none', 'MarkerSize', mrksz);
-
-
-                    dot_plots{end + 1} = plot_pattern;
                 end
+            else
+                % set values
+                y_vals = squeeze(avg_data(pattern, sample_idx, :));
+                x_vals = ones(size(y_vals, 1), 1);
+                x_vals = ...
+                    (x_vals .* numerosities(sample_idx, :)') + ...
+                    jitter_dots(pattern);
+                % sort values
+                [~, sort_idx] = sort(numerosities(sample_idx, :));
+                y_vals = y_vals(sort_idx);
+                x_vals = x_vals(sort_idx);
+                err_d = squeeze(err_down(pattern, sample_idx, :));
+                err_d = err_d(sort_idx);
+                err_u = squeeze(err_up(pattern, sample_idx, :));
+                err_u = err_u(sort_idx);
+
+                % Mark Chance Level
+                chance_colour = ax.GridAlpha;
+                yline(0.5, 'LineStyle', ':', ...
+                    'Alpha', chance_colour * 3, ...
+                    'LineWidth', linewidth, 'Color', 'k')
+
+                % plot error
+                err_plot = errorbar(x_vals, y_vals, err_d, err_u, ...
+                    'LineStyle', linestyle, 'Color', colours{pattern}, ...
+                    'LineWidth', linewidth, ...
+                    'Capsize', capsize, 'MarkerSize', mrksz);
+
+                % plot mean/median
+                plot_pattern = ...
+                    plot(x_vals, y_vals, ...
+                    'LineStyle', linestyle, 'LineWidth', linewidth, ...
+                    'Marker', 'o', 'Color', colours{pattern}, ...
+                    'MarkerFaceColor', colours{pattern}, ...
+                    'MarkerEdgeColor', 'none', 'MarkerSize', mrksz);
+
+                dot_plots{end + 1} = plot_pattern;
             end
+            
+            % Specific Adjustments
+            xlabel(ax, 'Test Numerosity', 'FontWeight', 'bold');
+            ax.XTick = unique(numerosities);
+            ax.XTickLabel = num2str(unique(numerosities));
+            ax.XTickLabelRotation = 0;
+            ax.XLim = [min(numerosities, [], "all") - .5 ...
+                max(numerosities, [], "all") + .5];
+
         case 'Overall'
             % Reaction Times
             if strcmp(what_analysis, 'Reaction Times')
@@ -120,7 +133,15 @@ for pattern = 1:length(patterns)
             else
                 % set values
                 y_vals = avg_data(pattern, :);
-                x_vals = ones(size(y_vals, 1), 1);
+                x_vals = (ones(size(y_vals, 1), 1) ...
+                    .* numerosities(:, 1)') + ...
+                    jitter_dots(pattern);
+
+                % Mark Chance Level
+                chance_colour = ax.GridAlpha;
+                yline(0.5, 'LineStyle', ':', ...
+                    'Alpha', chance_colour * 3, ...
+                    'LineWidth', linewidth, 'Color', 'k')
 
                 % Plot Error
                 err_plot = errorbar(x_vals, y_vals, ...
@@ -165,7 +186,15 @@ for pattern = 1:length(patterns)
             else
                 % set values
                 y_vals = avg_data(pattern, :);
-                x_vals = ones(size(y_vals, 1), 1);
+                x_vals = (ones(size(y_vals, 1), 1) ...
+                    .* numerosities(:, 1)') + ...
+                    jitter_dots(pattern);
+
+                % Mark Chance Level
+                chance_colour = ax.GridAlpha;
+                yline(0.5, 'LineStyle', ':', ...
+                    'Alpha', chance_colour * 3, ...
+                    'LineWidth', linewidth, 'Color', 'k')
 
                 % Plot Error
                 err_plot = errorbar(x_vals, y_vals, ...

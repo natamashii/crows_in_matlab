@@ -1,5 +1,6 @@
 function [performances, resp_freq, rec_times] = ...
-    sort_behav(rsp_mat_folderpath, who_analysis, curr_exp, numerosities, patterns)
+    sort_behav(rsp_mat_folderpath, who_analysis, ...
+    curr_exp, numerosities, patterns)
 
 % function to load & extract performances/reaction times from response
 % matrices
@@ -18,11 +19,15 @@ names_rsp = {filelist_rsp.name};	% file names
 % Pre allocation
 % dim 0: individual subject/session
 % dim 1: pattern type
-% dim 2: sample 
+% dim 2: sample
 % dim 3: test numerosities
-performances = zeros(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
-resp_freq = zeros(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
-rec_times = cell(length(names_rsp), length(patterns), size(numerosities, 1), size(numerosities, 2));
+
+performances = zeros(length(names_rsp), length(patterns), ...
+    size(numerosities, 1), size(numerosities, 2));
+resp_freq = zeros(length(names_rsp), length(patterns), ...
+    size(numerosities, 1), size(numerosities, 2));
+rec_times = cell(length(names_rsp), length(patterns), ...
+    size(numerosities, 1), size(numerosities, 2));
 
 % iterate over all files
 for idx = 1:length(names_rsp)
@@ -44,14 +49,14 @@ for idx = 1:length(names_rsp)
                     curr_resp(:, 5) ~= 9 & ...
                     curr_resp(:, 6) == rel_nums(test_idx), :);
 
-                % get correct trials
-                corr_trials = curr_trials(curr_trials(:, 5) == 0, :);
                 % get indices of correct trials
                 corr_idx = find(curr_resp(:, 2) == pattern & ...
                     curr_resp(:, 3) == rel_nums(1) & ...
                     curr_resp(:, 5) == 0 & ...
                     curr_resp(:, 6) == rel_nums(test_idx)); 
 
+                % get correct trials
+                corr_trials = curr_trials(curr_trials(:, 5) == 0, :);
                 % get error trials
                 err_trials = curr_trials(curr_trials(:, 5) == 1, :);
 
@@ -77,7 +82,6 @@ for idx = 1:length(names_rsp)
                         (size(corr_trials, 1) + size(err_trials, 1));
                 end
             end
-
         end
     end
 end

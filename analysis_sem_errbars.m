@@ -8,28 +8,27 @@ close all
 % divide standard/control stuff, save it separately (incl statistic shit
 % from that)
 % implement statistics
-% rewrite analysis stuff as functions
+% DONE rewrite analysis stuff as functions
 % bootstrapping: more bootstrap statistic? some p value or such stuff?
-% rewrite plotting stuff as one function
+% DONE rewrite plotting stuff as one function
 % DONE rewrite correction to one resp mat with RT
 % DONE rewrite sorting behaviour data as function
 % DONE rewrite data extraction from behaviour data as function
 % rewrite avg/median + error stuff as function
-% rewrite bootstrapping as one function
+% DONE rewrite bootstrapping as one function
 % DONE make plots with individual dots in background (like fish graphics)
 % save data (individual stuff and mean stuff)
 % make fig size variable
 % maybe time for birds
+% imporve single plot
+% regression analysis
 
 
 % Note
 % so far, condition & standard stimuli trials thrown together (must be checked beforehand!!)
-% maybe add response latency as 7th column lol
-% rewrite code and separate analysis & plot
 % save the analysis output somewhere
 % save corrected shit directly into folders, so make lists of dates that
 % should be implemented
-% add something to avoid plotting nonsense like median performance
 
 % response matrix
 % col 1: stimulus type (standard (1) or control (2))
@@ -128,13 +127,14 @@ subfolders = {subfolders(3:end).name};  % list of subfolder names (experiments)
 
 to_save = true; % if result shall be saved
 to_correct = false; % if response matrices shall be corrected
-in_detail = false;
+s_c = true;
 
 % for Plotting
 colours_pattern = ...
     {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; [0.1211 0.5195 0.6289]};
 colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...
     [0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; [0.6350 0.0780 0.1840]};
+colours_S_C = {[0.0660 0.4430 0.7450]; [0.5210 0.0860 0.8190]};
 format = 'svg';
 fig_title = '';
 
@@ -146,52 +146,104 @@ plot_font = 14;
 in_detail = false;
 capsize = 10;
 jitterwidth = 0.25;
+linestyle = "none";
 
 n_boot = 10000;
 confidence_level = 95;      % For a 95% CI
 alpha = 100 - confidence_level;
 
-
 % Correct Response Matrix
 if to_correct
-    corr_resp(rsp_mat_folderpath, spk_folderpath, who_analysis, curr_exp, numerosities);
+    corr_resp(rsp_mat_folderpath, spk_folderpath, who_analysis, ...
+        curr_exp, numerosities);
 end
 
 % Sum Average Performance for each Pattern
-[performances, resp_freq, rec_times] = ...
-    sort_behav(rsp_mat_folderpath, who_analysis, curr_exp, numerosities, patterns);
-
+if s_c
+    [performances_s, performances_c, ...
+        resp_freq_s, resp_freq_c, rec_times_s, rec_times_c] = ...
+        stand_cont(rsp_mat_folderpath, who_analysis, ...
+        curr_exp, numerosities, patterns);
+else
+    [performances, resp_freq, rec_times] = ...
+        sort_behav(rsp_mat_folderpath, who_analysis, ...
+        curr_exp, numerosities, patterns);
+end
 
 % Get data depending on what to analyse
 switch what_analysis
     case 'Performance'
-        [avg_data, err_data] = ...
-            calc_behav(performances, what_analysis, ...
-            calc_type, err_type, patterns, ...
-            numerosities, n_boot, alpha, focus_type);
-        ind_data = performances;
+        if s_c
+            [avg_data_s, err_data_s] = ...
+                calc_behav(performances_s, what_analysis, ...
+                calc_type, err_type, patterns, ...
+                numerosities, n_boot, alpha, focus_type);
+            [avg_data_c, err_data_c] = ...
+                calc_behav(performances_c, what_analysis, ...
+                calc_type, err_type, patterns, ...
+                numerosities, n_boot, alpha, focus_type);
+            ind_data_s = performances_s;
+            ind_data_c = performances_c;
+        else
+            [avg_data, err_data] = ...
+                calc_behav(performances, what_analysis, ...
+                calc_type, err_type, patterns, ...
+                numerosities, n_boot, alpha, focus_type);
+            ind_data = performances;
+        end
     case 'Response Frequency'
-        [avg_data, err_data] = ...
-            calc_behav(resp_freq, what_analysis, ...
-            calc_type, err_type, patterns, ...
-            numerosities, n_boot, alpha, focus_type);
-        ind_data = resp_freq;
+        if s_c
+            [avg_data_s, err_data_s] = ...
+                calc_behav(resp_freq_s, what_analysis, ...
+                calc_type, err_type, patterns, ...
+                numerosities, n_boot, alpha, focus_type);
+            [avg_data_c, err_data_c] = ...
+                calc_behav(resp_freq_c, what_analysis, ...
+                calc_type, err_type, patterns, ...
+                numerosities, n_boot, alpha, focus_type);
+            ind_data_s = resp_freq_s;
+            ind_data_c = resp_freq_c;
+        else
+            [avg_data, err_data] = ...
+                calc_behav(resp_freq, what_analysis, ...
+                calc_type, err_type, patterns, ...
+                numerosities, n_boot, alpha, focus_type);
+            ind_data = resp_freq;
+        end
     case 'Reaction Times'
-        [avg_data, err_data] = ...
-            calc_behav(rec_times, what_analysis, ...
-            calc_type, err_type, patterns, ...
-            numerosities, n_boot, alpha, focus_type);
-        ind_data = rec_times;
+        if s_c
+            [avg_data_s, err_data_s] = ...
+                calc_behav(rec_times_s, what_analysis, ...
+                calc_type, err_type, patterns, ...
+                numerosities, n_boot, alpha, focus_type);
+            [avg_data_c, err_data_c] = ...
+                calc_behav(rec_times_c, what_analysis, ...
+                calc_type, err_type, patterns, ...
+                numerosities, n_boot, alpha, focus_type);
+            ind_data_s = rec_times_s;
+            ind_data_c = rec_times_c;
+        else
+            [avg_data, err_data] = ...
+                calc_behav(rec_times, what_analysis, ...
+                calc_type, err_type, patterns, ...
+                numerosities, n_boot, alpha, focus_type);
+            ind_data = rec_times;
+        end
 end
     
-
-
+% Plot specificites depending on what to analyse
+if strcmp(focus_type, 'Single')
+    linestyle = "--";
+    plot_pos = [50 29.7];
+end
 
 % Plot
+if s_c
+    fig = plot_s_c
 fig = plot_stuff(ind_data, avg_data, err_data, numerosities, ...
         patterns, calc_type, err_type, what_analysis, who_analysis(1:end-1), ...
         experiments{curr_exp}, plot_font, colours_pattern, plot_pos, ...
-        linewidth, "none", mrksz, capsize, jitterwidth, focus_type);
+        linewidth, linestyle, mrksz, capsize, jitterwidth, focus_type);
 
 % Plot: Matches only
 

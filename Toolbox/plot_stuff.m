@@ -24,8 +24,8 @@ switch focus_type
 
             % Plot single data points
             ax = ...
-                plot_ind(numerosities, data, jitter_dots, ...
-                colours, patterns, mrksz, data_type, focus_type, sample_idx);
+                plot_ind(numerosities, ind_data, jitter_dots, ...
+                colours, patterns, mrksz, what_analysis, focus_type, sample_idx, linewidth);
 
             % plot the stuff
             [ax, dot_plots, leg_patch, leg_label] = ...
@@ -40,7 +40,7 @@ switch focus_type
                 ax.YLim = [0 800];
             elseif strcmp(what_analysis, 'Reaction Times') && ...
                     ~strcmp(who_analysis, 'humans')
-                ax.YLim = [200 400];
+                ax.YLim = [0 800];
             else
                 ax.YLim = [0 1];
                 ax.YTick = (0:0.2:1);
@@ -60,8 +60,8 @@ switch focus_type
 
         % Plot single data points
         ax = ...
-            plot_ind(numerosities, data, jitter_dots, ...
-            colours, patterns, mrksz, data_type, focus_type, 0);
+            plot_ind(numerosities, ind_data, jitter_dots, ...
+            colours, patterns, mrksz, what_analysis, focus_type, 0, linewidth);
 
         % plot the stuff
         [ax, dot_plots, leg_patch, leg_label] = ...
@@ -76,8 +76,8 @@ switch focus_type
 
         % Plot single data points
         ax = ...
-            plot_ind(numerosities, data, jitter_dots, ...
-            colours, patterns, mrksz, data_type, focus_type, 0);
+            plot_ind(numerosities, ind_data, jitter_dots, ...
+            colours, patterns, mrksz, what_analysis, focus_type, 0, linewidth);
 
         % plot the stuff
         [ax, dot_plots, leg_patch, leg_label] = ...
@@ -89,7 +89,7 @@ end
 
 % figure title
 fig_title = title([calc_type ' ' what_analysis ' of ' ...
-    who_analysis(1:end-1) ' in ' experiment ' Sample Time ']);
+    who_analysis ' in ' experiment ' Sample Time ']);
 % Plot Improvement
 [fig_pretty, fig_title_pretty] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
@@ -101,7 +101,7 @@ set(gca, 'TickDir', 'out');
 if strcmp(what_analysis, 'Reaction Times') && strcmp(who_analysis, 'humans')
     ax.YLim = [0 800];
 elseif strcmp(what_analysis, 'Reaction Times') && ~strcmp(who_analysis, 'humans')
-    ax.YLim = [200 400];
+    ax.YLim = [0 800];
 else
     ax.YLim = [0 1];
     ax.YTick = (0:0.2:1);
