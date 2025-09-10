@@ -14,14 +14,15 @@ close all
 % DONE rewrite correction to one resp mat with RT
 % DONE rewrite sorting behaviour data as function
 % DONE rewrite data extraction from behaviour data as function
-% rewrite avg/median + error stuff as function
+% DONE rewrite avg/median + error stuff as function
 % DONE rewrite bootstrapping as one function
 % DONE make plots with individual dots in background (like fish graphics)
 % save data (individual stuff and mean stuff)
 % make fig size variable
 % maybe time for birds
 % imporve single plot
-% regression analysis
+% regression analysis: add computing in function + plot regression curve
+% separetly in a function
 
 
 % Note
@@ -239,18 +240,29 @@ end
 
 % Plot
 if s_c
-    fig = plot_s_c
-fig = plot_stuff(ind_data, avg_data, err_data, numerosities, ...
-        patterns, calc_type, err_type, what_analysis, who_analysis(1:end-1), ...
+    plot_pos = [29.7 50];
+    fig = plot_s_c(numerosities, ind_data_s, ind_data_c, ...
+        avg_data_s, avg_data_c, err_data_s, err_data_c, what_analysis, ...
+        who_analysis(1:end-1), calc_type, experiments{curr_exp}, ...
+        patterns, err_type, jitterwidth, ...
+        colours_S_C, mrksz, plot_font, plot_pos, ...
+        linewidth, capsize, linestyle);
+    fig_name = [focus_type '_StandCont_' calc_type '_' err_type '_' ...
+        what_analysis '.' format];
+else
+    fig = plot_stuff(ind_data, avg_data, err_data, numerosities, ...
+        patterns, calc_type, err_type, what_analysis, ...
+        who_analysis(1:end-1), ...
         experiments{curr_exp}, plot_font, colours_pattern, plot_pos, ...
         linewidth, linestyle, mrksz, capsize, jitterwidth, focus_type);
+    fig_name = [focus_type '_' calc_type '_' err_type '_' ...
+        what_analysis '.' format];
+end
 
-% Plot: Matches only
 
 
 % save figure
 if to_save
-    fig_name = [focus_type '_' calc_type '_' err_type '_' what_analysis '.' format];
     adapt_path = [figure_path '\' subfolders{curr_exp} '\'];
     saveas(fig, [adapt_path, fig_name], format)
 end

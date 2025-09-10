@@ -106,7 +106,7 @@ for pattern = 1:length(patterns)
                 if strcmp(what_analysis, 'Reaction Times')
                     % concat RTs for all test numbers & subject/sessions
                     y_vals = ...
-                        vertcat(ind_data{:, pattern, sample_idx, :});
+                        vertcat(ind_data{:, pattern, sample_idx, 1});
                 else
                     y_vals = ind_data(:, pattern, sample_idx, 1);
                 end
