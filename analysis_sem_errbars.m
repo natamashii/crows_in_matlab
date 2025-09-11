@@ -5,8 +5,8 @@ close all
 % Script for sorting behavioural data
 
 % TODO
-% divide standard/control stuff, save it separately (incl statistic shit
-% from that)
+% DONE divide standard/control stuff, save it separately (incl statistic shit from that)
+% generalize standard/control to Jello/Uri
 % implement statistics
 % DONE rewrite analysis stuff as functions
 % bootstrapping: more bootstrap statistic? some p value or such stuff?
@@ -44,9 +44,12 @@ close all
 
 % Note: 9 in all columns for one row = abundance by bird
 
+% Pre allocation
+statistics = table();
+
 % Pre Definition
 
-who_analysis = {'humans\'; 'jello\'; 'uri\'};
+who_analysis = {'humans\'; 'jello\'; 'uri\'; 'birds\'};
 what_analysis = {'Performance'; 'Response Frequency'; 'Reaction Times'};
 calc_type = {'Mean', 'Median'};
 err_type = {'STD', 'SEM', 'CI'};
@@ -121,6 +124,7 @@ base_path = 'D:\MasterThesis\analysis\data\';
 figure_path = ['D:\MasterThesis\figures\progress_since_250902\' who_analysis '\'];
 spk_folderpath = [base_path, 'spk\'];
 rsp_mat_folderpath = [base_path, 'analysed\'];
+stats_path = ['D:\MasterThesis\analysis\data\statistics\' who_analysis '\'];
 
 filelist_spk = dir(figure_path);  % list of all data & subfolders
 subfolders = filelist_spk([filelist_spk(:).isdir]); % extract subfolders
@@ -259,7 +263,20 @@ else
         what_analysis '.' format];
 end
 
+% Add statistics
+if s_c
+    statistics_s_c = anova_sc(performances_s, performances_c, ...
+        resp_freq_s, resp_freq_c, rec_times_s, rec_times_c, patterns, ...
+        numerosities, stats_path, subfolders{curr_exp}, ...
+        {'Standard', 'Control'}, 'statistics_standard_control');
+end
 
+if strcmp(what_analysis, 'birds\')
+    statistics_s_c = anova_sc(performances_s, performances_c, ...
+        resp_freq_s, resp_freq_c, rec_times_s, rec_times_c, patterns, ...
+        numerosities, stats_path, subfolders{curr_exp}, ...
+        {'Jello', 'Uri'}, 'statistics_jello_uri');
+end
 
 % save figure
 if to_save
