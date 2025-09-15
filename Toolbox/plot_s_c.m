@@ -29,7 +29,7 @@ fig = figure();
 tiled = tiledlayout(fig, length(patterns), 1);
 tiled.TileSpacing = "compact";
 tiled.Padding = "compact";
-tiled.OuterPosition = [0.25 0 0.3 1];
+tiled.OuterPosition = [0.25 0 0.7 1];
 
 % iterate over patterns
 for pattern = 1:length(patterns)

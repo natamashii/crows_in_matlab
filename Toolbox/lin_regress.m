@@ -14,7 +14,11 @@ end
 
 % iterate over patterns
 for pattern = 1:length(patterns)
+    p1 = polyfit(x1, y1, 1);
+    f1 = polyval(p1, x1);
 
+    % write data as table
+    
 end
 
 
