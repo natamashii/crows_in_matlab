@@ -24,7 +24,7 @@ close all
 % regression analysis: add computing in function + plot regression curve separetly in a function
 % DONE rewrite standard/control & jello/uri stuff into one case
 % DONE different colours for uri & jello comparison thatn for standard & control
-% comparison of birds different experiments exp 1
+% comparison of birds different times exp 1
 % DONE make prompt asking adaptable
 % write one script to load all stuff to make it presentable to lena
 % in stimpattern_generation.m change input to case insensitive with strcmpi();
@@ -33,7 +33,7 @@ close all
 % add error type to legend in each plot function
 % for plotting: extract dot_alpha & marker factor & box alpha & boxwidth factor for all functions
 % Anova S/C and J/U: maybe pre process RTs: remove too quick trials & remove everything that is +- 3* MAD of median
-
+% perhaps look for significant difference in P1 vs. P2/3 first
 
 % Note
 % so far, condition & standard stimuli trials thrown together (must be checked beforehand!!)
@@ -68,10 +68,7 @@ to_correct = false; % if response matrices shall be corrected
 to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
 
-% crows: 1 = exp 1 100ms, 2 = exp 1 300ms, 3 = exp 1 50ms, 4 = exp 2 50ms
-% humans: 1 = exp 1 50ms, 2 = exp 2 50ms, 3 = exp 3 50ms
-
-% all numerosities relevant
+% all relevant numerosities (Lena's tabular)
 numerosities = [3, 4, 5, 6, 7; % sample
     2, 2, 3, 3, 3;  % test 1 numbers
     5, 6, 7, 4, 4;  % test 2 numbers
@@ -306,6 +303,10 @@ if to_split_ju | to_split_sc
         factors_stats, ['statistics_' fig_name_part(1:end - 1)]);
 end
 
+% Linear Regression: Compare patterns
+if ~(to_split_ju | to_split_sc)
+    lin_reg_pattern = lin_regress(performances, resp_freq, rec_times, false, patterns, numerosities);
+end
 
    
 %% Plotting
