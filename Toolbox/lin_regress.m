@@ -1,5 +1,5 @@
 function [penis] = ...
-    lin_regress(performances, resp_freq, rec_times, to_split, patterns, numerosities)
+    lin_regress(performances, resp_freq, rec_times, patterns, numerosities)
 
 % function to compute linear regression of all data that should be compared
 % to each other
@@ -47,6 +47,18 @@ for pattern = 1:length(patterns)
     end
 end
 
+% poly fit stuff
+% iterate over patterns
+% too tired now, so here the notes: google how to filter table
+% filter it to each pattern, then apply it in polyfit(sample, performance,
+% 1)
+% dont forget to do the '
+filtered_data = data_table(data_table.Pattern == patterns{pattern}, :);
+pipi(pattern, :) = polyfit(filtered_data.Sample, filtered_data.Performance, 1);
+for pattern = 1:length(patterns)
+    pipi = polyfit(data_table.)
+end
+
 % make columns categorical
 data_table.Pattern = categorical(cellstr(data_table.Pattern));
 data_table.Sample = categorical(data_table.Sample);
@@ -56,25 +68,15 @@ data_table.Subject = categorical(data_table.Subject);
 lme_model_performance = ...
     fitlme(data_table, 'Performance ~ Pattern + (1|Subject)');
 lme_model_resp_freq = ...
-    fitlme(data_table, 'ResponseFrequency ~ Sample * Pattern + (1|Subject)');
+    fitlme(data_table, 'ResponseFrequency ~ Pattern + (1|Subject)');
 lme_model_rec_times = ...
-    fitlme(data_table, 'RT ~ Sample * Pattern + (1|Subject)');
+    fitlme(data_table, 'RT ~ Pattern + (1|Subject)');
 
-anova_tab_performance = anova(lme_model_performance);
-anova_tab_resp_freq = anova(lme_model_resp_freq);
-anova_tab_rec_times = anova(lme_model_rec_times);
+anova_performance = anova(lme_model_performance);
+anova_resp_freq = anova(lme_model_resp_freq);
+anova_rec_times = anova(lme_model_rec_times);
 
-stats_performance = ...
-    rm_anova2(data_table.Performance, ...
-    data_table.Subject, data_table.Sample, data_table.Pattern, ...
-    {'Sample', 'Pattern'});
-stats_resp_freq = ...
-    rm_anova2(data_table.ResponseFrequency, ...
-    data_table.Subject, data_table.Sample, data_table.Pattern, ...
-    {'Sample', 'Pattern'});
-stats_rec_times = ...
-    rm_anova2(data_table.RT, ...
-    data_table.Subject, data_table.Sample, data_table.Pattern, ...
-    {'Sample', 'Pattern'});
+pipi = corrcoef();
+pipi = polyfit(performances(:, 1, :, 1))
 
 end
