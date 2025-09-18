@@ -5,6 +5,9 @@ close all
 % Script for sorting behavioural data
 
 % TODO
+% comparison patterns: linear regression, something with correlation
+% statistics: kruskal wallis, but which effect size???
+% post hoc: mann withney u with bonferroni or Conover–Iman test or dunn???
 % DONE divide standard/control stuff, save it separately (incl statistic shit from that)
 % DONE generalize standard/control to Jello/Uri
 % implement statistics
@@ -305,7 +308,15 @@ end
 
 % Linear Regression: Compare patterns
 if ~(to_split_ju | to_split_sc)
-    lin_reg_pattern = lin_regress(performances, resp_freq, rec_times, false, patterns, numerosities);
+    lin_reg_pattern_performance = ...
+        lin_regress(performances, resp_freq, rec_times, ...
+        patterns, numerosities, "Performance");
+    lin_reg_pattern_resp_freq = ...
+        lin_regress(performances, resp_freq, rec_times, ...
+        patterns, numerosities, "Response Frequency");
+    lin_reg_pattern_rec_times = ...
+        lin_regress(performances, resp_freq, rec_times, ...
+        patterns, numerosities, "Reaction Times");
 end
 
    
