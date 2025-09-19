@@ -15,6 +15,7 @@ function [lin_reg] = ...
 data_table = table();
 lin_reg = {"polyfit", "R", "df", "normr", "rsquared", ...
     "mu", "y", "delta"};
+filtered_data_cell = {};
 
 % iterate over patterns
 for pattern = 1:length(patterns)
@@ -25,7 +26,8 @@ for pattern = 1:length(patterns)
         % write data as table
         subjects_col = (1:size(performances, 1))';
         pattern_col = repmat(patterns{pattern}, size(subjects_col, 1), 1);
-        sample_col = repmat(numerosities(sample_idx, 1), size(subjects_col, 1), 1);
+        sample_col = ...
+            repmat(numerosities(sample_idx, 1), size(subjects_col, 1), 1);
         performance_col = performances(:, pattern, sample_idx, 1);
         resp_freq_col = resp_freq(:, pattern, sample_idx, 1);
 
@@ -88,6 +90,17 @@ for pattern = 1:length(patterns)
     lin_reg{pattern + 1, 6} = mu;
     lin_reg{pattern + 1, 7} = y;
     lin_reg{pattern + 1, 8} = delta;
+    filtered_data_cell{pattern} = filtered_data;
 end
+
+% Statistics
+% Kruskal-Wallis
+[p_kruskal, tbl_kruskal, stats_kruskal] = ...
+    kruskalwallis([filtered_data_cell{1}.Performance, ...
+    filtered_data_cell{2}.Performance, ...
+    filtered_data_cell{3}.Performance], ["P1", "P2", "P3"]); 
+eta2 = mes1way([filtered_data_cell{1}.Performance, ...
+    filtered_data_cell{2}.Performance, ...
+    filtered_data_cell{3}.Performance], 'eta2');
 
 end

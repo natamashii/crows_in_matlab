@@ -308,6 +308,7 @@ end
 
 % Linear Regression: Compare patterns
 if ~(to_split_ju | to_split_sc)
+    % Linear Regression
     lin_reg_pattern_performance = ...
         lin_regress(performances, resp_freq, rec_times, ...
         patterns, numerosities, "Performance");
@@ -317,6 +318,7 @@ if ~(to_split_ju | to_split_sc)
     lin_reg_pattern_rec_times = ...
         lin_regress(performances, resp_freq, rec_times, ...
         patterns, numerosities, "Reaction Times");
+
 end
 
    
