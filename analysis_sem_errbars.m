@@ -309,15 +309,14 @@ end
 % Linear Regression: Compare patterns
 if ~(to_split_ju | to_split_sc)
     % Linear Regression
-    lin_reg_pattern_performance = ...
+    lin_reg_pattern = ...
         lin_regress(performances, resp_freq, rec_times, ...
-        patterns, numerosities, "Performance");
-    lin_reg_pattern_resp_freq = ...
-        lin_regress(performances, resp_freq, rec_times, ...
-        patterns, numerosities, "Response Frequency");
-    lin_reg_pattern_rec_times = ...
-        lin_regress(performances, resp_freq, rec_times, ...
-        patterns, numerosities, "Reaction Times");
+        patterns, numerosities, what_analysis);
+    
+    % Statistics
+    [big_statistics, post_hoc] = ...
+        pattern_statistics(performances, resp_freq, rec_times, ...
+        what_analysis, numerosities, patterns, "Friedman", "Conover-Iman");
 
 end
 
@@ -350,7 +349,16 @@ else
         what_analysis '.' format];
 end
 
-% save figure
+% draw linear regression
+for pattern = 1:length(patterns)
+    lin_plot = plot([3, 4, 5, 6, 7], flip(unique(lin_reg_pattern{pattern + 1, 7})));
+    lin_plot.Color = colours_pattern{pattern};
+    lin_plot.LineStyle = "--";
+end
+
+
+
+%% save figure
 if to_save
     adapt_path = [figure_path '\' subfolders{curr_exp} '\'];
     saveas(fig, [adapt_path, fig_name], format)

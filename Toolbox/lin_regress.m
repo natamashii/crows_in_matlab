@@ -11,47 +11,15 @@ function [lin_reg] = ...
 % sth abt fixed effect, beta & random effect, eta
 % this works for matches only
 
+% note: do this again but for the avg_data cuz the shit looks weird rn...
+
 % pre allocation
-data_table = table();
 lin_reg = {"polyfit", "R", "df", "normr", "rsquared", ...
     "mu", "y", "delta"};
 filtered_data_cell = {};
 
-% iterate over patterns
-for pattern = 1:length(patterns)
-
-    % iterate over samples
-    for sample_idx = 1:size(numerosities, 1)
-
-        % write data as table
-        subjects_col = (1:size(performances, 1))';
-        pattern_col = repmat(patterns{pattern}, size(subjects_col, 1), 1);
-        sample_col = ...
-            repmat(numerosities(sample_idx, 1), size(subjects_col, 1), 1);
-        performance_col = performances(:, pattern, sample_idx, 1);
-        resp_freq_col = resp_freq(:, pattern, sample_idx, 1);
-
-        % Reaction Time: take median for each subject/session
-        rec_times_col = zeros(size(subjects_col, 1), 1);
-        % iterate over subejcts/sessions
-        for sub_idx = 1:size(subjects_col, 1)
-            rec_times_col(sub_idx) = ...
-                median(vertcat(rec_times{sub_idx, pattern, ...
-                sample_idx, 1}), "omitnan");
-        end
-
-        % store as table
-        temp_table = ...
-            table(subjects_col, sample_col, pattern_col, ...
-            performance_col, resp_freq_col, rec_times_col, ...
-            'VariableNames', ...
-            {'Subject', 'Sample', 'Pattern', ...
-            'Performance', 'ResponseFrequency', 'RT'});
-
-        data_table = [data_table; temp_table];  % append vertically
-
-    end
-end
+data_table = ...
+    datatable(performances, resp_freq, rec_times, patterns, numerosities);
 
 
 % iterate over patterns
@@ -92,15 +60,5 @@ for pattern = 1:length(patterns)
     lin_reg{pattern + 1, 8} = delta;
     filtered_data_cell{pattern} = filtered_data;
 end
-
-% Statistics
-% Kruskal-Wallis
-[p_kruskal, tbl_kruskal, stats_kruskal] = ...
-    kruskalwallis([filtered_data_cell{1}.Performance, ...
-    filtered_data_cell{2}.Performance, ...
-    filtered_data_cell{3}.Performance], ["P1", "P2", "P3"]); 
-eta2 = mes1way([filtered_data_cell{1}.Performance, ...
-    filtered_data_cell{2}.Performance, ...
-    filtered_data_cell{3}.Performance], 'eta2');
 
 end
