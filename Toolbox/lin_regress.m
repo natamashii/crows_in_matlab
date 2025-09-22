@@ -1,17 +1,9 @@
 function [lin_reg] = ...
     lin_regress(performances, resp_freq, rec_times, ...
-    patterns, numerosities, data_type)
+    patterns, numerosities, data_type, avg_data)
 
 % function to compute linear regression of all data that should be compared
 % to each other
-
-% NOTES
-% include p value shit + effect size (R^2 ???)
-% if to_split, then ind_data must be a 1x2 cell with ind data of cases
-% sth abt fixed effect, beta & random effect, eta
-% this works for matches only
-
-% note: do this again but for the avg_data cuz the shit looks weird rn...
 
 % pre allocation
 lin_reg = {"polyfit", "R", "df", "normr", "rsquared", ...
@@ -47,17 +39,22 @@ for pattern = 1:length(patterns)
             fprintf("Error: Mistyped Data Type :( ")
     end
     [y, delta] = ...
-        polyval(p, filtered_data.Sample, S);
+        polyval(p, filtered_data.Sample, S, mu);
+
+    % do the same for avg_data
+    [p_avg, S_avg, mu_avg] = ...
+        polyfit(numerosities(:, 1), avg_data(pattern, :), 1);
+    [y_avg, delta_avg] = polyval(p_avg, numerosities(:, 1), S_avg, mu_avg);
 
     % sort data
-    lin_reg{pattern + 1, 1} = p;
-    lin_reg{pattern + 1, 2} = S.R;
-    lin_reg{pattern + 1, 3} = S.df;
-    lin_reg{pattern + 1, 4} = S.normr;
-    lin_reg{pattern + 1, 5} = S.rsquared;
-    lin_reg{pattern + 1, 6} = mu;
-    lin_reg{pattern + 1, 7} = y;
-    lin_reg{pattern + 1, 8} = delta;
+    lin_reg{pattern + 1, 1} = {p; p_avg};
+    lin_reg{pattern + 1, 2} = {S.R; S_avg.R};
+    lin_reg{pattern + 1, 3} = {S.df; S_avg.df};
+    lin_reg{pattern + 1, 4} = {S.normr; S_avg.normr};
+    lin_reg{pattern + 1, 5} = {S.rsquared; S_avg.rsquared};
+    lin_reg{pattern + 1, 6} = {mu; mu_avg};
+    lin_reg{pattern + 1, 7} = {y; y_avg};
+    lin_reg{pattern + 1, 8} = {delta; delta_avg};
     filtered_data_cell{pattern} = filtered_data;
 end
 

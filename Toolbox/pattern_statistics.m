@@ -1,11 +1,13 @@
 function [big_statistics, post_hoc] = ...
     pattern_statistics(performances, resp_freq, rec_times, ...
-    data_type, numerosities, patterns, big_test, post_hoc_test)
+    data_type, numerosities, patterns, focus_type,...
+    big_test, post_hoc_test, ...
+    stats_path, subfolder, avg_data_stats)
 
 % function for statistics of pattern comparison
 
 % pre allocation
-filtered_table = cell(3, 2);
+filtered_table = cell(3, 3);
 big_statistics = {"Test Type", "p-Value", "Table", "Stats", ...
     "Effect Size Type", "Effect Size"};
 post_hoc = {"Method for Correction", "Post-Hoc Test", "p-Value", ...
@@ -32,44 +34,50 @@ for pattern = 1:length(patterns)
         case "Performance"
             filtered_table{pattern, 2} = ...
                 filtered_table{pattern, 1}.Performance;
+            filtered_table{pattern, 3} = avg_data_stats(:, pattern);
+            what_analysis = 'Performance';
         case "Response Frequency"
             filtered_table{pattern, 2} = ...
                 filtered_table{pattern, 1}.ResponseFrequency;
+            filtered_table{pattern, 3} = avg_data_stats(:, pattern);
+            what_analysis = 'ResponseFrequency';
         case "Reaction Times"
             filtered_table{pattern, 2} = ...
                 filtered_table{pattern, 1}.RT;
+            filtered_table{pattern, 3} = avg_data_stats(:, pattern);
+            what_analysis = 'ReactionTimes';
     end
 end
 
 %% Statistical Test
 
 switch big_test
-    case "Kruskal-Wallis"
+    case 'Kruskal_Wallis'
         % do the test
         [p_big, tbl_big, stats_big] = ...
-            kruskalwallis([filtered_table{1, 2}, ...
-            filtered_table{2, 2}, filtered_table{3, 2}], ...
+            kruskalwallis([filtered_table{1, 3}, ...
+            filtered_table{2, 3}, filtered_table{3, 3}], ...
             ["P1", "P2", "P3"], "off");
         big_statistics{2, 1} = "Kruskal-Wallis";
 
         % get corresponding effect size: Epsilon Squared
         H = tbl_big{2, 5};  % H-statistics/Chi squared
-        eps2 = H / (size(filtered_table{1, 2}, 1) - 1);
+        eps2 = H / (size(filtered_table{1, 3}, 1) - 1);
 
         big_statistics{2, 5} = "Epsilon Squared";
         big_statistics{2, 6} = eps2;
 
-    case "Friedman"
+    case 'Friedman'
         % do the test
         [p_big, tbl_big, stats_big] = ...
-            friedman([filtered_table{1, 2}, ...
-            filtered_table{2, 2}, filtered_table{3, 2}], 1, "off");
+            friedman([filtered_table{1, 3}, ...
+            filtered_table{2, 3}, filtered_table{3, 3}], 1, "off");
         big_statistics{2, 1} = "Friedman";
 
         % get corresponding effect size: Kendall's W
         chi2 = tbl_big{2, 5};  % H-statistics/Chi squared
         W = chi2 / ...
-            (size(filtered_table{1, 2}, 1) * (length(patterns) - 1));
+            (size(filtered_table{1, 3}, 1) * (length(patterns) - 1));
 
         big_statistics{2, 5} = "Kendall's W";
         big_statistics{2, 6} = W;
@@ -86,25 +94,46 @@ big_statistics{2, 4} = stats_big;
 % Post-Hoc analysis if significant
 if p_big < 0.05
     switch post_hoc_test
-        case "Wilcoxon Signed Rank"
+        case 'Wilcoxon_Signed_Rank'
             % Do the test & compute effect size: Rank-biserial correlation
             post_hoc{2, 2} = post_hoc_test;
             post_hoc{2, 4} = "Rank-Biserial Correlation r";
             % P1 vs. P2
             [p_post_hoc_P1P2, ~, stats_post_hoc_P1P2] = ...
-                signrank(filtered_table{1, 2}, filtered_table{2, 2});
+                signrank(filtered_table{1, 3}, filtered_table{2, 3});
+            mu_W = (size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1)) / 4;
+            sigma_W = sqrt((size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1) * ...
+                (2 * size(filtered_table{1, 3}, 1) + 1)) / 24);
+            stats_post_hoc_P1P2.zval = ...
+                (stats_post_hoc_P1P2.signedrank - mu_W) / sigma_W;
             r_post_hoc_P1P2 = stats_post_hoc_P1P2.zval / ...
-                sqrt(size(filtered_table{1, 2}, 1));
+                sqrt(size(filtered_table{1, 3}, 1));
             % P2 vs. P3
             [p_post_hoc_P2P3, ~, stats_post_hoc_P2P3] = ...
-                signrank(filtered_table{2, 2}, filtered_table{3, 2});
+                signrank(filtered_table{2, 3}, filtered_table{3, 3});
+            mu_W = (size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1)) / 4;
+            sigma_W = sqrt((size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1) * ...
+                (2 * size(filtered_table{1, 3}, 1) + 1)) / 24);
+            stats_post_hoc_P2P3.zval = ...
+                (stats_post_hoc_P2P3.signedrank - mu_W) / sigma_W;
             r_post_hoc_P2P3 = stats_post_hoc_P2P3.zval / ...
-                sqrt(size(filtered_table{1, 2}, 1));
+                sqrt(size(filtered_table{1, 3}, 1));
             % P1 vs. P3
             [p_post_hoc_P1P3, ~, stats_post_hoc_P1P3] = ...
-                signrank(filtered_table{1, 2}, filtered_table{3, 2});
+                signrank(filtered_table{1, 3}, filtered_table{3, 3});
+            mu_W = (size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1)) / 4;
+            sigma_W = sqrt((size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1) * ...
+                (2 * size(filtered_table{1, 3}, 1) + 1)) / 24);
+            stats_post_hoc_P1P3.zval = ...
+                (stats_post_hoc_P1P3.signedrank - mu_W) / sigma_W;
             r_post_hoc_P1P3 = stats_post_hoc_P1P3.zval / ...
-                sqrt(size(filtered_table{1, 2}, 1));
+                sqrt(size(filtered_table{1, 3}, 1));
 
             % Holm-Bonferroni Correction of p-values
             [p_post_hoc_corr, ~] = ...
@@ -121,7 +150,9 @@ if p_big < 0.05
             post_hoc{2, 5}{2, 2} = r_post_hoc_P2P3;     % P2 vs. P3
             post_hoc{2, 5}{3, 2} = r_post_hoc_P1P3;     % P1 vs. P3
 
-        case "Dunn"
+        case 'Dunn'
+            post_hoc{2, 2} = post_hoc_test;
+            post_hoc{2, 4} = "Rank-Biserial Correlation r";
             % run the test + correction after Sidák
             [c, ~, ~, ~] = ...
                 multcompare(stats_big, ...
@@ -133,55 +164,101 @@ if p_big < 0.05
                 c(1, 1), c(1, 2), c(1, 3), c(1, 4), c(1, 5), c(1, 6); ...
                 c(2, 1), c(2, 2), c(2, 3), c(2, 4), c(2, 5), c(2, 6); ...
                 c(3, 1), c(3, 2), c(3, 3), c(3, 4), c(3, 5), c(3, 6)};
+            post_hoc{2, 1} = "Sidak";
 
             % Effect Size: Rank-biserial correlation
             [~, ~, stats_P1P2] = ...
-                signrank(filtered_table{1, 2}, filtered_table{2, 2});
+                signrank(filtered_table{1, 3}, filtered_table{2, 3});
+            mu_W = (size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1)) / 4;
+            sigma_W = sqrt((size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1) * ...
+                (2 * size(filtered_table{1, 3}, 1) + 1)) / 24);
+            stats_P1P2.zval = ...
+                (stats_P1P2.signedrank - mu_W) / sigma_W;
             [~, ~, stats_P2P3] = ...
-                signrank(filtered_table{2, 2}, filtered_table{3, 2});
+                signrank(filtered_table{2, 3}, filtered_table{3, 3});
+            mu_W = (size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1)) / 4;
+            sigma_W = sqrt((size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1) * ...
+                (2 * size(filtered_table{1, 3}, 1) + 1)) / 24);
+            stats_P2P3.zval = ...
+                (stats_P2P3.signedrank - mu_W) / sigma_W;
             [~, ~, stats_P1P3] = ...
-                signrank(filtered_table{1, 2}, filtered_table{3, 2});
+                signrank(filtered_table{1, 3}, filtered_table{3, 3});
+            mu_W = (size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1)) / 4;
+            sigma_W = sqrt((size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1) * ...
+                (2 * size(filtered_table{1, 3}, 1) + 1)) / 24);
+            stats_P1P3.zval = ...
+                (stats_P1P3.signedrank - mu_W) / sigma_W;
 
             r_post_hoc_P1P2 = ...
-                stats_P1P2.zval / sqrt(size(filtered_data, 1));
+                stats_P1P2.zval / sqrt(size(filtered_table{1, 3}, 1));
             r_post_hoc_P2P3 = ...
-                stats_P2P3.zval / sqrt(size(filtered_data, 1));
+                stats_P2P3.zval / sqrt(size(filtered_table{1, 3}, 1));
             r_post_hoc_P1P3 = ...
-                stats_P1P3.zval / sqrt(size(filtered_data, 1));
+                stats_P1P3.zval / sqrt(size(filtered_table{1, 3}, 1));
 
             % save values
-            post_hoc{2, 3}{1, 2} = c(1, 6);  % P1 vs. P2
-            post_hoc{2, 3}{2, 2} = c(3, 6);  % P2 vs. P3
-            post_hoc{2, 3}{3, 2} = c(2, 6);  % P1 vs. P3
+            post_hoc{2, 3}{1, 2} = c{2, 6};  % P1 vs. P2
+            post_hoc{2, 3}{2, 2} = c{4, 6};  % P2 vs. P3
+            post_hoc{2, 3}{3, 2} = c{3, 6};  % P1 vs. P3
 
             post_hoc{2, 5}{1, 2} = r_post_hoc_P1P2;     % P1 vs. P2
             post_hoc{2, 5}{2, 2} = r_post_hoc_P2P3;     % P2 vs. P3
             post_hoc{2, 5}{3, 2} = r_post_hoc_P1P3;     % P1 vs. P3
 
-        case "Conover-Iman"
+        case 'Conover_Iman'
+            post_hoc{2, 2} = post_hoc_test;
+            post_hoc{2, 4} = "Rank-Biserial Correlation r";
             % do the test
             [p_P1P2, p_P2P3, p_P1P3] = ...
-                conoveriman(filtered_table{1, 2}, ...
-                filtered_table{2, 2}, filtered_table{3, 2});
+                conoveriman(filtered_table{1, 3}, ...
+                filtered_table{2, 3}, filtered_table{3, 3});
 
             % Holm-Bonferroni Correction of p-values
             [p_post_hoc_corr, ~] = ...
                 bonf_holm([p_P1P2, p_P2P3, p_P1P3]);
+            post_hoc{2, 1} = "Holm-Bonferroni";
 
             % Effect Size: Rank-Biserial Correlation
             [~, ~, stats_P1P2] = ...
-                signrank(filtered_table{1, 2}, filtered_table{2, 2});
+                signrank(filtered_table{1, 3}, filtered_table{2, 3});
+            mu_W = (size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1)) / 4;
+            sigma_W = sqrt((size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1) * ...
+                (2 * size(filtered_table{1, 3}, 1) + 1)) / 24);
+            stats_P1P2.zval = ...
+                (stats_P1P2.signedrank - mu_W) / sigma_W;
             [~, ~, stats_P2P3] = ...
-                signrank(filtered_table{2, 2}, filtered_table{3, 2});
+                signrank(filtered_table{2, 3}, filtered_table{3, 3});
+            mu_W = (size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1)) / 4;
+            sigma_W = sqrt((size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1) * ...
+                (2 * size(filtered_table{1, 3}, 1) + 1)) / 24);
+            stats_P2P3.zval = ...
+                (stats_P2P3.signedrank - mu_W) / sigma_W;
             [~, ~, stats_P1P3] = ...
-                signrank(filtered_table{1, 2}, filtered_table{3, 2});
+                signrank(filtered_table{1, 3}, filtered_table{3, 3});
+            mu_W = (size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1)) / 4;
+            sigma_W = sqrt((size(filtered_table{1, 3}, 1) * ...
+                (size(filtered_table{1, 3}, 1) + 1) * ...
+                (2 * size(filtered_table{1, 3}, 1) + 1)) / 24);
+            stats_P1P3.zval = ...
+                (stats_P1P3.signedrank - mu_W) / sigma_W;
 
             r_post_hoc_P1P2 = ...
-                stats_P1P2.zval / sqrt(size(filtered_data, 1));
+                stats_P1P2.zval / sqrt(size(filtered_table{1, 3}, 1));
             r_post_hoc_P2P3 = ...
-                stats_P2P3.zval / sqrt(size(filtered_data, 1));
+                stats_P2P3.zval / sqrt(size(filtered_table{1, 3}, 1));
             r_post_hoc_P1P3 = ...
-                stats_P1P3.zval / sqrt(size(filtered_data, 1));
+                stats_P1P3.zval / sqrt(size(filtered_table{1, 3}, 1));
 
             % save values
             post_hoc{2, 3}{1, 2} = p_post_hoc_corr(1);  % P1 vs. P2
@@ -198,5 +275,13 @@ if p_big < 0.05
     
 end
 
+% save the statistics
+statistics = struct();
+statistics.big_statistics = big_statistics;
+statistics.post_hoc = post_hoc;
+adapt_path = [stats_path '\' subfolder '\'];
+
+filename = ['statistics_' big_test '_' post_hoc_test '_' what_analysis '_' focus_type];
+save([adapt_path filename '.mat'], '-struct', 'statistics')
 
 end

@@ -6,11 +6,12 @@ function [p_P1P2, p_P2P3, p_P1P3] = conoveriman(data_p1, data_p2, data_p3)
 % rank the data
 x = [data_p1; data_p2; data_p3];
 ranked_x = tiedrank(x);
+divider = size(ranked_x, 1) / 3;
 
 % put it back into groups
-rank_p1 = ranked_x(1:60);
-rank_p2 = ranked_x(61:120);
-rank_p3 = ranked_x(121:end);
+rank_p1 = ranked_x(1:divider);
+rank_p2 = ranked_x(divider + 1:divider * 2);
+rank_p3 = ranked_x(divider * 2 + 1:end);
 
 % calculate mean ranks
 mean_rank_p1 = mean(rank_p1);
@@ -22,7 +23,7 @@ ranksums = [sum(rank_p1), sum(rank_p2), sum(rank_p3)];
 ss_total = sum(ranked_x .^ 2) - (sum(ranked_x) ^ 2 / size(ranked_x, 1));
 
 % Calculate between-group sum of squares
-ss_between = sum((ranksums .^ 2) / 60) - (sum(ranked_x)^2 / size(ranked_x, 1));
+ss_between = sum((ranksums .^ 2) / divider) - (sum(ranked_x)^2 / size(ranked_x, 1));
 
 % Calculate within-group sum of squares
 ss_within = ss_total - ss_between;
