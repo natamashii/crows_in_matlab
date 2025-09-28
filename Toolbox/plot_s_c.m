@@ -24,12 +24,11 @@ dot_alpha = 0.3;
 marker_factor = 4;
 
 % create figure
-fig = figure();
+fig = figure("Visible", "off");
 
-tiled = tiledlayout(fig, length(patterns), 1);
+tiled = tiledlayout(fig, 1, length(patterns));
 tiled.TileSpacing = "compact";
 tiled.Padding = "compact";
-tiled.OuterPosition = [0.25 0 0.7 1];
 
 % iterate over patterns
 for pattern = 1:length(patterns)
@@ -46,7 +45,6 @@ for pattern = 1:length(patterns)
     ax.FontWeight = 'bold';
     ax.XAxis.FontSize = plot_font;  % set fontsize of ticks
     ax.YAxis.FontSize = plot_font;  % set fontsize of ticks
-    xlabel(ax, 'Sample Numerosity', 'FontWeight', 'bold');    % set x-axis label
     ax.XTick = numerosities(:, 1);
     ax.XTickLabel = num2str(numerosities(:, 1));
     ax.XTickLabelRotation = 0;
@@ -197,15 +195,12 @@ for pattern = 1:length(patterns)
     end
     
     % Subplot Adjustments
-    if pattern == 1
-        ax.XTickLabel = ' ';
-        xlabel(ax, ' ', 'FontWeight', 'bold');    % set x-axis label
-        ylabel(ax, ' ', 'FontWeight', 'bold');    % set x-axis label
-    elseif pattern == 2
-        ax.XTickLabel = ' ';
-        xlabel(ax, ' ', 'FontWeight', 'bold');    % set x-axis label
+    if pattern == 2
+        % set x-axis label
+        xlabel(ax, 'Sample Numerosity', 'FontWeight', 'bold');
+        ylabel(ax, ' ', 'FontWeight', 'bold');    % set y-axis label
     elseif pattern == 3
-        ylabel(ax, ' ', 'FontWeight', 'bold');    % set x-axis label
+        ylabel(ax, ' ', 'FontWeight', 'bold');    % set y-axis label
     end
 end
 

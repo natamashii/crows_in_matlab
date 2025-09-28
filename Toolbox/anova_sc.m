@@ -1,6 +1,6 @@
 function statistics = anova_sc(performances_s, performances_c, ...
     resp_freq_s, resp_freq_c, rec_times_s, rec_times_c, patterns, ...
-    numerosities, stats_path, subfolder, factors, filename)
+    numerosities, factors)
 
 % Function for statistics of Standard vs. Control
 
@@ -167,8 +167,5 @@ statistics.RT = ...
     {'p Value ANOVA', 'p Value RM ANOVA', ...
     'F Stat ANOVA', 'F Stat RM ANOVA', ...
     'Partial Eta Squared', 'Pattern Type'});
-
-adapt_path = [stats_path '\' subfolder '\'];
-save([adapt_path filename '.mat'], '-struct', 'statistics')
 
 end

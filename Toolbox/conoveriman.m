@@ -23,7 +23,7 @@ ranksums = [sum(rank_p1), sum(rank_p2), sum(rank_p3)];
 ss_total = sum(ranked_x .^ 2) - (sum(ranked_x) ^ 2 / size(ranked_x, 1));
 
 % Calculate between-group sum of squares
-ss_between = sum((ranksums .^ 2) / divider) - (sum(ranked_x)^2 / size(ranked_x, 1));
+ss_between = sum((ranksums .^ 2) / divider) - (sum(ranked_x) ^ 2 / size(ranked_x, 1));
 
 % Calculate within-group sum of squares
 ss_within = ss_total - ss_between;

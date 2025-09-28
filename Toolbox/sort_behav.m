@@ -1,12 +1,12 @@
 function [performances, resp_freq, rec_times] = ...
-    sort_behav(rsp_mat_folderpath, who_analysis, ...
+    sort_behav(rsp_mat_path, who_analysis, ...
     curr_exp, numerosities, patterns)
 
 % function to load & extract performances/reaction times from response
 % matrices
 
 % Get Data
-path_resp = [rsp_mat_folderpath, who_analysis]; % adapt path
+path_resp = [rsp_mat_path, who_analysis]; % adapt path
 filelist_rsp = dir(path_resp);  % list of all data & subfolders
 subfolders_rsp = filelist_rsp([filelist_rsp(:).isdir]); % extract subfolders
 subfolders_rsp = {subfolders_rsp(3:end).name};  % list of subfolder names (experiments)
