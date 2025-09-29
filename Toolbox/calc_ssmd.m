@@ -7,8 +7,8 @@ function [smd, ssmd] = ...
 
 % pre allocation
 filtered_table = cell(3, 3);
-smd = cell(length(patterns), size(numerosities, 1));
-ssmd = cell(length(patterns), size(numerosities, 1));
+smd = NaN(length(patterns), size(numerosities, 1));
+ssmd = NaN(length(patterns), size(numerosities, 1));
 
 %% Arrange the data
 % Write data as table
@@ -58,8 +58,8 @@ for sample_idx = 1:size(numerosities, 1)
         meanEffectSize(p1, p2, ...
         "Effect", "meandiff", "Paired", true);
     covariance = cov(p1, p2);
-    smd{1, sample_idx} = table2array(placeholder("MeanDifference", "Effect"));
-    ssmd{1, sample_idx} = (mean(p1, "all") - mean(p2, "all")) / ...
+    smd(1, sample_idx) = table2array(placeholder("MeanDifference", "Effect"));
+    ssmd(1, sample_idx) = (mean(p1, "all") - mean(p2, "all")) / ...
         sqrt(var(p1, [], "all") + var(p2, [], "all") - ...
         (2 * covariance(1, 2)));
 
@@ -68,8 +68,8 @@ for sample_idx = 1:size(numerosities, 1)
         meanEffectSize(p2, p3, ...
         "Effect", "meandiff", "Paired", true);
     covariance = cov(p2, p3);
-    smd{2, sample_idx} = table2array(placeholder("MeanDifference", "Effect"));
-    ssmd{2, sample_idx} = (mean(p2, "all") - mean(p3, "all")) / ...
+    smd(2, sample_idx) = table2array(placeholder("MeanDifference", "Effect"));
+    ssmd(2, sample_idx) = (mean(p2, "all") - mean(p3, "all")) / ...
         sqrt(var(p2, [], "all") + var(p3, [], "all") - ...
         (2 * covariance(1, 2)));
 
@@ -78,8 +78,8 @@ for sample_idx = 1:size(numerosities, 1)
         meanEffectSize(p1, p3, ...
         "Effect", "meandiff", "Paired", true);
     covariance = cov(p1, p3);
-    smd{3, sample_idx} = table2array(placeholder("MeanDifference", "Effect"));
-    ssmd{3, sample_idx} = (mean(p1, "all") - mean(p3, "all")) / ...
+    smd(3, sample_idx) = table2array(placeholder("MeanDifference", "Effect"));
+    ssmd(3, sample_idx) = (mean(p1, "all") - mean(p3, "all")) / ...
         sqrt(var(p1, [], "all") + var(p3, [], "all") - ...
         (2 * covariance(1, 2)));
 end

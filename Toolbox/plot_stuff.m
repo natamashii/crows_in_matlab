@@ -10,7 +10,7 @@ function fig_pretty = ...
 jitter_dots = [-jitterwidth, 0, jitterwidth];
 
 % Create Figure
-fig = figure();
+fig = figure("Visible", "off");
 
 switch focus_type
     case 'Single'

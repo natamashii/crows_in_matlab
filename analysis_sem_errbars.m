@@ -86,9 +86,9 @@ prompt_what = ['What do you wish to analyse? '...
 
 to_save = true; % if result shall be saved
 to_correct = false; % if response matrices shall be corrected
-to_split_sc = true;    % if to compare standard & control conditions
+to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
-to_sort = true;     % if data must be sorted first
+to_sort = false;     % if data must be sorted first
 to_pattern_matches = false;     % if plotting pattern comparison (matches)
 to_pattern_curves = false;  % if plotting pattern comparison (tuning curves)
 to_ssmd = true;     % if plotting ssmd
@@ -475,23 +475,26 @@ if to_pattern_matches
                     calc_idx = 1;   % Mean
                     err_idx = 2;   % SEM
                     ind_data = performances;
+                    stats_name = 'Performance';
 
                 case 2  % Response Frequency
                     calc_idx = 1;   % Mean
                     err_idx = 2;    % SEM
                     ind_data = resp_freq;
+                    stats_name = 'Response_Frequency';
 
                 case 3  % Reaction Time
                     calc_idx = 2;   % Median
                     err_idx = 1;    % STD
                     ind_data = rec_times;
+                    stats_name = 'Reaction_Times';
 
                 otherwise
                     error("You did not enter a correct data specification.")
             end
 
             % Average Calculation
-            [avg_data, ~, err_data] = ...
+            [avg_data, avg_data_stats, err_data] = ...
                 calc_behav(ind_data, what_analysis{what_idx}, ...
                 calc_type{calc_idx}, err_type{err_idx}, patterns, ...
                 numerosities, n_boot, alpha, focus_type{focus_idx});
@@ -499,7 +502,8 @@ if to_pattern_matches
             % Statistics
             [big_statistics, post_hoc] = ...
                 pattern_statistics(performances, resp_freq, rec_times, ...
-                data_type, numerosities, patterns, avg_data_stats);
+                what_analysis{what_idx}, numerosities, patterns, ...
+                avg_data_stats);
 
             % Linear Regression
             lin_reg_pattern = ...
@@ -517,7 +521,10 @@ if to_pattern_matches
                 err_type{err_idx} '_' what_analysis{what_idx} '.' format];
 
             % Save the stuff
-            save([adapt_path 'statistics_pattern.mat'], ...
+            statistics.big_statistics = big_statistics;
+            statistics.post_hoc = post_hoc;
+            statistics.linear_regression = lin_reg_pattern;
+            save([adapt_path 'statistics_pattern_' stats_name '.mat'], ...
                 '-struct', 'statistics')
             saveas(fig, ...
                 [figure_path who_analysis{who_idx} subfolders{exp_idx} ...
@@ -629,6 +636,7 @@ end
 %% Strictly Standardized Mean Difference
 
 if to_ssmd
+
     % Pre Definition
     focus_idx = 3;
     progress_counter = 0;
@@ -648,6 +656,12 @@ if to_ssmd
         else
             curr_experiments = experiments{2};
         end
+
+        % Pre Allocation
+        all_smd = NaN(length(curr_experiments), length(patterns), ...
+            size(numerosities, 1));
+        all_ssmd = NaN(length(curr_experiments), length(patterns), ...
+            size(numerosities, 1));
 
         % iterate over experiments
         for exp_idx = 1:length(curr_experiments)
@@ -669,19 +683,58 @@ if to_ssmd
             resp_freq = sorted_data.resp_freq;
             rec_times = sorted_data.rec_times;
 
+            switch what_idx
+                case 1  % Performance
+                    calc_idx = 1;   % Mean
+                    err_idx = 2;   % SEM
+                    ind_data = performances;
+
+                case 2  % Response Frequency
+                    calc_idx = 1;   % Mean
+                    err_idx = 2;    % SEM
+                    ind_data = resp_freq;
+
+                case 3  % Reaction Time
+                    calc_idx = 2;   % Median
+                    err_idx = 1;    % STD
+                    ind_data = rec_times;
+
+                otherwise
+                    error("You did not enter a correct data specification.")
+            end
+
+            performances = sorted_data.performances;
+            resp_freq = sorted_data.resp_freq;
+            rec_times = sorted_data.rec_times;
+
             % Average Calculation
-            [avg_data, ~, err_data] = ...
+            [avg_data, avg_data_stats, err_data] = ...
                 calc_behav(ind_data, what_analysis{what_idx}, ...
                 calc_type{calc_idx}, err_type{err_idx}, patterns, ...
                 numerosities, n_boot, alpha, focus_type{focus_idx});
 
             % Strictly Standarized Mean Difference
-            [smd, ssmd] = ...
+            [all_smd(exp_idx, :, :), all_ssmd(exp_idx, :, :)] = ...
                 calc_ssmd(performances, resp_freq, rec_times, ...
                 avg_data_stats, patterns, numerosities, ...
                 what_analysis{what_idx});
 
+            % update progress bar
+            progress_counter = progress_counter + 1;  % for progressbar
+            progressbar(progress_counter, progress_total)
         end
+
+        % Plot the SSMD
+        fig = plot_ssmd(what_analysis{what_idx}, all_ssmd, ...
+            who_analysis{who_idx}(1:end-1), patterns, numerosities, ...
+            plot_font, colours_pattern, plot_pos, linewidth, linestyle, ...
+            mrksz, jitterwidth, curr_experiments);
+        fig_name = ['SSMD_' what_analysis{what_idx} '.' format];
+
+        % Save the stuff
+        saveas(fig, ...
+            [figure_path who_analysis{who_idx} subfolders{exp_idx} ...
+            '\' fig_name], format)
     end
 end
 
