@@ -17,16 +17,20 @@ if strcmp(who_analysis, 'humans')
         extractAfter(curr_experiments{2}, 11), ...
         extractAfter(curr_experiments{3}, 11)};
     x_indices = [1, 2, 3];
+    x_stop = 3;
 else
     x_entries = {extractAfter(curr_experiments{2}, 11), ...
         extractAfter(curr_experiments{1}, 11), ...
         extractAfter(curr_experiments{3}, 11), ...
         extractAfter(curr_experiments{4}, 11)};
     x_indices = [2, 1, 3, 4];
+    x_stop = 4;
 end
 
 % Create Figure
 fig = figure("Visible", "off");
+current_pos = fig.Position; % Get current figure position
+fig.Position = [current_pos(1), current_pos(2), plot_pos(1) * 50, plot_pos(2) * 50];
 tiled = tiledlayout(fig, 1, size(numerosities, 1));
 tiled.TileSpacing = "compact";
 tiled.Padding = "compact";
@@ -50,14 +54,10 @@ for sample_idx = 1:size(numerosities, 1)
     ax.YAxis.FontSize = plot_font;
     set(gca, "TickDir", "out");
     ax.XTickLabel = x_entries;
+    ax.XTick = 1:x_stop;
+    ylim([0 max(all_ssmd, [], "all")])
 
-    if strcmp(what_analysis, 'Reaction Times') && strcmp(who_analysis, 'humans')
-        ax.YLim = [0 800];
-    elseif strcmp(what_analysis, 'Reaction Times') && ~strcmp(who_analysis, 'humans')
-        ax.YLim = [0 700];
-    else
-        ax.YLim = [0 1];
-        ax.YTick = (0:0.2:1);
+    if ~strcmp(what_analysis, 'Reaction Times')
         % Mark Chance Level
         chance_colour = ax.GridAlpha;
         yline(0.5, 'LineStyle', ':', ...
@@ -76,7 +76,7 @@ for sample_idx = 1:size(numerosities, 1)
 
         % Adjust x vals
         x_vals = (1:length(curr_experiments)) + jitter_dots(pattern);
-        y_vals = all_ssmd(:, pattern, sample_idx);
+        y_vals = abs(all_ssmd(:, pattern, sample_idx));
 
         % Plot the SSMD for the current pattern
         plot_pattern = plot(x_vals(x_indices), ...
@@ -90,7 +90,7 @@ for sample_idx = 1:size(numerosities, 1)
             % for legend
             dot_plots{end + 1} = plot_pattern;
             leg_patch(end + 1) = plot_pattern;
-            leg_label(pattern) = patterns{pattern};
+            leg_label(pattern) = leg_entries{pattern};
         end
     end
 
@@ -103,9 +103,9 @@ for sample_idx = 1:size(numerosities, 1)
 end
 
 % Figure Adjustments
-fig_title = title(['Strictly Standardized Mean Differnce in ' ...
+fig_title = title(['Strictly Standardized Mean Difference in ' ...
     what_analysis ' of ' who_analysis]);
-[fig_pretty, fig_title_pretty] = ...
+[fig_pretty, ~] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
     true, leg_patch, leg_label);
 

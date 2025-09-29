@@ -111,6 +111,7 @@ colours_S_C = ...
     {[0.0660 0.4430 0.7450]; [0.5210 0.0860 0.8190]};   % Standard/Control
 colours_J_U = ...
     {[0.0000 0.4080 0.7410]; [0.9690 0.3650 0.8000]};   % Jello/Uri
+colours_ssmd = {[0.4745 0.3451 0.4706]; [0.1333 0.4745 0.4000]; [0.4627 0.3922 0.6824]};
 format = 'svg'; % figure save format
 fig_title = '';
 
@@ -642,6 +643,7 @@ if to_ssmd
     progress_counter = 0;
     progress_total = length(experiments{1}) + ...
         length(experiments{2}) + length(experiments{2});
+    plot_pos = [50, 21];
     % set what to analyse further
     what_idx = input(prompt_what);
 
@@ -727,14 +729,13 @@ if to_ssmd
         % Plot the SSMD
         fig = plot_ssmd(what_analysis{what_idx}, all_ssmd, ...
             who_analysis{who_idx}(1:end-1), patterns, numerosities, ...
-            plot_font, colours_pattern, plot_pos, linewidth, linestyle, ...
+            plot_font, colours_ssmd, plot_pos, linewidth, linestyle, ...
             mrksz, jitterwidth, curr_experiments);
         fig_name = ['SSMD_' what_analysis{what_idx} '.' format];
 
         % Save the stuff
         saveas(fig, ...
-            [figure_path who_analysis{who_idx} subfolders{exp_idx} ...
-            '\' fig_name], format)
+            [figure_path who_analysis{who_idx} '\' fig_name], format)
     end
 end
 

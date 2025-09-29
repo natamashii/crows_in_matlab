@@ -38,7 +38,7 @@ for pattern = 1:length(patterns)
             filtered_table{pattern, 2} = ...
                 filtered_table{pattern, 1}.RT;
             filtered_table{pattern, 3} = avg_data_stats(:, pattern);
-            what_analysis = 'ReactionTimes';
+            what_analysis = 'RT';
     end
 end
 
