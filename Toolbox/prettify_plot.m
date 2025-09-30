@@ -1,6 +1,6 @@
 function [fig_pretty, fig_title_pretty] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
-    add_legend, leg_patch, leg_label)
+    add_legend, leg_patch, leg_label, leg_title)
 
 % function to improve overall figure
 
@@ -17,12 +17,12 @@ fig_title.FontWeight = "bold";
 
 % Add legend if desired
 if add_legend
-    leg = legend(leg_patch, leg_label);
+    leg = legend(leg_label);
     leg.Location = "bestoutside";
     leg.Box = "off";
     leg.TextColor = "k";
     leg.FontSize = plot_font;
-    title(leg, 'Pattern', 'FontSize', plot_font)
+    title(leg, leg_title, 'FontSize', plot_font)
 end
 
 fig.Renderer = "painters";

@@ -1,6 +1,6 @@
 function statistics = stats_sc(performances_s, performances_c, ...
     resp_freq_s, resp_freq_c, rec_times_s, rec_times_c, patterns, ...
-    numerosities, factors, alpha)
+    numerosities, factors, alpha_stats)
 
 % Function for statistics of Standard vs. Control
 
@@ -140,7 +140,7 @@ for behav_idx = 1:3
         (size(filtered_data{behav_idx, 1}, 1) * 2);
 
     %% Post-Hoc Analysis
-    if stats_table(1, behav_idx) <= alpha
+    if le(stats_table{1, behav_idx}, alpha_stats)
         % iterate over samples
         p_r_samples = NaN(2, size(numerosities, 1));
         for sample_idx = 1:size(numerosities, 1)
@@ -148,7 +148,7 @@ for behav_idx = 1:3
             % Wilcoxon Signed-Rank Test
             [p_r_samples(1, sample_idx), ~, ...
                 wilcoxon_stats{2, behav_idx}{2, sample_idx}] = ...
-                signedrank(filtered_data{behav_idx, 1, sample_idx}, ...
+                signrank(filtered_data{behav_idx, 1, sample_idx}, ...
                 filtered_data{behav_idx, 2, sample_idx});
 
             % Effect Size: Rank-Biserial Correlation r
@@ -175,13 +175,13 @@ end
 %% Rewrite the results
 stats_table = cell2table(stats_table);
 stats_table.Properties.VariableNames = ...
-    {"Performance", "Response Frequency", "Reaction Time"};
+    {'Performance', 'Response Frequency', 'Reaction Time'};
 stats_table.Properties.RowNames = ...
-    {"Friedman p-Value", "Kendall's W", ...
-    "Wilcoxon Signed-Rank p-Value", "Rank Biserial-Correlation r"};
+    {'Friedman p-Value', 'Kendalls W', ...
+    'Wilcoxon Signed-Rank p-Value', 'Rank Biserial-Correlation r'};
 statistics.Results = stats_table;
 statistics.Friedman_Table = friedman_table;
 statistics.Friedman_Stats = friedman_stats;
-statistics.Alpha_Level = alpha;
+statistics.Alpha_Level = alpha_stats;
 
 end

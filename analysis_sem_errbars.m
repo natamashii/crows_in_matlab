@@ -15,6 +15,7 @@ close all
 % test for performance difference among patterns for each sample
 % do regression for each subject
 % do nieder vs veit
+% add error to all plot legend
 % set size effect
 % maybe compare amount of variation between patterns???
 % maybe build linear models or so 
@@ -84,14 +85,13 @@ prompt_what = ['What do you wish to analyse? '...
     '\n 2 - Response Frequency ' ...
     '\n 3 - Reaction Time '];
 
-to_save = true; % if result shall be saved
 to_correct = false; % if response matrices shall be corrected
-to_split_sc = false;    % if to compare standard & control conditions
+to_split_sc = true;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
 to_sort = false;     % if data must be sorted first
 to_pattern_matches = false;     % if plotting pattern comparison (matches)
 to_pattern_curves = false;  % if plotting pattern comparison (tuning curves)
-to_ssmd = true;     % if plotting ssmd
+to_ssmd = false;     % if plotting ssmd
 
 % all relevant numerosities (Lena's tabular)
 numerosities = [3, 4, 5, 6, 7; % sample
@@ -135,7 +135,7 @@ W = {2, 1};
 
 % Path definition
 base_path = 'D:\MasterThesis\analysis\data\';
-figure_path = 'D:\MasterThesis\figures\progress_since_250902\';
+figure_path = 'D:\MasterThesis\figures\progress_since_20250930\';
 spk_folderpath = [base_path, 'spk\'];
 analysis_path = [base_path, 'analysed\'];
 data_path = [analysis_path 'sorted_statistics\'];
@@ -209,8 +209,8 @@ end
 if to_split_sc
 
     % pre definition
-    focus_idx = 2;
     plot_pos = [21 100];
+    alpha_stats = 0.01;
     progress_counter = 0;
     progress_total = length(experiments{1}) + ...
         length(experiments{2}) + length(experiments{2});
@@ -256,18 +256,21 @@ if to_split_sc
                 case 1  % Performance
                     calc_idx = 1;   % Mean
                     err_idx = 2;   % SEM
+                    focus_idx = 1;  % Matches + Non-Matches
                     ind_data_s = performances_s;
                     ind_data_c = performances_c;
 
                 case 2  % Response Frequency
                     calc_idx = 1;   % Mean
                     err_idx = 2;    % SEM
+                    focus_idx = 1;  % Matches + Non-Matches
                     ind_data_s = resp_freq_s;
                     ind_data_c = resp_freq_c;
 
                 case 3  % Reaction Time
                     calc_idx = 2;   % Median
                     err_idx = 1;    % STD
+                    focus_idx = 2;  % Matches 
                     ind_data_s = rec_times_s;
                     ind_data_c = rec_times_c;
 
@@ -278,29 +281,24 @@ if to_split_sc
             % Statistics: Friedman
             statistics = stats_sc(performances_s, performances_c, ...
                 resp_freq_s, resp_freq_c, rec_times_s, rec_times_c, ...
-                patterns, numerosities, {'S', 'C'});
+                patterns, numerosities, {'S', 'C'}, alpha_stats);
 
             % Average Calculation
-            % Standard Conditions
-            [avg_data_s, ~, err_data_s] = ...
-                calc_behav(ind_data_s, what_analysis{what_idx}, ...
-                calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-                numerosities, n_boot, alpha, focus_type{focus_idx});
-
-            % Control Conditions
-            [avg_data_c, ~, err_data_c] = ...
-                calc_behav(ind_data_c, what_analysis{what_idx}, ...
-                calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-                numerosities, n_boot, alpha, focus_type{focus_idx});
+            [avg_data_s, avg_data_c, err_data_s, err_data_c] = ...
+                calc_behav_sc(ind_data_s, ind_data_c, ...
+                what_analysis{what_idx}, err_type{err_idx}, ...
+                calc_type{calc_idx}, numerosities, ...
+                who_analysis{who_idx}(1:end - 1));
 
             % Plot
             fig = plot_s_c(numerosities, ind_data_s, ind_data_c, ...
                 avg_data_s, avg_data_c, err_data_s, err_data_c, ...
                 what_analysis{what_idx}, ...
-                who_analysis{who_idx}(1 : end - 1), calc_type{calc_idx}, ...
-                curr_experiments{exp_idx}, patterns, err_type{err_idx}, ...
+                who_analysis{who_idx}(1:end - 1), calc_type{calc_idx}, ...
+                curr_experiments{exp_idx}, err_type{err_idx}, ...
                 jitterwidth, colours_S_C, mrksz, plot_font, plot_pos, ...
                 linewidth, capsize, linestyle, {'Standard', 'Control'});
+            
             fig_name = [focus_type{focus_idx} '_StandCont_' ...
                 calc_type{calc_idx} '_' err_type{err_idx} '_' ...
                 what_analysis{what_idx} '.' format];
