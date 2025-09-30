@@ -275,8 +275,8 @@ if to_split_sc
                     error("You did not enter a correct data specification.")
             end
 
-            % Statistics: Repeated Measure 2-Way ANOVA
-            statistics = anova_sc(performances_s, performances_c, ...
+            % Statistics: Friedman
+            statistics = stats_sc(performances_s, performances_c, ...
                 resp_freq_s, resp_freq_c, rec_times_s, rec_times_c, ...
                 patterns, numerosities, {'S', 'C'});
 
