@@ -4,7 +4,6 @@ function statistics = stats_sc(performances_s, performances_c, ...
 
 % Function for statistics of Standard vs. Control
 
-% Note: focuses on match trials only
 % Note: maybe pre process RTs: remove too quick trials & remove everything
 % that is +- 3* MAD of median
 
@@ -18,69 +17,16 @@ wilcoxon_stats = {"Performance", "Response Frequency", "Reaction Time"; ...
     {3, 4, 5, 6, 7; [], [], [], [], []}, ...
     {3, 4, 5, 6, 7; [], [], [], [], []}, ...
     {3, 4, 5, 6, 7; [], [], [], [], []}};
+
 stats_table = cell(4, 3);
 filtered_data = cell(3, 2, size(numerosities, 1));
 condition_split = cell(3, 2);
 
-% write data as table
-% iterate over patterns
-for pattern = 1:length(patterns)
-    % pre allocation
-    data_table = table();
-    subjects = (1:size(performances_s, 1))';    % subject/session col
+%% Sort Data into Nice Table
 
-    % iterate over samples
-    for sample_idx = 1:size(numerosities, 1)
-
-        % iterate over conditions
-        for cond_idx = 1:length(factors)
-            % sample col
-            numerosity_col = repmat(numerosities(sample_idx, 1), ...
-                size(subjects, 1), 1);
-            condition_col = repmat(factors{cond_idx}, ...
-                size(subjects, 1), 1);
-
-            % condition & data cols
-            if cond_idx == 1    % Standard Conditions/Jello
-                performance_col = ...
-                    performances_s(:, pattern, sample_idx, 1);
-                resp_freq_col = ...
-                    resp_freq_s(:, pattern, sample_idx, 1);
-                % Reaction Time: take median for each subject/session
-                rec_times_col = zeros(size(rec_times_s, 1), 1);
-                % iterate over subejcts/sessions
-                for sub_idx = 1:size(rec_times_s, 1)
-                    rec_times_col(sub_idx) = ...
-                        median(vertcat(rec_times_s{sub_idx, pattern, ...
-                        sample_idx, 1}), "omitnan");
-                end
-
-            elseif cond_idx == 2    % Control Conditions/Uri
-                performance_col = ...
-                    performances_c(:, pattern, sample_idx, 1);
-                resp_freq_col = ...
-                    resp_freq_c(:, pattern, sample_idx, 1);
-                % Reaction Time: take median for each subject/session
-                rec_times_col = zeros(size(rec_times_c, 1), 1);
-                % iterate over subejcts/sessions
-                for sub_idx = 1:size(rec_times_c, 1)
-                    rec_times_col(sub_idx) = ...
-                        median(vertcat(rec_times_c{sub_idx, pattern, ...
-                        sample_idx, 1}), "omitnan");
-                end
-            end
-
-            % store as table
-            temp_table = ...
-                table(subjects, numerosity_col, condition_col, ...
-                performance_col, resp_freq_col, rec_times_col, ...
-                'VariableNames', ...
-                    {'Subject', 'Sample', 'Condition', ...
-                    'Performance', 'ResponseFrequency', 'RT'});
-            data_table = [data_table; temp_table];  % append vertically
-        end
-    end
-end
+data_table = datatable({performances_s, performances_c}, ...
+    {resp_freq_s, resp_freq_c}, {rec_times_s, rec_times_c}, ...
+    patterns, numerosities, factors);
 
 %% Split Table into Samples
 
@@ -90,6 +36,7 @@ for sample_idx = 1:size(numerosities, 1)
     filtered = ...
         data_table(data_table.Sample == ...
         numerosities(sample_idx, 1), :);
+
     filtered_standard = filtered(filtered.Condition == factors{1}, :);
     filtered_control = filtered(filtered.Condition == factors{2}, :);
 
@@ -113,15 +60,18 @@ for cond_idx = 1:2
     
     % Performance
     condition_split{1, cond_idx} = ...
-        data_table(data_table.Condition == factors{cond_idx}, :).Performance;
+        data_table(data_table.Condition == ...
+        factors{cond_idx}, :).Performance;
 
     % Response Frequency
     condition_split{2, cond_idx} = ...
-        data_table(data_table.Condition == factors{cond_idx}, :).ResponseFrequency;
+        data_table(data_table.Condition == ...
+        factors{cond_idx}, :).ResponseFrequency;
 
     % Reaction Time
     condition_split{3, cond_idx} = ...
-        data_table(data_table.Condition == factors{cond_idx}, :).RT;
+        data_table(data_table.Condition == ...
+        factors{cond_idx}, :).RT;
 end
 
 %% Statistical Tests

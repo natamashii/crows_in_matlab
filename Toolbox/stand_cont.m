@@ -1,22 +1,22 @@
 function [performances_s, performances_c, ...
         resp_freq_s, resp_freq_c, rec_times_s, rec_times_c] = ...
-        stand_cont(rsp_mat_folderpath, who_analysis, ...
-        curr_exp, numerosities, patterns)
+        stand_cont(rsp_mat_path, who_analysis, ...
+        exp_idx, numerosities, patterns)
 
 % Function to load from response matrices, divided into standard/control
 
 % Get Data
-path_resp = [rsp_mat_folderpath, who_analysis]; % adapt path
+path_resp = [rsp_mat_path, who_analysis]; % adapt path
 filelist_rsp = dir(path_resp);  % list of all data & subfolders
 subfolders_rsp = filelist_rsp([filelist_rsp(:).isdir]); % extract subfolders
 subfolders_rsp = {subfolders_rsp(3:end).name};  % list of subfolder names (experiments)
 
-exp_path_resp = [path_resp, subfolders_rsp{curr_exp}, '\'];	% path with data of current experiment
+exp_path_resp = [path_resp, subfolders_rsp{exp_idx}, '\'];	% path with data of current experiment
 
 filelist_rsp = dir(fullfile(exp_path_resp, '*.mat'));  % list of all response matrices
 names_rsp = {filelist_rsp.name};	% file names
 
-%V Pre allocation
+% Pre allocation
 performances_s = zeros(length(names_rsp), length(patterns), ...
     size(numerosities, 1), size(numerosities, 2));
 resp_freq_s = zeros(length(names_rsp), length(patterns), ...

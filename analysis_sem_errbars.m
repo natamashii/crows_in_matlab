@@ -25,6 +25,7 @@ close all
 % look at non matches: if previous smoler/bigger -> Lena figure 16
 % look at cancellations (crow breaks off)
 % Weber fractions maybe???
+% make a file to load all statistics and get a damn overview
 % DONE rewrite plotting stuff as one function
 % DONE rewrite correction to one resp mat with RT
 % DONE rewrite sorting behaviour data as function
@@ -86,8 +87,8 @@ prompt_what = ['What do you wish to analyse? '...
     '\n 3 - Reaction Time '];
 
 to_correct = false; % if response matrices shall be corrected
-to_split_sc = true;    % if to compare standard & control conditions
-to_split_ju = false;    % if to compare Jello's & Uri's data
+to_split_sc = false;    % if to compare standard & control conditions
+to_split_ju = true;    % if to compare Jello's & Uri's data
 to_sort = false;     % if data must be sorted first
 to_pattern_matches = false;     % if plotting pattern comparison (matches)
 to_pattern_curves = false;  % if plotting pattern comparison (tuning curves)
@@ -143,8 +144,45 @@ rsp_mat_path = [analysis_path 'response_matrices\'];
 
 %% Correct Response Matrix
 if to_correct
-    corr_resp(analysis_path, spk_folderpath, who_analysis, ...
-        curr_exp, numerosities);
+    progress_counter = 0;
+    progress_total = length(experiments{1}) + ...
+        length(experiments{2}) + length(experiments{2});
+    % iterate over subjects
+    for who_idx = 1:length(who_analysis) - 1
+
+        % human subjects
+        if who_idx == 1
+            curr_experiments = experiments{1};
+
+            % avian subjects
+        else
+            curr_experiments = experiments{2};
+        end
+
+        % iterate over experiments
+        for exp_idx = 1:length(curr_experiments)
+            % pre allocation
+            sorted_data = struct();
+
+            % path adjustment
+            % list of all data & subfolders
+            filelist_spk = dir([rsp_mat_path who_analysis{who_idx}]);
+            % extract subfolders
+            subfolders = filelist_spk([filelist_spk(:).isdir]);
+            % list of subfolder names (experiments)
+            subfolders = {subfolders(3 : end).name};
+            adapt_path = ...
+                [data_path who_analysis{who_idx} subfolders{exp_idx} '\'];
+
+            % correct the response matrix
+            corr_resp(rsp_mat_path, spk_folderpath, who_analysis{who_idx}, ...
+                exp_idx, numerosities);
+
+            % update progress bar
+            progress_counter = progress_counter + 1;  % for progressbar
+            progressbar(progress_counter, progress_total)
+        end
+    end
 end
 
 %% Sort Data
@@ -211,6 +249,7 @@ if to_split_sc
     % pre definition
     plot_pos = [21 100];
     alpha_stats = 0.01;
+    jitterwidth = 0.15;
     progress_counter = 0;
     progress_total = length(experiments{1}) + ...
         length(experiments{2}) + length(experiments{2});
@@ -323,13 +362,13 @@ end
 if to_split_ju
 
     % pre definition
-    focus_idx = 2;
-    plot_pos = [21 100];
+    plot_pos = [21 200];
+    alpha_stats = 0.01;
+    jitterwidth = 0.15;
     progress_counter = 0;
     progress_total = length(experiments{2}) + length(experiments{2});
     curr_experiments = experiments{2};
     
-
     % set what to analyse further
     what_idx = input(prompt_what);
 
@@ -352,55 +391,105 @@ if to_split_ju
         uri_data = load([uri_path 'sorted_data.mat']);
 
         performances_j = jello_data.performances;
-        performances_c = uri_data.performances;
+        performances_j_s = jello_data.standard_performances;
+        performances_j_c = jello_data.control_performances;
+        performances_u = uri_data.performances;
+        performances_u_s = uri_data.standard_performances;
+        performances_u_c = uri_data.control_performances;
         resp_freq_j = jello_data.resp_freq;
-        resp_freq_c = uri_data.resp_freq;
+        resp_freq_j_s = jello_data.standard_resp_freq;
+        resp_freq_j_c = jello_data.control_resp_freq;
+        resp_freq_u = uri_data.resp_freq;
+        resp_freq_u_s = uri_data.standard_resp_freq;
+        resp_freq_u_c = uri_data.control_resp_freq;
         rec_times_j = jello_data.rec_times;
-        rec_times_c = uri_data.rec_times;
+        rec_times_j_s = jello_data.standard_rec_times;
+        rec_times_j_c = jello_data.control_rec_times;
+        rec_times_u = uri_data.rec_times;
+        rec_times_u_s = uri_data.standard_rec_times;
+        rec_times_u_c = uri_data.control_rec_times;
 
         switch what_idx
             case 1  % Performance
                 calc_idx = 1;   % Mean
                 err_idx = 2;   % SEM
+                focus_idx = 1;  % Maches + Non-Matches
                 ind_data_j = performances_j;
+                ind_data_j_s = performances_j_s;
+                ind_data_j_c = performances_j_c;
                 ind_data_u = performances_u;
+                ind_data_u_s = performances_u_s;
+                ind_data_u_c = performances_u_c;
 
             case 2  % Response Frequency
                 calc_idx = 1;   % Mean
                 err_idx = 2;    % SEM
+                focus_idx = 1;  % Maches + Non-Matches
                 ind_data_j = resp_freq_j;
+                ind_data_j_s = resp_freq_j_s;
+                ind_data_j_c = resp_freq_j_c;
                 ind_data_u = resp_freq_u;
+                ind_data_u_s = resp_freq_u_s;
+                ind_data_u_c = resp_freq_u_c;
 
             case 3  % Reaction Time
                 calc_idx = 2;   % Median
                 err_idx = 1;    % STD
+                focus_idx = 2;  % Matches
                 ind_data_j = rec_times_j;
+                ind_data_j_s = rec_times_j_s;
+                ind_data_j_c = rec_times_j_c;
                 ind_data_u = rec_times_u;
+                ind_data_u_s = rec_times_u_s;
+                ind_data_u_c = rec_times_u_c;
 
             otherwise
                 error("You did not enter a correct data specification.")
         end
 
-        % Statistics: Repeated Measure 2-Way ANOVA
-        statistics = anova_sc(performances_j, performances_u, ...
+        % Statistics Standard/Control: Friedman
+        % Jello
+        statistics_jello = stats_sc(performances_j_s, performances_j_c, ...
+                resp_freq_j_s, resp_freq_j_c, ...
+                rec_times_j_s, rec_times_j_c, ...
+                patterns, numerosities, {'S', 'C'}, alpha_stats);
+        % Uri
+        statistics_uri = stats_sc(performances_u_s, performances_u_c, ...
+                resp_freq_u_s, resp_freq_u_c, ...
+                rec_times_u_s, rec_times_u_c, ...
+                patterns, numerosities, {'S', 'C'}, alpha_stats);
+
+        % Statistics Jello/Uri: Friedman
+        statistics_birds = stats_birds(performances_j, performances_u, ...
             resp_freq_j, resp_freq_u, rec_times_j, rec_times_u, ...
-            patterns, numerosities, {'J', 'U'});
+            {'J', 'U'}, patterns, numerosities, alpha_stats);
+
 
         % Average Calculation
-        % Jello
-        [avg_data_j, ~, err_data_j] = ...
-            calc_behav(ind_data_j, what_analysis{what_idx}, ...
+        % Jello, Standard Conditions
+        [avg_data_j_s, ~, err_data_j_s] = ...
+            calc_behav(ind_data_j_s, what_analysis{what_idx}, ...
             calc_type{calc_idx}, err_type{err_idx}, patterns, ...
             numerosities, n_boot, alpha, focus_type{focus_idx});
-
-        % Uri
-        [avg_data_u, ~, err_data_u] = ...
-            calc_behav(ind_data_u, what_analysis{what_idx}, ...
+        % Jello, Control Conditions
+        [avg_data_j_c, ~, err_data_j_c] = ...
+            calc_behav(ind_data_j_c, what_analysis{what_idx}, ...
+            calc_type{calc_idx}, err_type{err_idx}, patterns, ...
+            numerosities, n_boot, alpha, focus_type{focus_idx});
+        % Uri, Standard Conditions
+        [avg_data_u_s, ~, err_data_u_s] = ...
+            calc_behav(ind_data_u_s, what_analysis{what_idx}, ...
+            calc_type{calc_idx}, err_type{err_idx}, patterns, ...
+            numerosities, n_boot, alpha, focus_type{focus_idx});
+        % Uri, Control Conditions
+        [avg_data_u_c, ~, err_data_u_c] = ...
+            calc_behav(ind_data_u_c, what_analysis{what_idx}, ...
             calc_type{calc_idx}, err_type{err_idx}, patterns, ...
             numerosities, n_boot, alpha, focus_type{focus_idx});
 
         % Plot
-        fig = plot_s_c(numerosities, ind_data_j, ind_data_u, ...
+        fig = plot_s_c(numerosities, ind_data_j_s, ind_data_j_c, ...
+            ind_data_u_s, ind_data_u_c, ...
             avg_data_j, avg_data_u, err_data_j, err_data_u, ...
             what_analysis{what_idx}, ...
             who_analysis{4}(1 : end - 1), calc_type{calc_idx}, ...

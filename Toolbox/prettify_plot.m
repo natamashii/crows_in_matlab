@@ -1,6 +1,6 @@
 function [fig_pretty, fig_title_pretty] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
-    add_legend, leg_patch, leg_label, leg_title)
+    add_legend, leg_patch, leg_label, leg_title, mrksz, ax)
 
 % function to improve overall figure
 
@@ -17,11 +17,16 @@ fig_title.FontWeight = "bold";
 
 % Add legend if desired
 if add_legend
-    leg = legend(leg_label);
-    leg.Location = "bestoutside";
-    leg.Box = "off";
-    leg.TextColor = "k";
-    leg.FontSize = plot_font;
+    h_copy = copyobj(leg_patch, ax);
+    set(h_copy(1:end-1), "XData", NaN', "YData", NaN)
+    h_copy(end).MarkerSize = mrksz * 20;
+    leg = ...
+        legend(h_copy, leg_label, ...
+        "Box", "off", ...
+        "Location", "bestoutside", ...
+        "TextColor", "k", ...
+        "FontSize", plot_font, ...
+        "FontWeight", "bold");
     title(leg, leg_title, 'FontSize', plot_font)
 end
 
