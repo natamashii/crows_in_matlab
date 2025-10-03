@@ -6,9 +6,6 @@ function fig_pretty = ...
 
 % Function to plot the data
 
-% pre definition
-jitter_dots = [-jitterwidth, 0, jitterwidth];
-
 % Create Figure
 fig = figure("Visible", "off");
 

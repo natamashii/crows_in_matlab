@@ -15,7 +15,7 @@ close all
 % test for performance difference among patterns for each sample
 % do regression for each subject
 % do nieder vs veit
-% add error to all plot legend
+% DONE add error to all plot legend
 % set size effect
 % maybe compare amount of variation between patterns???
 % maybe build linear models or so 
@@ -51,8 +51,7 @@ close all
 % for plotting: extract dot_alpha & marker factor & box alpha & boxwidth factor for all functions
 % Anova S/C and J/U: maybe pre process RTs: remove too quick trials & remove everything that is +- 3* MAD of median
 % perhaps look for significant difference in P1 vs. P2/3 first
-% save the analysis output somewhere
-% save corrected shit directly into folders, so make lists of dates that should be implemented
+% DONE save the analysis output somewhere
 
 % response matrix
 % col 1: stimulus type (standard (1) or control (2))
@@ -88,9 +87,9 @@ prompt_what = ['What do you wish to analyse? '...
 
 to_correct = false; % if response matrices shall be corrected
 to_split_sc = false;    % if to compare standard & control conditions
-to_split_ju = true;    % if to compare Jello's & Uri's data
+to_split_ju = false;    % if to compare Jello's & Uri's data
 to_sort = false;     % if data must be sorted first
-to_pattern_matches = false;     % if plotting pattern comparison (matches)
+to_uebersicht = true;     % if plotting pattern comparison (matches)
 to_pattern_curves = false;  % if plotting pattern comparison (tuning curves)
 to_ssmd = false;     % if plotting ssmd
 
@@ -108,6 +107,7 @@ colours_pattern = ...
 colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...
     [0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; ...
     [0.6350 0.0780 0.1840]};    % colours for samples
+colour_uebersicht = [0.0000 0.3490 0.2510];
 colours_S_C = ...
     {[0.0660 0.4430 0.7450]; [0.5210 0.0860 0.8190]};   % Standard/Control
 colours_J_U = ...
@@ -364,13 +364,14 @@ if to_split_ju
     % pre definition
     plot_pos = [21 200];
     alpha_stats = 0.01;
-    jitterwidth = 0.15;
+    jitterwidth = 0.1;
     progress_counter = 0;
-    progress_total = length(experiments{2}) + length(experiments{2});
+    progress_total = length(experiments{2});
     curr_experiments = experiments{2};
     
     % set what to analyse further
     what_idx = input(prompt_what);
+    who_idx = 4;
 
     % iterate over experiments
     for exp_idx = 1:length(curr_experiments)
@@ -488,21 +489,27 @@ if to_split_ju
             numerosities, n_boot, alpha, focus_type{focus_idx});
 
         % Plot
-        fig = plot_s_c(numerosities, ind_data_j_s, ind_data_j_c, ...
+        fig = ...
+            plot_birds(numerosities, ind_data_j_s, ind_data_j_c, ...
             ind_data_u_s, ind_data_u_c, ...
-            avg_data_j, avg_data_u, err_data_j, err_data_u, ...
-            what_analysis{what_idx}, ...
-            who_analysis{4}(1 : end - 1), calc_type{calc_idx}, ...
-            curr_experiments{exp_idx}, patterns, err_type{err_idx}, ...
-            jitterwidth, colours_J_U, mrksz, plot_font, plot_pos, ...
+            avg_data_j_s, avg_data_j_c, avg_data_u_s, avg_data_u_c, ...
+            err_data_j_s, err_data_j_c, err_data_u_s, err_data_u_c, ...
+            what_analysis{what_idx}, who_analysis{who_idx}(1:end - 1), ...
+            calc_type{calc_idx}, curr_experiments{exp_idx}, ...
+            err_type{err_idx}, jitterwidth, colours_J_U, ...
+            mrksz, plot_font, plot_pos, ...
             linewidth, capsize, linestyle, {'Jello', 'Uri'});
         fig_name = [focus_type{focus_idx} '_birds_' ...
             calc_type{calc_idx} '_' err_type{err_idx} '_' ...
             what_analysis{what_idx} '.' format];
 
         % Save the stuff
-        save([adapt_path 'statistics_jello_uri.mat'], ...
-            '-struct', 'statistics')
+        save([jello_path 'statistics_jello.mat'], ...
+            '-struct', 'statistics_jello')
+        save([jello_path 'statistics_jello.mat'], ...
+            '-struct', 'statistics_jello')
+        save([jello_path 'statistics_jello.mat'], ...
+            '-struct', 'statistics_jello')
         saveas(fig, [figure_path who_analysis{4} subfolders{exp_idx} ...
             '\' fig_name], format)
 
@@ -514,10 +521,9 @@ end
 
 %% Pattern Comparison: Matches Only
 
-if to_pattern_matches
+if to_uebersicht
 
     % pre definition
-    focus_idx = 2;
     progress_counter = 0;
     progress_total = length(experiments{1}) + ...
         length(experiments{2}) + length(experiments{2});
@@ -562,18 +568,21 @@ if to_pattern_matches
                 case 1  % Performance
                     calc_idx = 1;   % Mean
                     err_idx = 2;   % SEM
+                    focus_idx = 1;  % Matches + Non-Matches
                     ind_data = performances;
                     stats_name = 'Performance';
 
                 case 2  % Response Frequency
                     calc_idx = 1;   % Mean
                     err_idx = 2;    % SEM
+                    focus_idx = 1;  % Matches + Non-Matches
                     ind_data = resp_freq;
                     stats_name = 'Response_Frequency';
 
                 case 3  % Reaction Time
                     calc_idx = 2;   % Median
                     err_idx = 1;    % STD
+                    focus_idx = 2;  % Matches
                     ind_data = rec_times;
                     stats_name = 'Reaction_Times';
 
@@ -593,25 +602,14 @@ if to_pattern_matches
                 what_analysis{what_idx}, numerosities, patterns, ...
                 avg_data_stats);
 
-            % Linear Regression
-            lin_reg_pattern = ...
-                lin_regress(performances, resp_freq, rec_times, ...
-                patterns, numerosities, what_analysis{what_idx}, avg_data);
-
             % Plot
-            fig = plot_stuff(ind_data, avg_data, err_data, numerosities, ...
-                patterns, calc_type{calc_idx}, err_type{err_idx}, ...
-                what_analysis{what_idx}, who_analysis{who_idx}(1 : end - 1), ...
-                curr_experiments{exp_idx}, plot_font, colours_pattern, ...
-                plot_pos, linewidth, linestyle, mrksz, ...
-                capsize, jitterwidth, focus_type{focus_idx});
+
             fig_name = [focus_type{focus_idx} '_' calc_type{calc_idx} '_' ...
                 err_type{err_idx} '_' what_analysis{what_idx} '.' format];
 
             % Save the stuff
             statistics.big_statistics = big_statistics;
             statistics.post_hoc = post_hoc;
-            statistics.linear_regression = lin_reg_pattern;
             save([adapt_path 'statistics_pattern_' stats_name '.mat'], ...
                 '-struct', 'statistics')
             saveas(fig, ...
