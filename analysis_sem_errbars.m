@@ -33,7 +33,7 @@ close all
 % DONE rewrite avg/median + error stuff as function
 % DONE rewrite bootstrapping as one function
 % DONE make plots with individual dots in background (like fish graphics)
-% save data (individual stuff and mean stuff)
+% DONE save data (individual stuff and mean stuff)
 % make fig size variable (robust for each device used)
 % maybe time for birds
 % mark p value in standard/control & jello/uri plot
@@ -89,8 +89,8 @@ to_correct = false; % if response matrices shall be corrected
 to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
 to_sort = false;     % if data must be sorted first
-to_uebersicht = true;     % if plotting pattern comparison (matches)
-to_pattern_curves = false;  % if plotting pattern comparison (tuning curves)
+to_uebersicht = false;     % if plotting pattern comparison (matches)
+to_grouping_chunking = true;    % if plotting experiment comparison
 to_ssmd = false;     % if plotting ssmd
 
 % all relevant numerosities (Lena's tabular)
@@ -519,7 +519,7 @@ if to_split_ju
     end
 end
 
-%% Pattern Comparison: Matches Only
+%% Pattern Comparison
 
 if to_uebersicht
 
@@ -598,12 +598,20 @@ if to_uebersicht
 
             % Statistics
             [big_statistics, post_hoc] = ...
-                pattern_statistics(performances, resp_freq, rec_times, ...
+                pattern_statistics({performances}, ...
+                {resp_freq}, {rec_times}, ...
                 what_analysis{what_idx}, numerosities, patterns, ...
                 avg_data_stats);
 
             % Plot
-
+            fig = plot_uebersicht(ind_data, avg_data, err_data, ...
+                patterns, calc_type{calc_idx}, err_type{err_idx}, ...
+                what_analysis{what_idx}, ...
+                who_analysis{who_idx}(1:end - 1), ...
+                curr_experiments{exp_idx}, plot_font, ...
+                colour_uebersicht, plot_pos, linewidth, ...
+                mrksz, capsize, jitterwidth, focus_type{focus_idx}, ...
+                0.3, 4);
             fig_name = [focus_type{focus_idx} '_' calc_type{calc_idx} '_' ...
                 err_type{err_idx} '_' what_analysis{what_idx} '.' format];
 
@@ -624,18 +632,16 @@ if to_uebersicht
 
 end
 
+%% Grouping-Chunking Plot
+% try both: p2-p1 p3-p1 getrennt & combined (chunking)
 
-
-
-%% Pattern Comparison: Individual Numbers
-
-if to_pattern_curves
+if to_grouping_chunking
 
     % Pre Definition
-    focus_idx = 3;
     progress_counter = 0;
     progress_total = length(experiments{1}) + ...
         length(experiments{2}) + length(experiments{2});
+
     % set what to analyse further
     what_idx = input(prompt_what);
 
@@ -651,8 +657,15 @@ if to_pattern_curves
             curr_experiments = experiments{2};
         end
 
+        % Pre Allocation
+        all_performances = cell(length(curr_experiments), 1);
+        all_resp_freq = cell(length(curr_experiments), 1);
+        all_rec_times = cell(length(curr_experiments), 1);
+
         % iterate over experiments
         for exp_idx = 1:length(curr_experiments)
+            % pre allocation
+            statistics = struct();
 
             % path adjustment
             % list of all data & subfolders
@@ -667,58 +680,53 @@ if to_pattern_curves
             % load the data
             sorted_data = load([adapt_path 'sorted_data.mat']);
 
-            performances = sorted_data.performances;
-            resp_freq = sorted_data.resp_freq;
-            rec_times = sorted_data.rec_times;
+            all_performances{exp_idx} = sorted_data.performances;
+            all_resp_freq{exp_idx} = sorted_data.resp_freq;
+            all_rec_times{exp_idx} = sorted_data.rec_times;
 
             switch what_idx
                 case 1  % Performance
                     calc_idx = 1;   % Mean
                     err_idx = 2;   % SEM
-                    ind_data = performances;
+                    focus_idx = 1;  % Matches + Non-Matches
+                    ind_data{exp_idx} = all_performances{exp_idx};
+                    stats_name = 'Performance';
 
                 case 2  % Response Frequency
                     calc_idx = 1;   % Mean
                     err_idx = 2;    % SEM
-                    ind_data = resp_freq;
+                    focus_idx = 1;  % Matches + Non-Matches
+                    ind_data{exp_idx} = all_resp_freq{exp_idx};
+                    stats_name = 'Response_Frequency';
 
                 case 3  % Reaction Time
                     calc_idx = 2;   % Median
                     err_idx = 1;    % STD
-                    ind_data = rec_times;
+                    focus_idx = 2;  % Matches
+                    ind_data{exp_idx} = all_rec_times{exp_idx};
+                    stats_name = 'Reaction_Times';
 
                 otherwise
                     error("You did not enter a correct data specification.")
             end
-
-            % Average Calculation
-            [avg_data, ~, err_data] = ...
-                calc_behav(ind_data, what_analysis{what_idx}, ...
-                calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-                numerosities, n_boot, alpha, focus_type{focus_idx});
-
-            % Plot
-            fig = plot_stuff(ind_data, avg_data, err_data, numerosities, ...
-                patterns, calc_type{calc_idx}, err_type{err_idx}, ...
-                what_analysis{what_idx}, who_analysis{who_idx}(1 : end - 1), ...
-                curr_experiments{exp_idx}, plot_font, colours_pattern, ...
-                plot_pos, linewidth, linestyle, mrksz, ...
-                capsize, jitterwidth, focus_type{focus_idx});
-            fig_name = [focus_type{focus_idx} '_' calc_type{calc_idx} '_' ...
-                err_type{err_idx} '_' what_analysis{what_idx} '.' format];
-
-            % Save the stuff
-            saveas(fig, ...
-                [figure_path who_analysis{who_idx} subfolders{exp_idx} ...
-                '\' fig_name], format)
-
-            % update progress bar
-            progress_counter = progress_counter + 1;  % for progressbar
-            progressbar(progress_counter, progress_total)
         end
-    end
+        
+        % Get Pattern Differences
+        diff_data = ...
+            pattern_diffs(all_performances, all_resp_freq, ...
+            all_rec_times, patterns, numerosities, ...
+            what_analysis{what_idx}, curr_experiments, ...
+            focus_type{focus_idx}, calc_type{calc_idx}, err_type{err_idx});
 
+        % Statistics
+
+
+        % Plot
+        
+
+    end
 end
+
 %% Strictly Standardized Mean Difference
 
 if to_ssmd

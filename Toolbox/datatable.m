@@ -56,6 +56,7 @@ for pattern = 1:length(patterns)
                 'VariableNames', ...
                 {'Subject', 'Pattern', 'Sample', 'Condition', ...
                 'Performance', 'ResponseFrequency', 'RT'});
+
             data_table = [data_table; temp_table];  % append vertically
         end
     end

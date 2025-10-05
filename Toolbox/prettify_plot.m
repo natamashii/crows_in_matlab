@@ -4,11 +4,11 @@ function [fig_pretty, fig_title_pretty] = ...
 
 % function to improve overall figure
 
-set(gcf, 'Color', [1 1 1])  % set figure background to white
+set(gcf, "Color", [1 1 1])  % set figure background to white
 
 % change figure size
-set(gcf, 'PaperUnits', 'points')
-set(gcf, 'PaperSize', [plot_pos(1) plot_pos(2)])
+set(gcf, "PaperUnits", "points")
+set(gcf, "PaperSize", [plot_pos(1) plot_pos(2)])
 
 % figure title
 fig_title.FontSize = plot_font;
@@ -27,7 +27,7 @@ if add_legend
         "TextColor", "k", ...
         "FontSize", plot_font, ...
         "FontWeight", "bold");
-    title(leg, leg_title, 'FontSize', plot_font)
+    title(leg, leg_title, "FontSize", plot_font)
 end
 
 fig.Renderer = "painters";

@@ -13,7 +13,6 @@ function fig_pretty = ...
 %% Pre Allocation
 leg_patch = [];
 leg_label = string();
-dot_plots = {};
 
 %% Pre Definition
 dot_alpha = 0.3;
