@@ -641,6 +641,7 @@ if to_grouping_chunking
     progress_counter = 0;
     progress_total = length(experiments{1}) + ...
         length(experiments{2}) + length(experiments{2});
+    alpha_stats = 0.05;
 
     % set what to analyse further
     what_idx = input(prompt_what);
@@ -719,7 +720,10 @@ if to_grouping_chunking
             focus_type{focus_idx}, calc_type{calc_idx}, err_type{err_idx});
 
         % Statistics
-
+        [statistics] = ...
+            stats_pattern_diff(all_performances, ...
+            all_resp_freq, all_rec_times, ...
+            curr_experiments, patterns, numerosities, alpha_stats);
 
         % Plot
         

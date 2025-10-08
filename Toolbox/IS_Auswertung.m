@@ -30,8 +30,8 @@ rho_al = 2.7;   % in g/cm^3
 rho_pb = 11.34; % in g/cm^3
 
 % insert their values here
-N_al = [16219, 6603, 2415, 690, 576, 559, 551, 513, 457, 374];
-N_pb = [1247, 1197, 1025, 906, 695, 600, 481, 375, 264, 155];
+N_al = [15276, 5905, 2584, 627, 534, 500, 464, 491, 444, 348];
+N_pb = [1218, 999, 831, 888, 682, 534, 484, 333, 268, 109];
 
 % 1a) n_mess & n_korr Aluminium
 n_mess_al = zeros(size(N_al));
@@ -188,6 +188,6 @@ to_save = true;
 if to_save
     prompt = ("Insert Filename: ");
     savename = input(prompt);
-    save(strcat(char('G:\Meine Ablage\Master\Physik\Abgegebene Protokolle\Praktikum SoSe 25\'), ...
+    save(strcat(char('G:\Meine Ablage\Master\Physik\Abgegebene Protokolle\Blockpraktikum SoSe 25\'), ...
                         char(savename), '.mat'), '-struct', 'data')
 end
