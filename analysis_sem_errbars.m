@@ -11,6 +11,7 @@ close all
 % DONE divide standard/control stuff, save it separately (incl statistic shit from that)
 % DONE generalize standard/control to Jello/Uri
 % DONE implement statistics
+% normalize pattern diff somehow!!!!!!!!!!!!!!!!!!!!
 % DONE fix conover iman test
 % test for performance difference among patterns for each sample
 % do regression for each subject
@@ -25,6 +26,7 @@ close all
 % look at non matches: if previous smoler/bigger -> Lena figure 16
 % look at cancellations (crow breaks off)
 % Weber fractions maybe???
+% for describing stimuli better: spatial clustering coefficient (Marupudi, 2025)
 % make a file to load all statistics and get a damn overview
 % DONE rewrite plotting stuff as one function
 % DONE rewrite correction to one resp mat with RT
@@ -101,7 +103,7 @@ numerosities = [3, 4, 5, 6, 7; % sample
 patterns = {'P1', 'P2', 'P3'};
 
 % for Plotting
-colours_pattern = ...
+colours_pattern_diff = ...
     {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; ...
     [0.1211 0.5195 0.6289]};    % colours for patterns
 colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...

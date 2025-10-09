@@ -8,6 +8,8 @@ function [diff_data] = ...
 %% Pre Allocation
 placeholder = {"P1 vs. P2", "P1 vs. P3", "P3 vs. P2"; ...
     [], [], []; [], [], []; [], [], []};
+% row 1: names; row 2: all diff values over subjects/sessions; row 3:
+% mean/median of it; row 4: STD/SEM
 diff_data = cell(length(curr_experiments), size(numerosities, 1));
 
 % Iterate over Samples
