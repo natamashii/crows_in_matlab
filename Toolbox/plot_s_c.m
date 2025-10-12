@@ -40,6 +40,10 @@ set(gca, "TickDir", "out")
 if strcmp(what_analysis, 'Reaction Times')
     ax.YLim = [0 800];
     ylabel(ax, "Reaction Times [ms]")
+elseif strcmp(what_analysis, 'Performance')
+    ax.YLim = [0 1];
+    ax.YTick = 0:0.2:1;
+    ylabel(ax, "Performance")
 else
     ax.YLim = [0 1];
     ax.YTick = 0:0.2:1;

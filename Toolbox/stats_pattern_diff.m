@@ -8,11 +8,11 @@ function [statistics] = ...
 
 statistics = struct();
 statistics.Wilcoxon_Performance = ...
-    cell(length(curr_experiments), size(numerosities, 1));
+    cell(length(curr_experiments), size(numerosities, 1) + 1);
 statistics.Wilcoxon_ResponseFrequency = ...
-    cell(length(curr_experiments), size(numerosities, 1));
+    cell(length(curr_experiments), size(numerosities, 1) + 1);
 statistics.Wilcoxon_ReactionTimes = ...
-    cell(length(curr_experiments), size(numerosities, 1));
+    cell(length(curr_experiments), size(numerosities, 1) + 1);
 statistics.Significance = ...
     zeros(3, length(curr_experiments), size(numerosities, 1));
 
@@ -32,6 +32,12 @@ diff_data_rec_times = ...
 
 % Iterate over Experiments
 for exp_idx = 1:length(curr_experiments)
+    statistics.Wilcoxon_Performance{exp_idx, end} = ...
+        curr_experiments{exp_idx};
+    statistics.Wilcoxon_ResponseFrequency{exp_idx, end} = ...
+        curr_experiments{exp_idx};
+    statistics.Wilcoxon_ReactionTimes{exp_idx, end} = ...
+        curr_experiments{exp_idx};
 
     % Iterate Over Samples
     for sample_idx = 1:size(numerosities, 1)
@@ -110,9 +116,12 @@ for exp_idx = 1:length(curr_experiments)
         end
 
         %% sort the values
-        statistics.Wilcoxon_Performance{exp_idx, sample_idx} = placeholder_performance;
-        statistics.Wilcoxon_ResponseFrequency{exp_idx, sample_idx} = placeholder_resp_freq;
-        statistics.Wilcoxon_ReactionTimes{exp_idx, sample_idx} = placeholder_rec_times;
+        statistics.Wilcoxon_Performance{exp_idx, sample_idx} = ...
+            placeholder_performance;
+        statistics.Wilcoxon_ResponseFrequency{exp_idx, sample_idx} = ...
+            placeholder_resp_freq;
+        statistics.Wilcoxon_ReactionTimes{exp_idx, sample_idx} = ...
+            placeholder_rec_times;
     end
 end
 

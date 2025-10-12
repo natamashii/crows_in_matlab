@@ -7,14 +7,18 @@ function [low_err_data, up_err_data] = ...
 bootstrap_median = zeros(n_boot, 1);
 
 % pre definition
+if alpha < 1
+    alpha = alpha * 100;
+end
+
 lower_percentile = alpha / 2;
 upper_percentile = 100 - (alpha / 2);
 
 % Median of data
-med_data = median(data, "omitnan");
 
 % resample n_boot times
 for b_idx = 1:n_boot
+
     % generate random indices
     resample_idx = randi(numel(data), numel(data), 1);
 
@@ -28,10 +32,8 @@ for b_idx = 1:n_boot
     sorted_bootstrap_median = sort(bootstrap_median);
 
     % get CIs
-    low_err_data = med_data - ...
-        prctile(sorted_bootstrap_median, lower_percentile);
-    up_err_data = prctile(sorted_bootstrap_median, upper_percentile) - ...
-        med_data;
+    low_err_data = prctile(sorted_bootstrap_median, lower_percentile);
+    up_err_data = prctile(sorted_bootstrap_median, upper_percentile);
 
 end
 

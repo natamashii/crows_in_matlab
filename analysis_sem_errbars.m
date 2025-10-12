@@ -12,11 +12,13 @@ close all
 % DONE generalize standard/control to Jello/Uri
 % DONE implement statistics
 % normalize pattern diff somehow!!!!!!!!!!!!!!!!!!!!
+% to all plots with performance: make it in percentage & add [% correct] in ylabel
 % DONE fix conover iman test
 % test for performance difference among patterns for each sample
 % do regression for each subject
 % do nieder vs veit
 % DONE add error to all plot legend
+% Stimuli: nearest neighbour distance
 % set size effect
 % maybe compare amount of variation between patterns???
 % maybe build linear models or so 
@@ -38,6 +40,7 @@ close all
 % DONE save data (individual stuff and mean stuff)
 % make fig size variable (robust for each device used)
 % maybe time for birds
+% difference plot birds: divide into exp 1 times & exp1 vs exp2
 % mark p value in standard/control & jello/uri plot
 % imporve single plot
 % regression analysis: add computing in function + plot regression curve separetly in a function
@@ -49,7 +52,7 @@ close all
 % in stimpattern_generation.m change input to case insensitive with strcmpi();
 % change ind dot colours to be a bit different than the avg data (overlays with box plots...)
 % maybe combine plot_stuff with plot_sc somehow....
-% add error type to legend in each plot function
+% DONE add error type to legend in each plot function
 % for plotting: extract dot_alpha & marker factor & box alpha & boxwidth factor for all functions
 % Anova S/C and J/U: maybe pre process RTs: remove too quick trials & remove everything that is +- 3* MAD of median
 % perhaps look for significant difference in P1 vs. P2/3 first
@@ -118,7 +121,6 @@ colours_ssmd = {[0.4745 0.3451 0.4706]; [0.1333 0.4745 0.4000]; [0.4627 0.3922 0
 format = 'svg'; % figure save format
 fig_title = '';
 
-plot_font = 12;
 plot_pos = [21 29.7];   % default PaperPosition size of figure
 mrksz = 10;
 linewidth = 2;
@@ -128,7 +130,7 @@ jitterwidth = 0.25;
 linestyle = "none";
 
 % values for computing confidence interval
-n_boot = 10000;
+n_boot = 1000;
 confidence_level = 95;      % For a 95% CI
 alpha = 100 - confidence_level;
 
@@ -640,10 +642,8 @@ end
 if to_grouping_chunking
 
     % Pre Definition
-    progress_counter = 0;
-    progress_total = length(experiments{1}) + ...
-        length(experiments{2}) + length(experiments{2});
     alpha_stats = 0.05;
+    progress_counter = 0;
 
     % set what to analyse further
     what_idx = input(prompt_what);
@@ -653,11 +653,19 @@ if to_grouping_chunking
 
         % human subjects
         if who_idx == 1
-            curr_experiments = experiments{1};
+            curr_experiments = {'Exp 1'; 'Exp 2'; 'Exp 3'};
+            exp_x_vals = [1, 2, 3];
+            progress_total = (length(who_analysis) - 1) * ...
+                size(numerosities, 1);
 
             % avian subjects
         else
-            curr_experiments = experiments{2};
+            curr_experiments = ...
+                {'Exp 1 300 ms'; 'Exp 1 100 ms'; ...
+                'Exp 1 50 ms'; 'Exp 2 50 ms'};
+            exp_x_vals = [2, 1, 3, 4];
+            progress_total = (length(who_analysis) - 1) * ...
+                size(numerosities, 1);
         end
 
         % Pre Allocation
@@ -667,8 +675,6 @@ if to_grouping_chunking
 
         % iterate over experiments
         for exp_idx = 1:length(curr_experiments)
-            % pre allocation
-            statistics = struct();
 
             % path adjustment
             % list of all data & subfolders
@@ -721,127 +727,101 @@ if to_grouping_chunking
             what_analysis{what_idx}, curr_experiments, ...
             focus_type{focus_idx}, calc_type{calc_idx}, err_type{err_idx});
 
+        % Hodges-Lehmann Estimator
+        walsh_HL = ...
+            hodges_lehmann_estimator(diff_data, curr_experiments, ...
+            numerosities, n_boot, alpha_stats);
+
         % Statistics
         [statistics] = ...
             stats_pattern_diff(all_performances, ...
             all_resp_freq, all_rec_times, ...
             curr_experiments, patterns, numerosities, alpha_stats);
 
-        % Plot
-        
+        % iterate over samples
+        for sample_idx = 1:size(numerosities, 1)
 
-    end
-end
+            % Plot: Divided Into all Patterns, Raw Data
+            fig_diff = ...
+                plot_c_g(diff_data, colours_pattern_diff, ...
+                curr_experiments, what_analysis{what_idx}, ...
+                who_analysis{who_idx}(1:end-1), err_type{err_idx}, ...
+                calc_type{calc_idx}, numerosities, sample_idx, ...
+                plot_font, plot_pos, linewidth, mrksz, ...
+                capsize, jitterwidth / 2, 0.3, 4, false, exp_x_vals);
 
-%% Strictly Standardized Mean Difference
+            % Plot: Divided Into all Patterns, Walsh-Averages
+            fig_diff_walsh = ...
+                plot_c_g(walsh_HL, colours_pattern_diff, ...
+                curr_experiments, what_analysis{what_idx}, ...
+                who_analysis{who_idx}(1:end-1), err_type{err_idx}, ...
+                calc_type{calc_idx}, numerosities, sample_idx, ...
+                plot_font, plot_pos, linewidth, mrksz, ...
+                capsize, jitterwidth / 2, 0.3, 4, false, exp_x_vals);
 
-if to_ssmd
+            % Plot: Chunking/Grouping, Raw Data
+            fig_no_diff = ...
+                plot_c_g(diff_data, colours_pattern_diff, ...
+                curr_experiments, what_analysis{what_idx}, ...
+                who_analysis{who_idx}(1:end-1), err_type{err_idx}, ...
+                calc_type{calc_idx}, numerosities, sample_idx, ...
+                plot_font, plot_pos, linewidth, mrksz, ...
+                capsize, jitterwidth, 0.3, 4, true, exp_x_vals);
 
-    % Pre Definition
-    focus_idx = 3;
-    progress_counter = 0;
-    progress_total = length(experiments{1}) + ...
-        length(experiments{2}) + length(experiments{2});
-    plot_pos = [50, 21];
-    % set what to analyse further
-    what_idx = input(prompt_what);
+            % Plot: Chunking/Groupitizing, Walsh-Averages
+            fig_no_diff_walsh = ...
+                plot_c_g(walsh_HL, colours_pattern_diff, ...
+                curr_experiments, what_analysis{what_idx}, ...
+                who_analysis{who_idx}(1:end-1), err_type{err_idx}, ...
+                calc_type{calc_idx}, numerosities, sample_idx, ...
+                plot_font, plot_pos, linewidth, mrksz, ...
+                capsize, jitterwidth, 0.3, 4, true, exp_x_vals);
 
-    % iterate over subjects
-    for who_idx = 1:length(who_analysis) - 1
+            % Set Figure File Names
+            fig_name_diff = ['ChunkGroup_divided_' focus_type{focus_idx} ...
+                '_' calc_type{calc_idx} '_' err_type{err_idx} ...
+                '_' what_analysis{what_idx} '_Sample_' ...
+                num2str(numerosities(sample_idx, 1)) '.' format];
+            fig_name_diff_walsh = ['ChunkGroup_divided_Walsh_HL' ...
+                focus_type{focus_idx} ...
+                '_' calc_type{calc_idx} '_' err_type{err_idx} ...
+                '_' what_analysis{what_idx} '_Sample_' ...
+                num2str(numerosities(sample_idx, 1)) '.' format];
+            fig_name_no_diff = ['ChunkGroup_' focus_type{focus_idx} ...
+                '_' calc_type{calc_idx} '_' err_type{err_idx} ...
+                '_' what_analysis{what_idx} '_Sample_' ...
+                num2str(numerosities(sample_idx, 1)) '.' format];
+            fig_name_no_diff_walsh = ['ChunkGroup_Walsh_HL' ...
+                focus_type{focus_idx} ...
+                '_' calc_type{calc_idx} '_' err_type{err_idx} ...
+                '_' what_analysis{what_idx} '_Sample_' ...
+                num2str(numerosities(sample_idx, 1)) '.' format];
 
-        % human subjects
-        if who_idx == 1
-            curr_experiments = experiments{1};
-
-            % avian subjects
-        else
-            curr_experiments = experiments{2};
-        end
-
-        % Pre Allocation
-        all_smd = NaN(length(curr_experiments), length(patterns), ...
-            size(numerosities, 1));
-        all_ssmd = NaN(length(curr_experiments), length(patterns), ...
-            size(numerosities, 1));
-
-        % iterate over experiments
-        for exp_idx = 1:length(curr_experiments)
-
-            % path adjustment
-            % list of all data & subfolders
-            filelist = dir([data_path who_analysis{who_idx}]);
-            % extract subfolders
-            subfolders = filelist([filelist(:).isdir]);
-            % list of subfolder names (experiments)
-            subfolders = {subfolders(3 : end).name};
-            adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx} '\'];
-
-            % load the data
-            sorted_data = load([adapt_path 'sorted_data.mat']);
-
-            performances = sorted_data.performances;
-            resp_freq = sorted_data.resp_freq;
-            rec_times = sorted_data.rec_times;
-
-            switch what_idx
-                case 1  % Performance
-                    calc_idx = 1;   % Mean
-                    err_idx = 2;   % SEM
-                    ind_data = performances;
-
-                case 2  % Response Frequency
-                    calc_idx = 1;   % Mean
-                    err_idx = 2;    % SEM
-                    ind_data = resp_freq;
-
-                case 3  % Reaction Time
-                    calc_idx = 2;   % Median
-                    err_idx = 1;    % STD
-                    ind_data = rec_times;
-
-                otherwise
-                    error("You did not enter a correct data specification.")
-            end
-
-            performances = sorted_data.performances;
-            resp_freq = sorted_data.resp_freq;
-            rec_times = sorted_data.rec_times;
-
-            % Average Calculation
-            [avg_data, avg_data_stats, err_data] = ...
-                calc_behav(ind_data, what_analysis{what_idx}, ...
-                calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-                numerosities, n_boot, alpha, focus_type{focus_idx});
-
-            % Strictly Standarized Mean Difference
-            [all_smd(exp_idx, :, :), all_ssmd(exp_idx, :, :)] = ...
-                calc_ssmd(performances, resp_freq, rec_times, ...
-                avg_data_stats, patterns, numerosities, ...
-                what_analysis{what_idx});
-
-            % update progress bar
+            % Save the figure
+            saveas(fig_diff, ...
+                [figure_path who_analysis{who_idx} '\' fig_name_diff], ...
+                format)
+            saveas(fig_diff_walsh, ...
+                [figure_path who_analysis{who_idx} '\' fig_name_diff_walsh], ...
+                format)
+            saveas(fig_no_diff, ...
+                [figure_path who_analysis{who_idx} '\' fig_name_no_diff], ...
+                format)
+            saveas(fig_no_diff_walsh, ...
+                [figure_path who_analysis{who_idx} '\' fig_name_no_diff_walsh], ...
+                format)
+            
+        % update progress bar
             progress_counter = progress_counter + 1;  % for progressbar
             progressbar(progress_counter, progress_total)
         end
 
-        % Plot the SSMD
-        fig = plot_ssmd(what_analysis{what_idx}, all_ssmd, ...
-            who_analysis{who_idx}(1:end-1), patterns, numerosities, ...
-            plot_font, colours_ssmd, plot_pos, linewidth, linestyle, ...
-            mrksz, jitterwidth, curr_experiments);
-        fig_name = ['SSMD_' what_analysis{what_idx} '.' format];
-
         % Save the stuff
-        saveas(fig, ...
-            [figure_path who_analysis{who_idx} '\' fig_name], format)
+        adapt_path = [data_path who_analysis{who_idx} '\'];
+        save([adapt_path 'statistics_chunking_grouping_' stats_name '.mat'], ...
+            '-struct', 'statistics')
     end
 end
 
-
-
-
-
-
-
+%% Hodges-Lehmann Estimator
 
