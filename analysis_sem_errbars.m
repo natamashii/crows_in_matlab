@@ -57,6 +57,7 @@ close all
 % Anova S/C and J/U: maybe pre process RTs: remove too quick trials & remove everything that is +- 3* MAD of median
 % perhaps look for significant difference in P1 vs. P2/3 first
 % DONE save the analysis output somewhere
+% something is wrong with calling data for plot_uebersicht_detail
 
 % response matrix
 % col 1: stimulus type (standard (1) or control (2))
@@ -91,12 +92,13 @@ prompt_what = ['What do you wish to analyse? '...
     '\n 3 - Reaction Time '];
 
 to_correct = false; % if response matrices shall be corrected
+to_sort = false;     % if data must be sorted first
 to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
-to_sort = false;     % if data must be sorted first
 to_uebersicht = false;     % if plotting pattern comparison (matches)
+to_uebersicht_detail = false;   % if plotting detailed comparison
 to_grouping_chunking = true;    % if plotting experiment comparison
-to_ssmd = false;     % if plotting ssmd
+to_grouping_chunking_birds = false;
 
 % all relevant numerosities (Lena's tabular)
 numerosities = [3, 4, 5, 6, 7; % sample
@@ -109,9 +111,9 @@ patterns = {'P1', 'P2', 'P3'};
 colours_pattern_diff = ...
     {[0.8008 0.2578 0.7266]; [0.1445 0.4336 0.2070]; ...
     [0.1211 0.5195 0.6289]};    % colours for patterns
-colours_numbers = {[0 0.4460 0.7410]; [0.8500 0.3250 0.0980]; ...
-    [0.9290 0.6940 0.1250]; [0.3010 0.7450 0.9330]; ...
-    [0.6350 0.0780 0.1840]};    % colours for samples
+colours_numbers = {[0.1020 0.4900 0.8510]; [0.5760 0.4040 0.9220]; ...
+    [0.9220 0.4040 0.6430]; [0.9490 0.4510 0.2670]; ...
+    [0.4430 0.6120 0.3250]};    % colours for samples
 colour_uebersicht = [0.0000 0.3490 0.2510];
 colours_S_C = ...
     {[0.0660 0.4430 0.7450]; [0.5210 0.0860 0.8190]};   % Standard/Control
@@ -130,7 +132,7 @@ jitterwidth = 0.25;
 linestyle = "none";
 
 % values for computing confidence interval
-n_boot = 1000;
+n_boot = 10000;
 confidence_level = 95;      % For a 95% CI
 alpha = 100 - confidence_level;
 
@@ -176,7 +178,7 @@ if to_correct
             % list of subfolder names (experiments)
             subfolders = {subfolders(3 : end).name};
             adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx} '\'];
+                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
 
             % correct the response matrix
             corr_resp(rsp_mat_path, spk_folderpath, who_analysis{who_idx}, ...
@@ -217,7 +219,7 @@ if to_sort
             % list of subfolder names (experiments)
             subfolders = {subfolders(3 : end).name};
             adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx} '\'];
+                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
 
             % sort the data
             [performances, resp_freq, rec_times] = ...
@@ -283,7 +285,7 @@ if to_split_sc
             % list of subfolder names (experiments)
             subfolders = {subfolders(3 : end).name};
             adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx} '\'];
+                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
 
             % load the data
             sorted_data = load([adapt_path 'sorted_data.mat']);
@@ -350,8 +352,8 @@ if to_split_sc
             save([adapt_path 'statistics_standard_control.mat'], ...
                 '-struct', 'statistics')
             saveas(fig, [figure_path who_analysis{who_idx} ...
-                subfolders{exp_idx} '\' fig_name], ...
-                format)
+                subfolders{exp_idx} '\' what_analysis{what_idx} '\' ...
+                fig_name], format)
 
             % update progress bar
             progress_counter = progress_counter + 1;  % for progressbar
@@ -387,9 +389,9 @@ if to_split_ju
         subfolders = filelist([filelist(:).isdir]);
         % list of subfolder names (experiments)
         subfolders = {subfolders(3 : end).name};
-        adapt_path = [data_path who_analysis{4} subfolders{exp_idx} '\'];
-        jello_path = [data_path who_analysis{2} subfolders{exp_idx} '\'];
-        uri_path = [data_path who_analysis{3} subfolders{exp_idx} '\'];
+        adapt_path = [data_path who_analysis{4} subfolders{exp_idx + 1} '\'];
+        jello_path = [data_path who_analysis{2} subfolders{exp_idx + 1} '\'];
+        uri_path = [data_path who_analysis{3} subfolders{exp_idx + 1} '\'];
 
         % load the data
         jello_data = load([jello_path 'sorted_data.mat']);
@@ -469,28 +471,27 @@ if to_split_ju
             resp_freq_j, resp_freq_u, rec_times_j, rec_times_u, ...
             {'J', 'U'}, patterns, numerosities, alpha_stats);
 
-
         % Average Calculation
         % Jello, Standard Conditions
         [avg_data_j_s, ~, err_data_j_s] = ...
             calc_behav(ind_data_j_s, what_analysis{what_idx}, ...
             calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-            numerosities, n_boot, alpha, focus_type{focus_idx});
+            numerosities, n_boot, alpha, focus_type{focus_idx}, true);
         % Jello, Control Conditions
         [avg_data_j_c, ~, err_data_j_c] = ...
             calc_behav(ind_data_j_c, what_analysis{what_idx}, ...
             calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-            numerosities, n_boot, alpha, focus_type{focus_idx});
+            numerosities, n_boot, alpha, focus_type{focus_idx}, true);
         % Uri, Standard Conditions
         [avg_data_u_s, ~, err_data_u_s] = ...
             calc_behav(ind_data_u_s, what_analysis{what_idx}, ...
             calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-            numerosities, n_boot, alpha, focus_type{focus_idx});
+            numerosities, n_boot, alpha, focus_type{focus_idx}, true);
         % Uri, Control Conditions
         [avg_data_u_c, ~, err_data_u_c] = ...
             calc_behav(ind_data_u_c, what_analysis{what_idx}, ...
             calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-            numerosities, n_boot, alpha, focus_type{focus_idx});
+            numerosities, n_boot, alpha, focus_type{focus_idx}, true);
 
         % Plot
         fig = ...
@@ -515,7 +516,7 @@ if to_split_ju
         save([jello_path 'statistics_jello.mat'], ...
             '-struct', 'statistics_jello')
         saveas(fig, [figure_path who_analysis{4} subfolders{exp_idx} ...
-            '\' fig_name], format)
+            '\' what_analysis{what_idx} '\' fig_name], format)
 
         % update progress bar
         progress_counter = progress_counter + 1;  % for progressbar
@@ -523,7 +524,7 @@ if to_split_ju
     end
 end
 
-%% Pattern Comparison
+%% Übersichts-Plot: Pattern Comparison
 
 if to_uebersicht
 
@@ -559,7 +560,7 @@ if to_uebersicht
             % list of subfolder names (experiments)
             subfolders = {subfolders(3 : end).name};
             adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx} '\'];
+                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
 
             % load the data
             sorted_data = load([adapt_path 'sorted_data.mat']);
@@ -598,7 +599,7 @@ if to_uebersicht
             [avg_data, avg_data_stats, err_data] = ...
                 calc_behav(ind_data, what_analysis{what_idx}, ...
                 calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-                numerosities, n_boot, alpha, focus_type{focus_idx});
+                numerosities, n_boot, alpha, focus_type{focus_idx}, false);
 
             % Statistics
             [big_statistics, post_hoc] = ...
@@ -616,7 +617,8 @@ if to_uebersicht
                 colour_uebersicht, plot_pos, linewidth, ...
                 mrksz, capsize, jitterwidth, focus_type{focus_idx}, ...
                 0.3, 4);
-            fig_name = [focus_type{focus_idx} '_' calc_type{calc_idx} '_' ...
+            fig_name = [focus_type{focus_idx} '_Übersicht_' ...
+                calc_type{calc_idx} '_' ...
                 err_type{err_idx} '_' what_analysis{what_idx} '.' format];
 
             % Save the stuff
@@ -626,7 +628,7 @@ if to_uebersicht
                 '-struct', 'statistics')
             saveas(fig, ...
                 [figure_path who_analysis{who_idx} subfolders{exp_idx} ...
-                '\' fig_name], format)
+                '\' what_analysis{what_idx} '\' fig_name], format)
 
             % update progress bar
             progress_counter = progress_counter + 1;  % for progressbar
@@ -634,6 +636,110 @@ if to_uebersicht
         end
     end
 
+end
+
+%% More Detailed Überblick
+
+if to_uebersicht_detail
+
+    % Pre Definition
+    progress_counter = 0;
+    progress_total = length(experiments{1}) + ...
+        length(experiments{2}) + length(experiments{2});
+    plot_pos = [21, 120];
+
+    % set what to analyse further
+    what_idx = input(prompt_what);
+
+    % iterate over subjects
+    for who_idx = 1:length(who_analysis) - 1
+
+        % human subjects
+        if who_idx == 1
+            curr_experiments = experiments{1};
+
+            % avian subjects
+        else
+            curr_experiments = experiments{2};
+        end
+
+        % iterate over experiments
+        for exp_idx = 1:length(curr_experiments)
+            % pre allocation
+            statistics = struct();
+
+            % path adjustment
+            % list of all data & subfolders
+            filelist = dir([data_path who_analysis{who_idx}]);
+            % extract subfolders
+            subfolders = filelist([filelist(:).isdir]);
+            % list of subfolder names (experiments)
+            subfolders = {subfolders(3 : end).name};
+            adapt_path = ...
+                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
+
+            % load the data
+            sorted_data = load([adapt_path 'sorted_data.mat']);
+
+            performances = sorted_data.performances;
+            resp_freq = sorted_data.resp_freq;
+            rec_times = sorted_data.rec_times;
+
+            switch what_idx
+                case 1  % Performance
+                    calc_idx = 1;   % Mean
+                    err_idx = 2;   % SEM
+                    focus_idx = 3;  % Matches + Non-Matches
+                    ind_data = performances;
+                    stats_name = 'Performance';
+
+                case 2  % Response Frequency
+                    calc_idx = 1;   % Mean
+                    err_idx = 2;    % SEM
+                    focus_idx = 3;  % Matches + Non-Matches
+                    ind_data = resp_freq;
+                    stats_name = 'Response_Frequency';
+
+                case 3  % Reaction Time
+                    calc_idx = 2;   % Median
+                    err_idx = 1;    % STD
+                    focus_idx = 3;  % Matches
+                    ind_data = rec_times;
+                    stats_name = 'Reaction_Times';
+
+                otherwise
+                    error("You did not enter a correct data specification.")
+            end
+
+            % Average Calculation
+            [avg_data, avg_data_stats, err_data] = ...
+                calc_behav(ind_data, what_analysis{what_idx}, ...
+                calc_type{calc_idx}, err_type{err_idx}, patterns, ...
+                numerosities, n_boot, alpha, focus_type{focus_idx}, false);
+
+            % Plot
+            fig = plot_uebersicht_detail(ind_data, avg_data, err_data, ...
+                numerosities, ...
+                patterns, calc_type{calc_idx}, err_type{err_idx}, ...
+                what_analysis{what_idx}, ...
+                who_analysis{who_idx}(1:end - 1), ...
+                curr_experiments{exp_idx}, plot_font, ...
+                colours_numbers, plot_pos, linewidth, ...
+                mrksz, capsize, jitterwidth, 0.3, 4);
+            fig_name = [focus_type{focus_idx} '_Übersicht_detail_' ...
+                calc_type{calc_idx} '_' ...
+                err_type{err_idx} '_' what_analysis{what_idx} '.' format];
+
+            % Save the stuff
+            saveas(fig, ...
+                [figure_path who_analysis{who_idx} subfolders{exp_idx + 1} ...
+                '\' what_analysis{what_idx} '\' fig_name], format)
+
+            % update progress bar
+            progress_counter = progress_counter + 1;  % for progressbar
+            progressbar(progress_counter, progress_total)
+        end
+    end
 end
 
 %% Grouping-Chunking Plot
@@ -684,7 +790,7 @@ if to_grouping_chunking
             % list of subfolder names (experiments)
             subfolders = {subfolders(3 : end).name};
             adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx} '\'];
+                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
 
             % load the data
             sorted_data = load([adapt_path 'sorted_data.mat']);
@@ -799,17 +905,29 @@ if to_grouping_chunking
 
             % Save the figure
             saveas(fig_diff, ...
-                [figure_path who_analysis{who_idx} '\' fig_name_diff], ...
-                format)
+                [figure_path who_analysis{who_idx} ...
+                '\all_experiments\Sample_' ...
+                num2str(numerosities(sample_idx, 1)) '\' ...
+                what_analysis{what_idx} '\' ...
+                fig_name_diff], format)
             saveas(fig_diff_walsh, ...
-                [figure_path who_analysis{who_idx} '\' fig_name_diff_walsh], ...
-                format)
+                [figure_path who_analysis{who_idx} ...
+                '\all_experiments\Sample_' ...
+                num2str(numerosities(sample_idx, 1)) '\' ...
+                what_analysis{what_idx} '\' ...
+                fig_name_diff_walsh], format)
             saveas(fig_no_diff, ...
-                [figure_path who_analysis{who_idx} '\' fig_name_no_diff], ...
-                format)
+                [figure_path who_analysis{who_idx} ...
+                '\all_experiments\Sample_' ...
+                num2str(numerosities(sample_idx, 1)) '\' ...
+                what_analysis{what_idx} '\' ...
+                fig_name_no_diff], format)
             saveas(fig_no_diff_walsh, ...
-                [figure_path who_analysis{who_idx} '\' fig_name_no_diff_walsh], ...
-                format)
+                [figure_path who_analysis{who_idx} ...
+                '\all_experiments\Sample_' ...
+                num2str(numerosities(sample_idx, 1)) '\' ...
+                what_analysis{what_idx} '\' ...
+                fig_name_no_diff_walsh], format)
             
         % update progress bar
             progress_counter = progress_counter + 1;  % for progressbar
@@ -817,11 +935,208 @@ if to_grouping_chunking
         end
 
         % Save the stuff
-        adapt_path = [data_path who_analysis{who_idx} '\'];
+        adapt_path = [data_path who_analysis{who_idx} '\all_experiments\'];
         save([adapt_path 'statistics_chunking_grouping_' stats_name '.mat'], ...
             '-struct', 'statistics')
     end
 end
 
-%% Hodges-Lehmann Estimator
+%% Grouping-Chunking Plot: Birds, divided into Experiments 1 & 2 and times 
 
+if to_grouping_chunking_birds
+
+    % Pre Definition
+    alpha_stats = 0.05;
+    progress_counter = 0;
+    curr_experiments = ...
+        {'Exp 1 300 ms'; 'Exp 1 100 ms'; ...
+        'Exp 1 50 ms'; 'Exp 2 50 ms'};
+    exp_x_vals = {[3, 2, 1], [3, 4]};
+    progress_total = (length(who_analysis) - 1) * ...
+        size(numerosities, 1);
+    fig_name_extension = {'_exp1_2_'; '_diff_times_'};
+
+    % set what to analyse further
+    what_idx = input(prompt_what);
+
+    % iterate over subjects
+    for who_idx = 2:length(who_analysis) - 1
+
+        % Pre Allocation
+        all_performances = cell(length(curr_experiments), 1);
+        all_resp_freq = cell(length(curr_experiments), 1);
+        all_rec_times = cell(length(curr_experiments), 1);
+
+        % iterate over experiments
+        for exp_idx = 1:length(curr_experiments)
+
+            % path adjustment
+            % list of all data & subfolders
+            filelist = dir([data_path who_analysis{who_idx}]);
+            % extract subfolders
+            subfolders = filelist([filelist(:).isdir]);
+            % list of subfolder names (experiments)
+            subfolders = {subfolders(3 : end).name};
+            adapt_path = ...
+                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
+
+            % load the data
+            sorted_data = load([adapt_path 'sorted_data.mat']);
+
+            all_performances{exp_idx} = sorted_data.performances;
+            all_resp_freq{exp_idx} = sorted_data.resp_freq;
+            all_rec_times{exp_idx} = sorted_data.rec_times;
+
+            switch what_idx
+                case 1  % Performance
+                    calc_idx = 1;   % Mean
+                    err_idx = 2;   % SEM
+                    focus_idx = 1;  % Matches + Non-Matches
+                    ind_data{exp_idx} = all_performances{exp_idx};
+                    stats_name = 'Performance';
+
+                case 2  % Response Frequency
+                    calc_idx = 1;   % Mean
+                    err_idx = 2;    % SEM
+                    focus_idx = 1;  % Matches + Non-Matches
+                    ind_data{exp_idx} = all_resp_freq{exp_idx};
+                    stats_name = 'Response_Frequency';
+
+                case 3  % Reaction Time
+                    calc_idx = 2;   % Median
+                    err_idx = 1;    % STD
+                    focus_idx = 2;  % Matches
+                    ind_data{exp_idx} = all_rec_times{exp_idx};
+                    stats_name = 'Reaction_Times';
+
+                otherwise
+                    error("You did not enter a correct data specification.")
+            end
+        end
+        
+        % Get Pattern Differences
+        diff_data = ...
+            pattern_diffs(all_performances, all_resp_freq, ...
+            all_rec_times, patterns, numerosities, ...
+            what_analysis{what_idx}, curr_experiments, ...
+            focus_type{focus_idx}, calc_type{calc_idx}, err_type{err_idx});
+
+        % Hodges-Lehmann Estimator
+        walsh_HL = ...
+            hodges_lehmann_estimator(diff_data, curr_experiments, ...
+            numerosities, n_boot, alpha_stats);
+
+        % Statistics
+        [statistics] = ...
+            stats_pattern_diff(all_performances, ...
+            all_resp_freq, all_rec_times, ...
+            curr_experiments, patterns, numerosities, alpha_stats);
+
+        % Iterate over both versions to plot
+        for ver_idx = 1:length(exp_x_vals)
+
+            % iterate over samples
+            for sample_idx = 1:size(numerosities, 1)
+
+                % Plot: Divided Into all Patterns, Raw Data
+                fig_diff = ...
+                    plot_c_g(diff_data, colours_pattern_diff, ...
+                    curr_experiments, what_analysis{what_idx}, ...
+                    who_analysis{who_idx}(1:end-1), err_type{err_idx}, ...
+                    calc_type{calc_idx}, numerosities, sample_idx, ...
+                    plot_font, plot_pos, linewidth, mrksz, ...
+                    capsize, jitterwidth / 2, 0.3, 4, ...
+                    false, exp_x_vals{ver_idx});
+
+                % Plot: Divided Into all Patterns, Walsh-Averages
+                fig_diff_walsh = ...
+                    plot_c_g(walsh_HL, colours_pattern_diff, ...
+                    curr_experiments, what_analysis{what_idx}, ...
+                    who_analysis{who_idx}(1:end-1), err_type{err_idx}, ...
+                    calc_type{calc_idx}, numerosities, sample_idx, ...
+                    plot_font, plot_pos, linewidth, mrksz, ...
+                    capsize, jitterwidth / 2, 0.3, 4, ...
+                    false, exp_x_vals{ver_idx});
+
+                % Plot: Chunking/Grouping, Raw Data
+                fig_no_diff = ...
+                    plot_c_g(diff_data, colours_pattern_diff, ...
+                    curr_experiments, what_analysis{what_idx}, ...
+                    who_analysis{who_idx}(1:end-1), err_type{err_idx}, ...
+                    calc_type{calc_idx}, numerosities, sample_idx, ...
+                    plot_font, plot_pos, linewidth, mrksz, ...
+                    capsize, jitterwidth, 0.3, 4, ...
+                    true, exp_x_vals{ver_idx});
+
+                % Plot: Chunking/Groupitizing, Walsh-Averages
+                fig_no_diff_walsh = ...
+                    plot_c_g(walsh_HL, colours_pattern_diff, ...
+                    curr_experiments, what_analysis{what_idx}, ...
+                    who_analysis{who_idx}(1:end-1), err_type{err_idx}, ...
+                    calc_type{calc_idx}, numerosities, sample_idx, ...
+                    plot_font, plot_pos, linewidth, mrksz, ...
+                    capsize, jitterwidth, 0.3, 4, ...
+                    true, exp_x_vals{ver_idx});
+
+                % Set Figure File Names
+                fig_name_diff = ['ChunkGroup_divided_' ...
+                    fig_name_extension{ver_idx} focus_type{focus_idx} ...
+                    '_' calc_type{calc_idx} '_' err_type{err_idx} ...
+                    '_' what_analysis{what_idx} '_Sample_' ...
+                    num2str(numerosities(sample_idx, 1)) '.' format];
+                fig_name_diff_walsh = ['ChunkGroup_divided_Walsh_HL' ...
+                    fig_name_extension{ver_idx} focus_type{focus_idx} ...
+                    '_' calc_type{calc_idx} '_' err_type{err_idx} ...
+                    '_' what_analysis{what_idx} '_Sample_' ...
+                    num2str(numerosities(sample_idx, 1)) '.' format];
+                fig_name_no_diff = ['ChunkGroup_' ...
+                    fig_name_extension{ver_idx} focus_type{focus_idx} ...
+                    '_' calc_type{calc_idx} '_' err_type{err_idx} ...
+                    '_' what_analysis{what_idx} '_Sample_' ...
+                    num2str(numerosities(sample_idx, 1)) '.' format];
+                fig_name_no_diff_walsh = ['ChunkGroup_Walsh_HL' ...
+                    fig_name_extension{ver_idx} focus_type{focus_idx} ...
+                    '_' calc_type{calc_idx} '_' err_type{err_idx} ...
+                    '_' what_analysis{what_idx} '_Sample_' ...
+                    num2str(numerosities(sample_idx, 1)) '.' format];
+
+                % Save the figure
+                saveas(fig_diff, ...
+                    [figure_path who_analysis{who_idx} ...
+                    '\all_experiments\Sample_' ...
+                    num2str(numerosities(sample_idx, 1)) '\' ...
+                    what_analysis{what_idx} '\' ...
+                    fig_name_diff], format)
+                saveas(fig_diff_walsh, ...
+                    [figure_path who_analysis{who_idx} ...
+                    '\all_experiments\Sample_' ...
+                    num2str(numerosities(sample_idx, 1)) '\' ...
+                    what_analysis{what_idx} '\' ...
+                    fig_name_diff_walsh], format)
+                saveas(fig_no_diff, ...
+                    [figure_path who_analysis{who_idx} ...
+                    '\all_experiments\Sample_' ...
+                    num2str(numerosities(sample_idx, 1)) '\' ...
+                    what_analysis{what_idx} '\' ...
+                    fig_name_no_diff], format)
+                saveas(fig_no_diff_walsh, ...
+                    [figure_path who_analysis{who_idx} ...
+                    '\all_experiments\Sample_' ...
+                    num2str(numerosities(sample_idx, 1)) '\' ...
+                    what_analysis{what_idx} '\' ...
+                    fig_name_no_diff_walsh], format)
+
+                % update progress bar
+                progress_counter = progress_counter + 1;  % for progressbar
+                progressbar(progress_counter, progress_total)
+            end
+        end
+
+        % Save the stuff
+        adapt_path = [data_path who_analysis{who_idx} '\all_experiments\'];
+        save([adapt_path 'statistics_chunking_grouping_' stats_name '.mat'], ...
+            '-struct', 'statistics')
+    end
+end
+
+ 

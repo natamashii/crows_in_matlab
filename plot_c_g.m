@@ -29,14 +29,28 @@ dot_alpha = 0.3;
 % Create Figure
 fig = figure("Visible", "off");
 
+% Mark 0 Line
+ax0 = axes(fig);
+hold on
+ax0.Color = [1 1 1];     % set background colour to white
+chance_colour = ax0.GridAlpha;
+yl = yline(ax0, 0, ...
+    "LineStyle", ":", ...
+    "Alpha", chance_colour * 3, ...
+    "LineWidth", linewidth, ...
+    "Color", "k");
+ax0.YGrid = "on";
+ax0.Box = "off";
+
 % Axis Adjustments
-ax = gca;
+ax = axes(fig, "Position", ax0.Position);
 hold on
 
+linkaxes([ax0,ax],'xy');
 set(gca, "TickDir", "out")
 axis padded
 ax.YGrid = "on";    % plot horizontal grid lines
-ax.Color = [1 1 1];     % set background colour to white
+ax.Color = "none";     % set background colour to white
 ax.XColor = "k";    % set colour of axis to black
 ax.YColor = "k";    % set colour of axis to black
 ax.FontWeight = "bold";
@@ -49,13 +63,13 @@ ax.XTickLabelRotation = 0;
 ax.XLim = [.5 length(curr_experiments) + .5];
 ylabel(ax, ['Difference in ' what_analysis], "FontWeight", "bold")
 
-% Mark 0 Line
-chance_colour = ax.GridAlpha;
-yline(0, ...
-    "LineStyle", ":", ...
-    "Alpha", chance_colour * 0.7, ...
-    "LineWidth", linewidth, ...
-    "Color", "k")
+
+
+% Set ylim depending on what_analysis
+if strcmp(what_analysis, 'Reaction Times')
+    ax.YLim = [-50 50];
+else
+    ax.YLim = [-0.5 0.5];
 
 % Iterate over Experiments
 for exp_idx = exp_x_vals
@@ -134,5 +148,8 @@ fig_title = title([calc_type ' Difference in ' what_analysis ' of ' ...
 [fig_pretty, ~] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
     true, leg_patch, leg_label, ' ', mrksz, ax);
+
+ax0.XAxis.Visible = "off";
+ax0.YAxis.Visible = "off";
 
 end
