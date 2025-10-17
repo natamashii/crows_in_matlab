@@ -60,10 +60,12 @@ xlabel(ax, "Experiment", "FontWeight", "bold");    % set x-axis label
 ax.XTick = 1:length(curr_experiments);
 ax.XTickLabel = curr_experiments;
 ax.XTickLabelRotation = 0;
-ax.XLim = [.5 length(curr_experiments) + .5];
+if length(exp_x_vals) < 3
+    ax.XLim = [2.5 4.5];
+else
+    ax.XLim = [.5 length({curr_experiments{exp_x_vals}}) + .5];
+end
 ylabel(ax, ['Difference in ' what_analysis], "FontWeight", "bold")
-
-
 
 % Set ylim depending on what_analysis
 if strcmp(what_analysis, 'Reaction Times')

@@ -97,8 +97,8 @@ to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
 to_uebersicht = false;     % if plotting pattern comparison (matches)
 to_uebersicht_detail = false;   % if plotting detailed comparison
-to_grouping_chunking = true;    % if plotting experiment comparison
-to_grouping_chunking_birds = false;
+to_grouping_chunking = false;    % if plotting experiment comparison
+to_grouping_chunking_birds = true;
 
 % all relevant numerosities (Lena's tabular)
 numerosities = [3, 4, 5, 6, 7; % sample
@@ -549,25 +549,31 @@ if to_uebersicht
 
         % iterate over experiments
         for exp_idx = 1:length(curr_experiments)
-            % pre allocation
-            statistics = struct();
+            % if combining Jello and Uri
+            if who_idx == 4
+                [performances, resp_freq, rec_times] = ...
+                    bird_combination(data_path, exp_idx);
+            else
+                % pre allocation
+                statistics = struct();
 
-            % path adjustment
-            % list of all data & subfolders
-            filelist = dir([data_path who_analysis{who_idx}]);
-            % extract subfolders
-            subfolders = filelist([filelist(:).isdir]);
-            % list of subfolder names (experiments)
-            subfolders = {subfolders(3 : end).name};
-            adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
+                % path adjustment
+                % list of all data & subfolders
+                filelist = dir([data_path who_analysis{who_idx}]);
+                % extract subfolders
+                subfolders = filelist([filelist(:).isdir]);
+                % list of subfolder names (experiments)
+                subfolders = {subfolders(3 : end).name};
+                adapt_path = ...
+                    [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
 
-            % load the data
-            sorted_data = load([adapt_path 'sorted_data.mat']);
+                % load the data
+                sorted_data = load([adapt_path 'sorted_data.mat']);
 
-            performances = sorted_data.performances;
-            resp_freq = sorted_data.resp_freq;
-            rec_times = sorted_data.rec_times;
+                performances = sorted_data.performances;
+                resp_freq = sorted_data.resp_freq;
+                rec_times = sorted_data.rec_times;
+            end
 
             switch what_idx
                 case 1  % Performance
@@ -665,25 +671,31 @@ if to_uebersicht_detail
 
         % iterate over experiments
         for exp_idx = 1:length(curr_experiments)
-            % pre allocation
-            statistics = struct();
+            % if combining Jello and Uri
+            if who_idx == 4
+                [performances, resp_freq, rec_times] = ...
+                    bird_combination(data_path, exp_idx);
+            else
+                % pre allocation
+                statistics = struct();
 
-            % path adjustment
-            % list of all data & subfolders
-            filelist = dir([data_path who_analysis{who_idx}]);
-            % extract subfolders
-            subfolders = filelist([filelist(:).isdir]);
-            % list of subfolder names (experiments)
-            subfolders = {subfolders(3 : end).name};
-            adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
+                % path adjustment
+                % list of all data & subfolders
+                filelist = dir([data_path who_analysis{who_idx}]);
+                % extract subfolders
+                subfolders = filelist([filelist(:).isdir]);
+                % list of subfolder names (experiments)
+                subfolders = {subfolders(3 : end).name};
+                adapt_path = ...
+                    [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
 
-            % load the data
-            sorted_data = load([adapt_path 'sorted_data.mat']);
+                % load the data
+                sorted_data = load([adapt_path 'sorted_data.mat']);
 
-            performances = sorted_data.performances;
-            resp_freq = sorted_data.resp_freq;
-            rec_times = sorted_data.rec_times;
+                performances = sorted_data.performances;
+                resp_freq = sorted_data.resp_freq;
+                rec_times = sorted_data.rec_times;
+            end
 
             switch what_idx
                 case 1  % Performance
@@ -781,23 +793,32 @@ if to_grouping_chunking
 
         % iterate over experiments
         for exp_idx = 1:length(curr_experiments)
+            % if combining Jello and Uri
+            if who_idx == 4
+                [performances, resp_freq, rec_times] = ...
+                    bird_combination(data_path, exp_idx);
+                all_performances{exp_idx} = performances;
+                all_resp_freq{exp_idx} = resp_freq;
+                all_rec_times{exp_idx} = rec_times;
 
-            % path adjustment
-            % list of all data & subfolders
-            filelist = dir([data_path who_analysis{who_idx}]);
-            % extract subfolders
-            subfolders = filelist([filelist(:).isdir]);
-            % list of subfolder names (experiments)
-            subfolders = {subfolders(3 : end).name};
-            adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
+            else
+                % path adjustment
+                % list of all data & subfolders
+                filelist = dir([data_path who_analysis{who_idx}]);
+                % extract subfolders
+                subfolders = filelist([filelist(:).isdir]);
+                % list of subfolder names (experiments)
+                subfolders = {subfolders(3 : end).name};
+                adapt_path = ...
+                    [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
 
-            % load the data
-            sorted_data = load([adapt_path 'sorted_data.mat']);
+                % load the data
+                sorted_data = load([adapt_path 'sorted_data.mat']);
 
-            all_performances{exp_idx} = sorted_data.performances;
-            all_resp_freq{exp_idx} = sorted_data.resp_freq;
-            all_rec_times{exp_idx} = sorted_data.rec_times;
+                all_performances{exp_idx} = sorted_data.performances;
+                all_resp_freq{exp_idx} = sorted_data.resp_freq;
+                all_rec_times{exp_idx} = sorted_data.rec_times;
+            end
 
             switch what_idx
                 case 1  % Performance
@@ -954,7 +975,7 @@ if to_grouping_chunking_birds
     exp_x_vals = {[3, 2, 1], [3, 4]};
     progress_total = (length(who_analysis) - 1) * ...
         size(numerosities, 1);
-    fig_name_extension = {'_exp1_2_'; '_diff_times_'};
+    fig_name_extension = {'_diff_times_'; '_exp1_2_'};
 
     % set what to analyse further
     what_idx = input(prompt_what);
@@ -969,23 +990,32 @@ if to_grouping_chunking_birds
 
         % iterate over experiments
         for exp_idx = 1:length(curr_experiments)
+            % if combining Jello and Uri
+            if who_idx == 4
+                [performances, resp_freq, rec_times] = ...
+                    bird_combination(data_path, exp_idx);
+                all_performances{exp_idx} = performances;
+                all_resp_freq{exp_idx} = resp_freq;
+                all_rec_times{exp_idx} = rec_times;
 
-            % path adjustment
-            % list of all data & subfolders
-            filelist = dir([data_path who_analysis{who_idx}]);
-            % extract subfolders
-            subfolders = filelist([filelist(:).isdir]);
-            % list of subfolder names (experiments)
-            subfolders = {subfolders(3 : end).name};
-            adapt_path = ...
-                [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
+            else
+                % path adjustment
+                % list of all data & subfolders
+                filelist = dir([data_path who_analysis{who_idx}]);
+                % extract subfolders
+                subfolders = filelist([filelist(:).isdir]);
+                % list of subfolder names (experiments)
+                subfolders = {subfolders(3 : end).name};
+                adapt_path = ...
+                    [data_path who_analysis{who_idx} subfolders{exp_idx + 1} '\'];
 
-            % load the data
-            sorted_data = load([adapt_path 'sorted_data.mat']);
+                % load the data
+                sorted_data = load([adapt_path 'sorted_data.mat']);
 
-            all_performances{exp_idx} = sorted_data.performances;
-            all_resp_freq{exp_idx} = sorted_data.resp_freq;
-            all_rec_times{exp_idx} = sorted_data.rec_times;
+                all_performances{exp_idx} = sorted_data.performances;
+                all_resp_freq{exp_idx} = sorted_data.resp_freq;
+                all_rec_times{exp_idx} = sorted_data.rec_times;
+            end
 
             switch what_idx
                 case 1  % Performance
