@@ -40,7 +40,11 @@ yl = yline(ax0, 0, ...
     "LineWidth", linewidth, ...
     "Color", "k");
 ax0.YGrid = "on";
+ax0.GridColor = [0 0 0];
 ax0.Box = "off";
+ax0.XAxis.Visible = "off";
+ax0.YAxis.Visible = "off";
+hold off
 
 % Axis Adjustments
 ax = axes(fig, "Position", ax0.Position);
@@ -72,6 +76,7 @@ if strcmp(what_analysis, 'Reaction Times')
     ax.YLim = [-50 50];
 else
     ax.YLim = [-0.5 0.5];
+end
 
 % Iterate over Experiments
 for exp_idx = exp_x_vals
@@ -151,7 +156,5 @@ fig_title = title([calc_type ' Difference in ' what_analysis ' of ' ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
     true, leg_patch, leg_label, ' ', mrksz, ax);
 
-ax0.XAxis.Visible = "off";
-ax0.YAxis.Visible = "off";
 
 end

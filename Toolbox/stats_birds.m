@@ -14,7 +14,6 @@ friedman_stats = {"Performance", "Response Frequency", "Reaction Time"; ...
     [], [], []};
 
 stats_table = cell(2, 3);
-filtered_data = cell(3, 2, size(numerosities, 1));
 crow_split = cell(3, 2);
 
 %% Sort Data into Nice Table
@@ -56,7 +55,7 @@ for behav_idx = 1:3
     % Effect Size: Kendall's W
     chi2 = friedman_table{2, behav_idx}{2, 5};  % Chi Squared Statistics
     stats_table{2, behav_idx} = chi2 / ...
-        (size(filtered_data{behav_idx, 1}, 1) * 2);
+        (size(crow_split{behav_idx, 1}, 1) * 2);
 end
 
 %% Rewrite the results
