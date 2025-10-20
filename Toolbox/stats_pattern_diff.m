@@ -64,7 +64,7 @@ for exp_idx = 1:length(curr_experiments)
                 ((2 * size(curr_data{2, pattern}, 1)) + 1)) / 24);
             zval = (stats.signedrank - mu_W) / sigma_W;
             placeholder_performance{3, pattern + 1} = zval / ...
-                sqrt(size(curr_data{2, pattern}, 1));
+                sqrt(size(curr_data{2, pattern}, 1));            
 
             %% Response Frequency
             curr_data = diff_data_resp_freq{exp_idx, sample_idx};
@@ -98,7 +98,7 @@ for exp_idx = 1:length(curr_experiments)
             placeholder_rec_times{3, pattern + 1} = zval / ...
                 sqrt(size(curr_data{2, pattern}, 1));
         end
-
+     
         %% Mark Significant Values
         % Performance
         if le([placeholder_performance{2, 2:end}], alpha_stats)

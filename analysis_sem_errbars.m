@@ -97,8 +97,8 @@ to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
 to_uebersicht = false;     % if plotting pattern comparison (matches)
 to_uebersicht_detail = false;   % if plotting detailed comparison
-to_grouping_chunking = false;    % if plotting experiment comparison
-to_grouping_chunking_birds = true;
+to_grouping_chunking = true;    % if plotting experiment comparison
+to_grouping_chunking_birds = false;
 
 % all relevant numerosities (Lena's tabular)
 numerosities = [3, 4, 5, 6, 7; % sample
@@ -141,8 +141,8 @@ p = {2, 1};
 W = {2, 1};
 
 % Path definition
-base_path = 'D:\MasterThesis\analysis\data\';
-figure_path = 'D:\MasterThesis\figures\progress_since_20250930\';
+base_path = 'G:\Meine Ablage\Master\4. Semester\MasterThesis\analysis\data\';
+figure_path = 'G:\Meine Ablage\Master\4. Semester\MasterThesis\figures\progress_since_20250930\';
 spk_folderpath = [base_path, 'spk\'];
 analysis_path = [base_path, 'analysed\'];
 data_path = [analysis_path 'sorted_statistics\'];
