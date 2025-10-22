@@ -1,7 +1,7 @@
 function [ax, leg_patch, leg_label] = ...
     plot_pattern(ind_data, avg_data, err_data, patterns, pattern, ...
     what_analysis, calc_type, err_type, focus_type, ...
-    colour_uebersicht, plot_font, linewidth, mrksz, capsize)
+    colour_uebersicht, plot_font, linewidth, mrksz, capsize, x_factor)
 
 % function to create variations of the first plot
 
@@ -31,7 +31,7 @@ else    % Performance/Response Frequency
 end
 
 % Adjust x vals
-x_vals = ones(size(y_vals, 1), 1) * pattern;
+x_vals = (ones(size(y_vals, 1), 1) * pattern) + x_factor;
 
 % Plotting
 if strcmp(what_analysis, 'Reaction Times')

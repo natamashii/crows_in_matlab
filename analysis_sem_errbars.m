@@ -39,7 +39,7 @@ close all
 % DONE make plots with individual dots in background (like fish graphics)
 % DONE save data (individual stuff and mean stuff)
 % make fig size variable (robust for each device used)
-% maybe time for birds
+% DONE maybe time for birds
 % difference plot birds: divide into exp 1 times & exp1 vs exp2
 % mark p value in standard/control & jello/uri plot
 % imporve single plot
@@ -54,7 +54,6 @@ close all
 % maybe combine plot_stuff with plot_sc somehow....
 % DONE add error type to legend in each plot function
 % for plotting: extract dot_alpha & marker factor & box alpha & boxwidth factor for all functions
-% Anova S/C and J/U: maybe pre process RTs: remove too quick trials & remove everything that is +- 3* MAD of median
 % perhaps look for significant difference in P1 vs. P2/3 first
 % DONE save the analysis output somewhere
 % something is wrong with calling data for plot_uebersicht_detail
@@ -95,7 +94,7 @@ to_correct = false; % if response matrices shall be corrected
 to_sort = false;     % if data must be sorted first
 to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
-to_uebersicht = false;     % if plotting pattern comparison (matches)
+to_uebersicht = true;     % if plotting pattern comparison (matches)
 to_uebersicht_detail = false;   % if plotting detailed comparison
 to_grouping_chunking = true;    % if plotting experiment comparison
 to_grouping_chunking_birds = false;
@@ -253,7 +252,7 @@ if to_split_sc
 
     % pre definition
     plot_pos = [21 100];
-    alpha_stats = 0.01;
+    alpha_stats = 0.05;
     jitterwidth = 0.15;
     progress_counter = 0;
     progress_total = length(experiments{1}) + ...
@@ -369,7 +368,7 @@ if to_split_ju
 
     % pre definition
     plot_pos = [21 200];
-    alpha_stats = 0.01;
+    alpha_stats = 0.05;
     jitterwidth = 0.1;
     progress_counter = 0;
     progress_total = length(experiments{2});
@@ -528,7 +527,7 @@ if to_uebersicht
     what_idx = input(prompt_what);
 
     % iterate over subjects
-    for who_idx = 1:length(who_analysis) - 1
+    for who_idx = 1:length(who_analysis)
 
         % human subjects
         if who_idx == 1
@@ -541,10 +540,45 @@ if to_uebersicht
 
         % iterate over experiments
         for exp_idx = 1:length(curr_experiments)
-            % if combining Jello and Uri
+            % if both crows
             if who_idx == 4
-                [performances, resp_freq, rec_times] = ...
-                    bird_combination(data_path, exp_idx);
+                % Extract Jello's data 
+                % path adjustment
+                % list of all data & subfolders
+                filelist = dir([data_path who_analysis{2}]);
+                % extract subfolders
+                subfolders = filelist([filelist(:).isdir]);
+                % list of subfolder names (experiments)
+                subfolders = {subfolders(3 : end).name};
+                subfolders = subfolders(2:end);
+                jello_path = ...
+                    [data_path who_analysis{2} subfolders{exp_idx} '\'];
+
+                % load the data
+                sorted_data_jello = load([jello_path 'sorted_data.mat']);
+
+                performances_j = sorted_data_jello.performances;
+                resp_freq_j = sorted_data_jello.resp_freq;
+                rec_times_j = sorted_data_jello.rec_times;
+
+                % Extract Uri's Data
+                % path adjustment
+                % list of all data & subfolders
+                filelist = dir([data_path who_analysis{3}]);
+                % extract subfolders
+                subfolders = filelist([filelist(:).isdir]);
+                % list of subfolder names (experiments)
+                subfolders = {subfolders(3 : end).name};
+                subfolders = subfolders(2:end);
+                uri_path = ...
+                    [data_path who_analysis{3} subfolders{exp_idx} '\'];
+
+                % load the data
+                sorted_data_uri = load([uri_path 'sorted_data.mat']);
+
+                performances_u = sorted_data_uri.performances;
+                resp_freq_u = sorted_data_uri.resp_freq;
+                rec_times_u = sorted_data_uri.rec_times;
             else
                 % pre allocation
                 statistics = struct();
@@ -573,58 +607,105 @@ if to_uebersicht
                     calc_idx = 1;   % Mean
                     err_idx = 2;   % SEM
                     focus_idx = 1;  % Matches + Non-Matches
-                    ind_data = performances;
+                    if who_idx == 4
+                        ind_data_j = performances_j;
+                        ind_data_u = performances_u;
+                    else
+                        ind_data = performances;
+                    end
                     stats_name = 'Performance';
 
                 case 2  % Response Frequency
                     calc_idx = 1;   % Mean
                     err_idx = 2;    % SEM
                     focus_idx = 1;  % Matches + Non-Matches
-                    ind_data = resp_freq;
+                    if who_idx == 4
+                        ind_data_j = resp_freq_j;
+                        ind_data_u = resp_freq_u;
+                    else
+                        ind_data = resp_freq;
+                    end
                     stats_name = 'Response_Frequency';
 
                 case 3  % Reaction Time
                     calc_idx = 2;   % Median
                     err_idx = 1;    % STD
                     focus_idx = 2;  % Matches
-                    ind_data = rec_times;
+                    if who_idx == 4
+                        ind_data_j = rec_times_j;
+                        ind_data_u = rec_times_u;
+                    else
+                        ind_data = rec_times;
+                    end
                     stats_name = 'Reaction_Times';
 
                 otherwise
                     error("You did not enter a correct data specification.")
             end
 
-            % Average Calculation
-            [avg_data, avg_data_stats, err_data] = ...
-                calc_behav(ind_data, what_analysis{what_idx}, ...
-                calc_type{calc_idx}, err_type{err_idx}, patterns, ...
-                numerosities, n_boot, alpha, focus_type{focus_idx}, false);
+            if who_idx == 4
+                % Average Calculation
+                % Jello
+                [avg_data_j, ~, err_data_j] = ...
+                    calc_behav(ind_data_j, what_analysis{what_idx}, ...
+                    calc_type{calc_idx}, err_type{err_idx}, patterns, ...
+                    numerosities, n_boot, alpha, ...
+                    focus_type{focus_idx}, false);
 
-            % Statistics
-            [big_statistics, post_hoc] = ...
-                pattern_statistics({performances}, ...
-                {resp_freq}, {rec_times}, ...
-                what_analysis{what_idx}, numerosities, patterns, ...
-                avg_data_stats);
+                % Uri
+                [avg_data_u, ~, err_data_U] = ...
+                    calc_behav(ind_data_u, what_analysis{what_idx}, ...
+                    calc_type{calc_idx}, err_type{err_idx}, patterns, ...
+                    numerosities, n_boot, alpha, ...
+                    focus_type{focus_idx}, false);
 
-            % Plot
-            fig = plot_uebersicht(ind_data, avg_data, err_data, ...
-                patterns, calc_type{calc_idx}, err_type{err_idx}, ...
-                what_analysis{what_idx}, ...
-                who_analysis{who_idx}(1:end - 1), ...
-                curr_experiments{exp_idx}, plot_font, ...
-                colour_uebersicht, plot_pos, linewidth, ...
-                mrksz, capsize, jitterwidth, focus_type{focus_idx}, ...
-                0.3, 4);
-            fig_name = [focus_type{focus_idx} '_Übersicht_' ...
-                calc_type{calc_idx} '_' ...
-                err_type{err_idx} '_' what_analysis{what_idx} '.' format];
+                % Plot
+                fig = plot_uebersicht({ind_data_j, ind_data_u}, ...
+                    {avg_data_j, avg_data_u}, {err_data_j, err_data_u}, ...
+                    patterns, calc_type{calc_idx}, err_type{err_idx}, ...
+                    what_analysis{what_idx}, ...
+                    who_analysis{who_idx}(1:end - 1), ...
+                    curr_experiments{exp_idx}, plot_font, ...
+                    colour_uebersicht, plot_pos, linewidth, ...
+                    mrksz, capsize, jitterwidth, focus_type{focus_idx}, ...
+                    0.3, 4);
+                fig_name = [focus_type{focus_idx} '_Übersicht_' ...
+                    calc_type{calc_idx} '_' ...
+                    err_type{err_idx} '_' what_analysis{what_idx} '.' format];
+            else
 
-            % Save the stuff
-            statistics.big_statistics = big_statistics;
-            statistics.post_hoc = post_hoc;
-            save([adapt_path 'statistics_pattern_' stats_name '.mat'], ...
-                '-struct', 'statistics')
+                % Average Calculation
+                [avg_data, avg_data_stats, err_data] = ...
+                    calc_behav(ind_data, what_analysis{what_idx}, ...
+                    calc_type{calc_idx}, err_type{err_idx}, patterns, ...
+                    numerosities, n_boot, alpha, focus_type{focus_idx}, false);
+
+                % Statistics
+                [big_statistics, post_hoc] = ...
+                    pattern_statistics({performances}, ...
+                    {resp_freq}, {rec_times}, ...
+                    what_analysis{what_idx}, numerosities, patterns, ...
+                    avg_data_stats);
+
+                % Plot
+                fig = plot_uebersicht({ind_data}, {avg_data}, {err_data}, ...
+                    patterns, calc_type{calc_idx}, err_type{err_idx}, ...
+                    what_analysis{what_idx}, ...
+                    who_analysis{who_idx}(1:end - 1), ...
+                    curr_experiments{exp_idx}, plot_font, ...
+                    colour_uebersicht, plot_pos, linewidth, ...
+                    mrksz, capsize, jitterwidth, focus_type{focus_idx}, ...
+                    0.3, 4);
+                fig_name = [focus_type{focus_idx} '_Übersicht_' ...
+                    calc_type{calc_idx} '_' ...
+                    err_type{err_idx} '_' what_analysis{what_idx} '.' format];
+
+                % Save the stuff
+                statistics.big_statistics = big_statistics;
+                statistics.post_hoc = post_hoc;
+                save([adapt_path 'statistics_pattern_' stats_name '.mat'], ...
+                    '-struct', 'statistics')
+            end
             saveas(fig, ...
                 [figure_path who_analysis{who_idx} subfolders{exp_idx} ...
                 '\' what_analysis{what_idx} '\' fig_name], format)

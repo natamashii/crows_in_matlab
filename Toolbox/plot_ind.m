@@ -1,6 +1,6 @@
 function ax = ...
     plot_ind(ind_data, jitterwidth, dot_alpha, marker_factor, ...
-    colours, pattern, mrksz, what_analysis, focus_type)
+    colours, pattern, mrksz, what_analysis, focus_type, x_factor)
 
 % Function to plot individual data points of each subject/session
 
@@ -43,7 +43,7 @@ switch focus_type
 end
 
 % Adjust x vals
-x_vals = ones(size(y_vals, 1), 1) * pattern;
+x_vals = (ones(size(y_vals, 1), 1) * pattern) + x_factor;
 
 % Plot
 dot_plot = swarmchart(x_vals, y_vals, mrksz * marker_factor, ...

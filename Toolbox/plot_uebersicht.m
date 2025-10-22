@@ -10,26 +10,35 @@ function fig_pretty = ...
 % Create figure
 fig = figure("Visible", "off");
 
-% iterate over Patterns
-for pattern = 1:length(patterns)
-
-    % Plot Individual Dots
-    ax = ...
-        plot_ind(ind_data, jitterwidth, dot_alpha, marker_factor, ...
-        colour_uebersicht, pattern, mrksz, what_analysis, focus_type);
-
-    % Adjust Colors for Error & Mean Plot
-    avg_colours = rgb2hsv(colour_uebersicht);
-    avg_colours(:, 3) = avg_colours(:, 3) * .7;
-    avg_colours = hsv2rgb(avg_colours);
-
-    % Plot the Average/Median
-    [ax, leg_patch, leg_label] = ...
-        plot_pattern(ind_data, avg_data, err_data, patterns, pattern, ...
-        what_analysis, calc_type, err_type, focus_type, ...
-        avg_colours, plot_font, linewidth, mrksz, capsize);
+if length(ind_data) > 1
+    x_factor = [-jitterwidth, jitterwidth];
+else
+    x_factor = 1;
 end
 
+for who_idx = 1:length(ind_data)
+    % iterate over Patterns
+    for pattern = 1:length(patterns)
+
+        % Plot Individual Dots
+        ax = ...
+            plot_ind(ind_data{who_idx}, jitterwidth, dot_alpha, ...
+            marker_factor, colour_uebersicht, pattern, mrksz, ...
+            what_analysis, focus_type, x_factor(who_idx));
+
+        % Adjust Colors for Error & Mean Plot
+        avg_colours = rgb2hsv(colour_uebersicht);
+        avg_colours(:, 3) = avg_colours(:, 3) * .7;
+        avg_colours = hsv2rgb(avg_colours);
+
+        % Plot the Average/Median
+        [ax, leg_patch, leg_label] = ...
+            plot_pattern(ind_data{who_idx}, avg_data{who_idx}, ...
+            err_data{who_idx}, patterns, pattern, ...
+            what_analysis, calc_type, err_type, focus_type, ...
+            avg_colours, plot_font, linewidth, mrksz, capsize, x_factor);
+    end
+end
 % Plot Adjustments
 set(gca, "TickDir", "out")
 axis padded
@@ -54,6 +63,9 @@ else
     ax.YTick = 0:0.2:1;
     ylabel(ax, what_analysis)
 end
+
+% Invisible plots for legend
+
 
 % Figure Adjustments
 fig_title = title([calc_type ' ' what_analysis ' of ' ...
