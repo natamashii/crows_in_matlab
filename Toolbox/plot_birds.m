@@ -42,7 +42,7 @@ xlabel(ax, "Sample Numerosity", "FontWeight", "bold")
 set(gca, "TickDir", "out")
 % set ylim
 if strcmp(what_analysis, 'Reaction Times')
-    ax.YLim = [0 800];
+    ax.YLim = [0 650];
     ylabel(ax, "Reaction Times [ms]")
 else
     ax.YLim = [0 1];

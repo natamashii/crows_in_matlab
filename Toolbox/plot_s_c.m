@@ -38,7 +38,7 @@ ax.XLim = [min(numerosities(:, 1)) - .5 max(numerosities(:, 1)) + .5];
 xlabel(ax, "Sample Numerosity", "FontWeight", "bold")
 set(gca, "TickDir", "out")
 if strcmp(what_analysis, 'Reaction Times')
-    ax.YLim = [0 800];
+    ax.YLim = [0 650];
     ylabel(ax, "Reaction Times [ms]")
 elseif strcmp(what_analysis, 'Performance')
     ax.YLim = [0 1];

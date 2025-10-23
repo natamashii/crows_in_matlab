@@ -1,61 +1,70 @@
 function [lin_reg] = ...
     lin_regress(performances, resp_freq, rec_times, ...
-    patterns, numerosities, data_type, avg_data)
+    patterns, numerosities, calc_type, err_type, n_boot, alpha_stats)
 
-% function to compute linear regression of all data that should be compared
-% to each other
+% Function to get data of a linear regression
 
-% pre allocation
-lin_reg = {"polyfit", "R", "df", "normr", "rsquared", ...
-    "mu", "y", "delta"};
-filtered_data_cell = {};
+%% Pre allocation
 
-data_table = ...
-    datatable(performances, resp_freq, rec_times, patterns, numerosities);
+lin_reg = {" ", "y", "delta", "R2", "coefficients", "Structure", "mu"; ...
+    "Performance", NaN, NaN, NaN, NaN, NaN, NaN; ...
+    "ResponseFrequency", NaN, NaN, NaN, NaN, NaN, NaN; ...
+    "ReactionTimes", NaN, NaN, NaN, NaN, NaN, NaN};
 
+%% Get average data
+[avg_data_performance, ~, ~] = ...
+    calc_behav(performances, 'Performance', calc_type, err_type, ...
+    patterns, numerosities, n_boot, alpha_stats, 'Overall', false);
+[avg_data_resp_freq, ~, ~] = ...
+    calc_behav(resp_freq, 'Response Frequency', calc_type, err_type, ...
+    patterns, numerosities, n_boot, alpha_stats, 'Overall', false);
+[avg_data_rec_times, ~, ~] = ...
+    calc_behav(rec_times, 'Reaction Times', calc_type, err_type, ...
+    patterns, numerosities, n_boot, alpha_stats, 'Matches', false);
 
-% iterate over patterns
-for pattern = 1:length(patterns)
+%% Get Regression Values
 
-    % filter data
-    filtered_data = ...
-        data_table(string(data_table.Pattern) == patterns{pattern}, :);
+[p_performance, S_performance, mu_performance] = ...
+    polyfit([1, 2, 3], avg_data_performance, 1);
+[p_resp_freq, S_resp_freq, mu_resp_freq] = ...
+    polyfit([1, 2, 3], avg_data_resp_freq, 1);
+[p_rec_times, S_rec_times, mu_rec_times] = ...
+    polyfit([1, 2, 3], avg_data_rec_times, 1);
 
-    % linear regression
-    switch data_type
-        case "Performance"
-            [p, S, mu] = ...
-                polyfit(filtered_data.Sample, ...
-                filtered_data.Performance, 1);
-        case "Response Frequency"
-            [p, S, mu] = ...
-                polyfit(filtered_data.Sample, ...
-                filtered_data.ResponseFrequency, 1);
-        case "Reaction Times"
-            [p, S, mu] = ...
-                polyfit(filtered_data.Sample, ...
-                filtered_data.RT, 1);
-        otherwise
-            fprintf("Error: Mistyped Data Type :( ")
-    end
-    [y, delta] = ...
-        polyval(p, filtered_data.Sample, S, mu);
+[y_performance, delta_performance] = polyval(p_performance, [1, 2, 3]);
+[y_resp_freq, delta_resp_freq] = polyval(p_resp_freq, [1, 2, 3]);
+[y_rec_times, delta_rec_times] = polyval(p_rec_times, [1, 2, 3]);
 
-    % do the same for avg_data
-    [p_avg, S_avg, mu_avg] = ...
-        polyfit(numerosities(:, 1), avg_data(pattern, :), 1);
-    [y_avg, delta_avg] = polyval(p_avg, numerosities(:, 1), S_avg, mu_avg);
+%% Store the Data
 
-    % sort data
-    lin_reg{pattern + 1, 1} = {p; p_avg};
-    lin_reg{pattern + 1, 2} = {S.R; S_avg.R};
-    lin_reg{pattern + 1, 3} = {S.df; S_avg.df};
-    lin_reg{pattern + 1, 4} = {S.normr; S_avg.normr};
-    lin_reg{pattern + 1, 5} = {S.rsquared; S_avg.rsquared};
-    lin_reg{pattern + 1, 6} = {mu; mu_avg};
-    lin_reg{pattern + 1, 7} = {y; y_avg};
-    lin_reg{pattern + 1, 8} = {delta; delta_avg};
-    filtered_data_cell{pattern} = filtered_data;
-end
+% fitted y values
+lin_reg{1, 2} = y_performance;
+lin_reg{2, 2} = y_resp_freq;
+lin_reg{3, 2} = y_rec_times;
+
+% 2 * STD (Delta)#
+lin_reg{1, 3} = delta_performance;
+lin_reg{2, 3} = delta_resp_freq;
+lin_reg{3, 3} = delta_rec_times;
+
+% R^2
+lin_reg{1, 4} = S_performance.rsquared;
+lin_reg{2, 4} = S_resp_freq.rsquared;
+lin_reg{3, 4} = S_rec_times.rsquared;
+
+% coefficients (p)
+lin_reg{1, 5} = p_performance;
+lin_reg{2, 5} = p_resp_freq;
+lin_reg{3, 5} = p_rec_times;
+
+% Structure (S)
+lin_reg{1, 6} = S_performance;
+lin_reg{2, 6} = S_resp_freq;
+lin_reg{3, 6} = S_rec_times;
+
+% mu
+lin_reg{1, 7} = mu_performance;
+lin_reg{2, 7} = mu_resp_freq;
+lin_reg{3, 7} = mu_rec_times;
 
 end

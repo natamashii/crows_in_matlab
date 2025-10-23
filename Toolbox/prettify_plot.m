@@ -18,7 +18,7 @@ fig_title.FontWeight = "bold";
 % Add legend if desired
 if add_legend
     h_copy = copyobj(leg_patch, ax);
-    set(h_copy(1:end-1), "XData", NaN', "YData", NaN)
+    set(h_copy(1:end - 1), "XData", NaN', "YData", NaN)
     h_copy(end).MarkerSize = mrksz * 20;
     leg = ...
         legend(h_copy, leg_label, ...
