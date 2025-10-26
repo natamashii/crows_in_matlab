@@ -29,7 +29,8 @@ stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\crows\';
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
 stim_type = input(prompt, "s");
-prompt = 'Which Pattern to create? r - random, 1 - equal distances, 2 - additive, 3 - multiplicative, A - arabic ';
+prompt = ['Which Pattern to create? r - random, 1 - equal distances, ' ...
+    '2 - additive, 3 - multiplicative, A - arabic '];
 pattern_type = "P" + input(prompt, "s");
 counter = 0;    % for progressbar
 amount_img = 3;     % defines how many versions of one condition should be generated

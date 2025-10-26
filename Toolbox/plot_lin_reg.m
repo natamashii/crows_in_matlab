@@ -1,17 +1,18 @@
-function plot_lin_reg(lin_reg_pattern, patterns, numerosities, ...
-    jitterwidth, linestyle, linewidth, colours_pattern)
+function plot_lin_reg(lin_reg, x_factor, what_idx, ...
+    linestyle, linewidth, colour)
 
-% function to plot linear regression curve & mark p value & effect size as
-% text within damn plot
+% function to plot linear regression curve 
 
-jitter_dots = [-jitterwidth, 0, jitterwidth];
+% set y vals
+y_vals = lin_reg{what_idx + 1, 2};
 
-% iterate over patterns
-for pattern = 1:length(patterns)
-    plot(numerosities(:, 1) + jitter_dots(pattern), ...
-        lin_reg_pattern{pattern + 1, 7}{2}, ...
-        "Color", colours_pattern{pattern}, "LineStyle", linestyle, ...
-        "LineWidth", linewidth);
-end
+% set x vals
+x_vals = (1:length(y_vals)) + x_factor;
+
+% Plot the linear regression curve
+plot(x_vals, y_vals, ...
+    "LineStyle", linestyle, ...
+    "LineWidth", linewidth, ...
+    "Color", colour);
 
 end

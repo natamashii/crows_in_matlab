@@ -51,7 +51,7 @@ for exp_idx = 1:length(curr_experiments)
         % Iterate over Pattern Combinations
         for pattern = 1:length(patterns)
             %% Performance
-            curr_data = diff_data_performance{exp_idx, sample_idx};
+            curr_data = diff_data_performance{1}{exp_idx, sample_idx};
             % Wilcoxon Signed-Rank
             [placeholder_performance{2, pattern + 1}, ~, stats] = ...
                 signrank(curr_data{2, pattern});
@@ -67,7 +67,7 @@ for exp_idx = 1:length(curr_experiments)
                 sqrt(size(curr_data{2, pattern}, 1));            
 
             %% Response Frequency
-            curr_data = diff_data_resp_freq{exp_idx, sample_idx};
+            curr_data = diff_data_resp_freq{1}{exp_idx, sample_idx};
             % Wilcoxon Signed-Rank
             [placeholder_resp_freq{2, pattern + 1}, ~, stats] = ...
                 signrank(curr_data{2, pattern});
@@ -83,7 +83,7 @@ for exp_idx = 1:length(curr_experiments)
                 sqrt(size(curr_data{2, pattern}, 1));
 
             %% Reaction Times
-            curr_data = diff_data_rec_times{exp_idx, sample_idx};
+            curr_data = diff_data_rec_times{1}{exp_idx, sample_idx};
             % Wilcoxon Signed-Rank
             [placeholder_rec_times{2, pattern + 1}, ~, stats] = ...
                 signrank(curr_data{2, pattern});

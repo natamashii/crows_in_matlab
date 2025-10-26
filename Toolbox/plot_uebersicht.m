@@ -1,9 +1,9 @@
 function fig_pretty = ...
     plot_uebersicht(ind_data, avg_data, err_data, ...
-    patterns, calc_type, err_type, what_analysis, who_analysis, ...
+    patterns, calc_type, err_type, what_analysis, what_idx, who_analysis, ...
     experiment, plot_font, colours_J_U, plot_pos, linewidth, ...
     mrksz, capsize, jitterwidth, focus_type, ...
-    dot_alpha, marker_factor)
+    dot_alpha, marker_factor, lin_reg, add_reg)
 
 % Function to Plot the Übersichts-Plot
 
@@ -43,6 +43,20 @@ for who_idx = 1:length(ind_data)
             x_factor(who_idx), marker_shape(who_idx));
     end
 end
+
+for who_idx = 1:length(ind_data)
+    % Adjust Colors for Error & Mean Plot
+    avg_colours = rgb2hsv(colours_J_U{who_idx});
+    avg_colours(:, 3) = avg_colours(:, 3) * .7;
+    avg_colours = hsv2rgb(avg_colours);
+
+    % Plot Linear Regression Curve
+    if add_reg
+        plot_lin_reg(lin_reg{who_idx}, x_factor(who_idx), ...
+            what_idx, "--", linewidth, avg_colours);
+    end
+end
+
 % Plot Adjustments
 set(gca, "TickDir", "out")
 axis padded
