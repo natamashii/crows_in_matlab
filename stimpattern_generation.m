@@ -2,29 +2,9 @@ clear
 clc 
 close all
 
-% main script
-% nums 1-3 in groups also as groups???
-% curr_num = 1 will always be the same so I can simply just put it before
-% the switch case thing
-
-% add groupitizing function
-% ideas: spatial grouping, colour grouping, temporal grouping 
-% make back circle radius back to one value
-% sort code bit: move hardcoded variables to top
-% make scaling a two element vector to allow flexibility of screen for
-% display
-% maybe try to work around hardcoded variables
-% after this, implement b_grey to main loop (only let it generated once)
-% then make standard and control generation all at once
-% make path adaptive
-% maybe find a solution for winsize soft coding and why it matters on which
-% PC i am letting this code run
-% put controls and stuff into functions
-
-
-% Pre definition
+%% Pre definition
 % path to save stimuli pattern
-stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\crows\';
+stim_path = 'D:\MasterThesis\analysis\Stimuli_creation\crows\'; % Note: let this be a character & not a string (trust me!)
 
 % demanding specification of stimulus type to generate (case-insensitive)
 prompt = 'Create set of Standard (s) or Control (c) stimuli? ';
@@ -54,10 +34,11 @@ angle_steps = 360;  % fine tuning of background circle
 % dot specifications
 rad_dot_limit = [.05, .14];   % radius limitations (based on control)
 area_limit = [.18, .2];   % limits of cumulative area of the dots
-density_limit = [.80, .86; .69, 20];
+density_limit = [.80, .86; .69, 20];    % for control & standard conditions
 
-subgroup_rad = .12;
+subgroup_rad = .12; % radius of subgroups
 
+% Subgroup specification for P3 - Groupitizing
 % group radii: (4=2+2, 5=3+2, 6=2+2+2, 7=3+3+1, 8=2+2+2+2, 9=3+3+3, 10=2+2+2+2+2)
 gr_dots_m = {[1], [2], [3], ...
     [2; 2], [3; 2], [2; 2; 2], [3; 3; 1], [2; 2; 2; 2], [3; 3; 3], [2; 2; 2; 2; 2]};
@@ -68,6 +49,8 @@ gr_rad_m = {[subgroup_rad], [subgroup_rad], [subgroup_rad], ...
     [subgroup_rad; subgroup_rad; subgroup_rad; subgroup_rad], ...
     [subgroup_rad; subgroup_rad; subgroup_rad], ...
     [subgroup_rad; subgroup_rad; subgroup_rad; subgroup_rad; subgroup_rad]};
+
+% Subgroup specification for P2 - Chunking
 % group radii: (4=3+1, 5=2+2+1, 6=3+2+1, 7=4+2+1, 8=3+2+2+1, 9=4+3+2, 10=4+4+2)
 gr_dots_a = {[1], [2], [2; 1], ...
     [3; 1], [2; 2; 1], [3; 2; 1], [4; 2; 1], [3; 2; 2; 1], [4; 3; 2], [4; 4; 2]};
@@ -89,6 +72,7 @@ x_pos_arab = [-0.3, -0.3, ...
 [b_grey, x, y] = plot_backcircle(angle_steps, winsize, rad_back, back_circ_c);
 filename = 'B_grey.bmp';
 
+% save background circle alone as picture
 f = getframe(gcf);
 [img, ~] = frame2im(f);
 imwrite(img, strcat(stim_path,filename));  % save the figure
@@ -97,15 +81,19 @@ close
 % iterate over amount of desired stimuli
 for stimulus = 1:size(numbers, 2)
     curr_num = numbers(stimulus);
+
+    % Iterate over amount of different stimuli to generate
     for img = 1:amount_img
-        % Pre definitions
+        % Pre definitions: Toggle variables
         check = false;
         size_check = false;
         dot_check = false;
         % pre allocations
         dot_pos = zeros(curr_num, 2);
+
         while ~check
-            % Dot Sizes
+            % Set Dot Sizes
+
             % Control Stimuli
             if stim_type == "c" || stim_type == "C"
                 stim_type = "C";
@@ -138,15 +126,21 @@ for stimulus = 1:size(numbers, 2)
             switch pattern_type
                 case {"Pr", "PR"}     % randomized
                     while ~dot_check
-                        % Dot Positions
-                        % validation 1: dot inside background circle
+
+                        % validation 1: Dot inside B_grey
+                        % Iterate over each dot to generate
                         for dot = 1:curr_num
+
+                            % Set Spatial Limit of current dot
                             dot_pos_limit = max(max(x * rad_back, y * rad_back)) ...
                                 - (2 * dot_radii(dot)) * scaling;
+
+                            % Set Dot Positions
                             dot_pos(dot, :) = (2 * dot_pos_limit) * (rand(2, 1) - .5);
                         end
 
                         if curr_num > 1
+
                             % validation 2: no overlap between dots
                             min_dot_distance = 2 * subgroup_rad;
                             [dot_distances, overlap_check] = ...
@@ -168,13 +162,18 @@ for stimulus = 1:size(numbers, 2)
                     end
                     group_check = true;
                     pattern_type = "PR";
+
                 case "P1"   % equal distances
                     while ~dot_check
-                        % Dot Positions
-                        % validation 1: dot inside background circle
+                        % validation 1: Dot inside B_grey
+                        % Iterate over each dot to generate
                         for dot = 1:curr_num
+
+                            % Set Spatial Limit of current dot
                             dot_pos_limit = max(max(x * rad_back, y * rad_back)) ...
                                 - (2 * dot_radii(dot)) * 1;
+
+                            % Set Dot Positions
                             dot_pos(dot, :) = (2 * dot_pos_limit) * (rand(2, 1) - .5);
                         end
 
@@ -183,6 +182,7 @@ for stimulus = 1:size(numbers, 2)
                             min_dot_distance = subgroup_rad * 2.7;
                             [dot_distances, overlap_check] = ...
                                 get_distances(dot_pos, min_dot_distance);
+
                             % cumulative density control
                             mean_distance = mean(dot_distances, "all");
                             if (mean_distance >= density_limit_spec(1) && ...
@@ -199,95 +199,113 @@ for stimulus = 1:size(numbers, 2)
                         end
                     end
                     group_check = true;
+
                 case "P2"   % additive
                     group_check = false;
-                    % set grouping way & how dots should be grouped
-                    group_radii = gr_rad_a{curr_num};
-                    dot_groups = gr_dots_a{curr_num};
+
+                    % Set Subgroup Parameters
+                    group_radii = gr_rad_a{num_idx};    % Radius of each subgroup
+                    dot_groups = gr_dots_a{num_idx};    % Amount of Dots in Each Subgroup
+
                     % change density interval when only one group
                     if size(dot_groups, 1) == 1
                         density_limit_spec = density_limit_spec(:) - .51;
                     end
+
                 case "P3"   % multiplicative
                     group_check = false;
-                    % set grouping way & how dots should be grouped
-                    group_radii = gr_rad_m{curr_num};
-                    dot_groups = gr_dots_m{curr_num};
+
+                    % Set Subgroup Parameters
+                    group_radii = gr_rad_m{num_idx};    % Radius of each subgroup
+                    dot_groups = gr_rad_m{num_idx};     % Amount of Dots in Each Subgroup
+
                     % change density interval when only one group
                     if size(dot_groups, 1) == 1
                         density_limit_spec = density_limit(2, :);
                         density_limit_spec(1) = density_limit_spec(1) - 1;
                     end
+
                 case {"Pa", "PA"}   % arabic numerals
                     group_check = true;
                     pattern_type = "PA";
                     check = true;
+
                 otherwise
                     fprintf("Error. This is not a valid pattern type: ")
                     fprintf(pattern_type)
                     to_break = true;
                     break
             end
+
+            % Set Subgroups if needed
             while ~group_check
+
                 % generate grouped dots
-                [group_distances, group_wise_distances, dot_pos, group_centers] = ...
-                    grouped_dots(dot_groups, group_radii, dot_radii, scaling, rad_back, x, y);
+                [group_distances, group_wise_distances, ...
+                    dot_pos, group_centers] = ...
+                    grouped_dots(dot_groups, group_radii, dot_radii, ...
+                    scaling, rad_back, x, y);
     
-                % validation: groups have approximately same distance to one
-                % another
-                if all(isapprox(group_distances(:), group_distances(end), RelativeTolerance=1e-2))
-                    group_check = true;
-                end
                 group_check = true;
             end
 
-            % validation: cumulative density control
+            % validation 3: cumulative density 
             if pattern_type ~= "PA"
+
                 dot_density = density(dot_pos(:, 1), dot_pos(:, 2));
-                if (mean(dot_density) - mean(dot_radii)) >= density_limit_spec(1) && ...
-                        (mean(dot_density) - mean(dot_radii)) <= density_limit_spec(2)
+                if (mean(dot_density) - mean(dot_radii)) >= ...
+                        density_limit_spec(1) && ...
+                        (mean(dot_density) - mean(dot_radii)) <= ...
+                        density_limit_spec(2)
                     check = true;
+
                 elseif curr_num == 1
                     check = true;
                 end
+
                 if pattern_type == "PR" || pattern_type == "P1"
                     if mean(dot_density) >= density_limit_spec(1) && ...
                             mean(dot_density) <= density_limit_spec(2)
+
                         check = true;
+
                     elseif curr_num == 1
                         check = true;
                     end
                 end
             end
-            %check = true;
         end
 
         % plot the dots
         if pattern_type ~= "PA"
-            fig = plot_stim_pattern(angle_steps, winsize, rad_back, back_circ_c, ...
-                dot_pos, dot_radii);
+
+            fig = plot_stim_pattern(angle_steps, winsize, rad_back, ...
+                back_circ_c, dot_pos, dot_radii);
+        % Plot arabic numerosities
         else
-            [fig, x, y] = plot_backcircle(angle_steps, winsize, rad_back*1.2, back_circ_c);
+            [fig, x, y] = plot_backcircle(angle_steps, winsize, ...
+                rad_back * 1.2, back_circ_c);
 
             arab = text(x_pos_arab(stimulus), 0, num2str(curr_num));
             arab.FontWeight = "bold";
             arab.Color = "k";
             arab.FontSize = 50;
-            %markin = text([-0.75, -0.5, -0.25, 0, 0, 0, 0.25, 0.5, 0.75], [0, 0, 0, 0, 0.25, -0.25, 0, 0, 0], ".", "Color", "green");
 
         end
 
-        % save
-        filename = strcat(stim_type, '_', pattern_type, '_', strcat(num2str(curr_num), num2str(img - 1)), '.bmp');
+        % save picture
+        filename = strcat(stim_type, '_', pattern_type, '_', ...
+            strcat(num2str(curr_num), num2str(img - 1)), '.bmp');
         f = getframe(gcf);
         [img, ~] = frame2im(f);
         imwrite(img, strcat(stim_path,filename));   % save figure
 
-        close
+        close   % close figure to avoid potential overwriting
 
         counter = counter + 1;  % for progressbar
         progressbar(counter, size(numbers, 2) * amount_img)
     end
+    
     if to_break
         break
     end
