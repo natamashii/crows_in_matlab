@@ -95,9 +95,9 @@ to_correct = false; % if response matrices shall be corrected
 to_sort = false;     % if data must be sorted first
 to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
-to_uebersicht = false;     % if plotting pattern comparison (matches)
+to_uebersicht = true;     % if plotting pattern comparison (matches)
 to_uebersicht_detail = false;   % if plotting detailed comparison
-to_grouping_chunking = true;    % if plotting experiment comparison
+to_grouping_chunking = false;    % if plotting experiment comparison
 to_grouping_chunking_birds = false;
 to_stim_dist = false;
 
@@ -117,7 +117,7 @@ colours_numbers = {[0.1020 0.4900 0.8510]; [0.5760 0.4040 0.9220]; ...
     [0.4430 0.6120 0.3250]};    % colours for samples
 colour_uebersicht = [0.0000 0.3490 0.2510];
 colours_S_C = ...
-    {[0.0660 0.4430 0.7450]; [0.5210 0.0860 0.8190]};   % Standard/Control
+    {[0.770 0.586 0.289]; [0.531 0.39 0.727]};   % Standard/Control
 colours_J_U = ...
     {[0.0000 0.4080 0.7410]; [0.9690 0.3650 0.8000]};   % Jello/Uri
 colours_ssmd = {[0.4745 0.3451 0.4706]; [0.1333 0.4745 0.4000]; [0.4627 0.3922 0.6824]};
