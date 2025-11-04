@@ -4,7 +4,7 @@ function fig_pretty = ...
 % Function to Plot Distribution of used Numerosities
 
 % get all numerosities used & their frequency
-[freq_nums, used_nums] = groupcounts(numerosities);
+[freq_nums, used_nums] = groupcounts(reshape(numerosities, [], 1));
 
 % Create Figure
 fig = figure("Visible", "off");
@@ -18,7 +18,7 @@ edge_colour(:, 3) = edge_colour(:, 3) * .7;
 edge_colour = hsv2rgb(edge_colour);
 
 % Plot Frequency of Numerosities
-num_hist = histogram(freq_nums, size(used_nums, 1));
+num_hist = histogram(reshape(numerosities, [], 1), "BinMethod", "integers");
 num_hist.FaceColor = colour;
 num_hist.EdgeColor = edge_colour;
 num_hist.LineWidth = linewidth;
@@ -33,8 +33,10 @@ ax.XAxis.FontSize = plot_font;  % set fontsize of x ticks
 ax.YAxis.FontSize = plot_font;  % set fontsize of y ticks
 ax.XTick = used_nums;
 ax.XTickLabel = num2str(used_nums);
-ax.XTickRotation = 0;
+ax.XTickLabelRotation = 0;
 ax.XLim = [min(used_nums) - .5 max(used_nums) + .5];
+ax.YLim = [0 max(freq_nums) + .5];
+ax.YTick = 0:max(freq_nums);
 xlabel(ax, "Numerosity", "FontWeight", "bold");
 ylabel(ax, "Numerosity Frequency [#]", "FontWeight", "bold")
 set(gca, "TickDir", "out")

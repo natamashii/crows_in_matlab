@@ -95,7 +95,7 @@ to_correct = false; % if response matrices shall be corrected
 to_sort = false;     % if data must be sorted first
 to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
-to_uebersicht = true;     % if plotting pattern comparison (matches)
+to_uebersicht = false;     % if plotting pattern comparison (matches)
 to_uebersicht_detail = false;   % if plotting detailed comparison
 to_grouping_chunking = false;    % if plotting experiment comparison
 to_grouping_chunking_birds = false;
@@ -1312,7 +1312,7 @@ if to_stim_dist
     
     % Plot Distribution of Numerosities used
     fig_num = ...
-        plot_num_dist(numerosities, plot_font, plot_pos, colour, linewidth);
+        plot_num_dist(numerosities, plot_font, plot_pos, [0.329, 0.522, 0.447], linewidth);
 
     % save the figure
     saveas(fig_num, [figure_path 'numerosity_distribution.svg'], format)
