@@ -3,7 +3,7 @@ function fig_pretty = ...
     avg_data_s, avg_data_c, err_data_s, err_data_c, what_analysis, ...
     who_analysis, calc_type, experiment, ...
     err_type, jitterwidth, colours_split, mrksz, plot_font, plot_pos, ...
-    linewidth, capsize, linestyle, factors)
+    linewidth, capsize, linestyle, factors, add_title, axis_colour)
 
 % function to plot behavioural data with focus on comparing standard &
 % control conditions
@@ -26,8 +26,8 @@ axis padded
 % Subplot Adjustments
 ax.YGrid = "on";    % horizontal grid lines
 ax.Color = [1 1 1];     % set bakcground colour to white
-ax.XColor = "k";    % set y-axis colour to black
-ax.YColor = "k";    % set x-axis colour to black
+ax.XColor = axis_colour;    % set y-axis colour to black
+ax.YColor = axis_colour;    % set x-axis colour to black
 ax.FontWeight = "bold";
 ax.XAxis.FontSize = plot_font;  % set fontsize of x ticks
 ax.YAxis.FontSize = plot_font;  % set fontsize of y ticks
@@ -36,18 +36,19 @@ ax.XTickLabel = num2str(numerosities(:, 1));
 ax.XTickLabelRotation = 0;
 ax.XLim = [min(numerosities(:, 1)) - .5 max(numerosities(:, 1)) + .5];
 xlabel(ax, "Sample Numerosity", "FontWeight", "bold")
+set(gca, "linewidth", 2)
 set(gca, "TickDir", "out")
 if strcmp(what_analysis, 'Reaction Times')
     ax.YLim = [0 650];
     ylabel(ax, "Reaction Times [ms]")
 elseif strcmp(what_analysis, 'Performance')
-    ax.YLim = [0 1];
-    ax.YTick = 0:0.2:1;
-    ylabel(ax, "Performance")
-else
-    ax.YLim = [0 1];
-    ax.YTick = 0:0.2:1;
-    ylabel(ax, what_analysis)
+    ax.YLim = [0 100];
+    ax.YTick = 0:20:100;
+    ylabel(ax, "Performance [%]")
+elseif strcmp(what_analysis, 'Response Frequency')
+    ax.YLim = [0 100];
+    ax.YTick = 0:20:100;
+    ylabel(ax, "Response Frequency [%]")
 end
 
 % iterate over samples
@@ -137,11 +138,11 @@ for sample_idx = 1:size(numerosities, 1)
 
         % Mark Chance Level
         chance_colour = ax.GridAlpha;
-        yline(0.5, ...
+        yline(50, ...
             "LineStyle", ":", ...
             "Alpha", chance_colour * 3, ...
             "LineWidth", linewidth, ...
-            "Color", "k")
+            "Color", "#404040")
 
         % Plot Error: Standard Conditions
         error_plot_s = ...
@@ -185,13 +186,13 @@ for sample_idx = 1:size(numerosities, 1)
     % Add invisible plot for err_type
     err_plot = errorbar(1, 1, 5, 1, ...
         "LineStyle", "none", ...
-        "Color", "k", ...
+        "Color", axis_colour, ...
         "LineWidth", linewidth, ...
         "CapSize", capsize, ...
         "MarkerSize", mrksz, ...
         "Marker", "o", ...
         "MarkerEdgeColor", "none", ...
-        "MarkerFaceColor", "k");
+        "MarkerFaceColor", axis_colour);
 
     % Legend
     leg_patch(1) = plot_pattern_s;
@@ -203,11 +204,15 @@ for sample_idx = 1:size(numerosities, 1)
 end
 
 % Figure Adjustments
+if add_title
+    fig_title = title([calc_type ' ' what_analysis ' of ' ...
+        who_analysis ' in ' experiment ' Sample Time ']); 
+else
+    fig_title = title(' ');
+end
 
-fig_title = title([calc_type ' ' what_analysis ' of ' ...
-    who_analysis ' in ' experiment ' Sample Time ']); 
 [fig_pretty, ~] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
-    true, leg_patch, leg_label, 'Stimulus Condition', mrksz, ax);
+    true, leg_patch, leg_label, 'Stimulus Condition', mrksz, ax, axis_colour);
 
 end

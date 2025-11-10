@@ -3,7 +3,7 @@ function fig_pretty = ...
     patterns, calc_type, err_type, what_analysis, what_idx, who_analysis, ...
     experiment, plot_font, colours_J_U, plot_pos, linewidth, ...
     mrksz, capsize, jitterwidth, focus_type, ...
-    dot_alpha, marker_factor, lin_reg, add_reg)
+    dot_alpha, marker_factor, lin_reg, add_reg, add_title, axis_colour)
 
 % Function to Plot the Übersichts-Plot
 
@@ -40,7 +40,7 @@ for who_idx = 1:length(ind_data)
             err_data{who_idx}, patterns, pattern, ...
             what_analysis, calc_type, err_type, focus_type, ...
             avg_colours, plot_font, linewidth, mrksz, capsize, ...
-            x_factor(who_idx), marker_shape(who_idx));
+            x_factor(who_idx), marker_shape(who_idx), axis_colour);
     end
 end
 
@@ -62,8 +62,8 @@ set(gca, "TickDir", "out")
 axis padded
 ax.YGrid = "on";    % plot horizontal grid lines
 ax.Color = [1 1 1];     % set background colour to white
-ax.XColor = "k";    % set colour of axis to black
-ax.YColor = "k";    % set colour of axis to black
+ax.XColor = axis_colour;    % set colour of axis to black
+ax.YColor = axis_colour;    % set colour of axis to black
 ax.FontWeight = "bold";
 ax.XAxis.FontSize = plot_font;  % set fontsize of ticks
 ax.YAxis.FontSize = plot_font;  % set fontsize of ticks
@@ -72,14 +72,19 @@ ax.XTick = 1:length(patterns);
 ax.XTickLabel = patterns;
 ax.XTickLabelRotation = 0;
 ax.XLim = [.5 length(patterns) + .5];
+set(gca, "linewidth", 2)
 
 if strcmp(what_analysis, 'Reaction Times')
     ax.YLim = [0 650];
     ylabel(ax, "Reaction Times [ms]")
-else
-    ax.YLim = [0 1];
-    ax.YTick = 0:0.2:1;
-    ylabel(ax, what_analysis)
+elseif strcmp(what_analysis, 'Performance')
+    ax.YLim = [40 100];
+    ax.YTick = 40:20:100;
+    ylabel(ax, "Performance [%]")
+elseif strcmp(what_analysis, 'Response Frequency')
+    ax.YLim = [40 100];
+    ax.YTick = 40:20:100;
+    ylabel(ax, "Response Frequency [%]")
 end
 
 if strcmp(who_analysis, 'birds')
@@ -117,9 +122,9 @@ if strcmp(who_analysis, 'birds')
 
     % Add to Legend
     leg_patch(end + 1) = jello_plot;
-    leg_label(end + 1) = "Jello";
+    leg_label(end + 1) = "Crow 1";
     leg_patch(end + 1) = uri_plot;
-    leg_label(end + 1) = "Uri";
+    leg_label(end + 1) = "Crow 2";
 
     if ~(length(leg_patch) == length(leg_label))
         leg_label = leg_label(2:end);
@@ -127,17 +132,21 @@ if strcmp(who_analysis, 'birds')
 end 
 
 % Figure Adjustments
-fig_title = title([calc_type ' ' what_analysis ' of ' ...
-    who_analysis ' in ' experiment ' Sample Time ']);
+if add_title 
+    fig_title = title([calc_type ' ' what_analysis ' of ' ...
+        who_analysis ' in ' experiment ' Sample Time ']);
+else
+    fig_title = title(' ');
+end
 
 [fig_pretty, fig_title_pretty] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
-    false, leg_patch, leg_label);
+    false, leg_patch, leg_label, ' ', mrksz, ax, axis_colour);
 
 leg = legend(leg_patch, leg_label, ...
     "Box", "off", ...
     "Location", "bestoutside", ...
-    "TextColor", "k", ...
+    "TextColor", axis_colour, ...
     "FontSize", plot_font, ...
     "FontWeight", "bold");
 

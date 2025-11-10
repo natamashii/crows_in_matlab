@@ -2,7 +2,8 @@ function fig_pretty = ...
     plot_uebersicht_detail(ind_data, avg_data, err_data, numerosities, ...
     patterns, calc_type, err_type, what_analysis, who_analysis, ...
     experiment, plot_font, colours_numbers, plot_pos, linewidth, ...
-    mrksz, capsize, jitterwidth, dot_alpha, marker_factor)
+    mrksz, capsize, jitterwidth, dot_alpha, marker_factor, ...
+    add_title, axis_colour)
 
 % Function to Plot the Übersichts-Plot (but detailed)
 
@@ -34,8 +35,8 @@ for pattern = 1:length(patterns)
     axis padded
     ax.YGrid = "on";    % plot horizontal grid lines
     ax.Color = [1 1 1];     % set background colour to white
-    ax.XColor = "k";    % set colour of axis to black
-    ax.YColor = "k";    % set colour of axis to black
+    ax.XColor = axis_colour;    % set colour of axis to black
+    ax.YColor = axis_colour;    % set colour of axis to black
     ax.FontWeight = "bold";
     ax.XAxis.FontSize = plot_font;  % set fontsize of ticks
     ax.YAxis.FontSize = plot_font;  % set fontsize of ticks
@@ -49,8 +50,10 @@ for pattern = 1:length(patterns)
     if pattern == 1
         if strcmp(what_analysis, 'Reaction Times')
             ylabel(ax, "Reaction Times [ms]", "FontWeight", "bold")
-        else
-            ylabel(ax, what_analysis)
+        elseif strcmp(what_analysis, 'Performance')
+            ylabel(ax, "Performance [%]", "FontWeight", "bold")
+        elseif strcmp(what_analysis, 'Response Frequency')
+            ylabel(ax, "Response Frequency [%]", "FontWeight", "bold")
         end
     elseif pattern == 2
         xlabel(ax, "Test Numerosity", "FontWeight", "bold")
@@ -60,19 +63,19 @@ for pattern = 1:length(patterns)
     end
 
     if strcmp(what_analysis, 'Reaction Times')
-        ax.YLim = [0 800];
+        ax.YLim = [0 650];
     else
-        ax.YLim = [0 1];
-        ax.YTick = 0:0.2:1;
+        ax.YLim = [0 100];
+        ax.YTick = 0:20:100;
     end
 
     % Mark Chance Level
     chance_colour = ax.GridAlpha;
-    yline(0.5, ...
+    yline(50, ...
         "LineStyle", ":", ...
         "Alpha", chance_colour * 3, ...
         "LineWidth", linewidth, ...
-        "Color", "k")
+        "Color", axis_colour)
 
     % Iterate Over Samples
     for sample_idx = 1:size(numerosities, 1)
@@ -141,7 +144,7 @@ for pattern = 1:length(patterns)
     % Plot Invisible Error Plot for Legend
     leg_err = errorbar(0, 1, 5, 5, ...
         "LineStyle", "none", ...
-        "Color", "k", ...
+        "Color", axis_colour, ...
         "LineWidth", linewidth, ...
         "CapSize", capsize, ...
         "MarkerSize", mrksz);
@@ -151,17 +154,23 @@ leg_patch(end + 1) = leg_err;
 leg_label(end + 1) = err_type;
 
 % Figure Adjustments
-fig_title = title([calc_type ' ' what_analysis ' of ' ...
-    who_analysis ' in ' experiment ' Sample Time ']);
+if add_title
+
+    fig_title = title([calc_type ' ' what_analysis ' of ' ...
+        who_analysis ' in ' experiment ' Sample Time ']);
+else
+    fig_title = title(' ');
+end
+
 [fig_pretty, fig_title_pretty] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
-    false, leg_patch, leg_label, ax);
+    false, leg_patch, leg_label, ' ', mrksz, ax, axis_colour);
 
 leg = ...
     legend(leg_patch, leg_label, ...
     "Box", "off", ...
     "Location", "bestoutside", ...
-    "TextColor", "k", ...
+    "TextColor", axis_colour, ...
     "FontSize", plot_font, ...
     "FontWeight", "bold");
 title(leg, "Sample", "FontSize", plot_font)

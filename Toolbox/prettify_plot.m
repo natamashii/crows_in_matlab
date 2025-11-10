@@ -1,6 +1,6 @@
 function [fig_pretty, fig_title_pretty] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
-    add_legend, leg_patch, leg_label, leg_title, mrksz, ax)
+    add_legend, leg_patch, leg_label, leg_title, mrksz, ax, axis_colour)
 
 % function to improve overall figure
 
@@ -12,7 +12,7 @@ set(gcf, "PaperSize", [plot_pos(1) plot_pos(2)])
 
 % figure title
 fig_title.FontSize = plot_font;
-fig_title.Color = "k";
+fig_title.Color = axis_colour;
 fig_title.FontWeight = "bold";
 
 % Add legend if desired
@@ -24,13 +24,14 @@ if add_legend
         legend(h_copy, leg_label, ...
         "Box", "off", ...
         "Location", "bestoutside", ...
-        "TextColor", "k", ...
+        "TextColor", axis_colour, ...
         "FontSize", plot_font, ...
         "FontWeight", "bold");
     title(leg, leg_title, "FontSize", plot_font)
 end
 
 fig.Renderer = "painters";
+fontname(gcf, "Helvetica")
 
 fig_pretty = fig;  % Assign the modified figure to output
 fig_title_pretty = fig_title;  % Assign the modified title to output
