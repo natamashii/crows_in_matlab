@@ -93,11 +93,11 @@ prompt_what = ['What do you wish to analyse? '...
 
 to_correct = false; % if response matrices shall be corrected
 to_sort = false;     % if data must be sorted first
-to_split_sc = false;    % if to compare standard & control conditions
+to_split_sc = true;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
 to_uebersicht = false;     % if plotting pattern comparison (matches)
 to_uebersicht_detail = false;   % if plotting detailed comparison
-to_grouping_chunking = true;    % if plotting experiment comparison
+to_grouping_chunking = false;    % if plotting experiment comparison
 to_stim_dist = false;
 
 % all relevant numerosities (Lena's tabular)
@@ -144,10 +144,10 @@ rsp_mat_path = [analysis_path 'response_matrices\'];
 % Specifications for plots: Presentation or Thesis
 axis_colour = {'#404040', 'k'};
 aim_name = {'presentation', 'thesis'};
-plot_font = {20, 14};
-capsize = {13, 10};
-linewidth = {3, 2};
-mrksz = {14, 10};
+plot_font = {20, 20};
+capsize = {13, 13};
+linewidth = {3, 3};
+mrksz = {14, 14};
 
 %% Correct Response Matrix
 if to_correct
@@ -1060,7 +1060,7 @@ if to_grouping_chunking
 
                 % Plot: Divided Into all Patterns, Raw Data
                 fig_diff = ...
-                    plot_c_g(diff_data, colours_pattern_diff, ...
+                    plot_c_g(diff_data, colour_uebersicht, ...
                     curr_experiments, what_analysis{what_idx}, ...
                     who_analysis{who_idx}(1:end-1), err_type{err_idx}, ...
                     calc_type{calc_idx}, numerosities, ...
@@ -1086,7 +1086,7 @@ if to_grouping_chunking
 
                 % Plot: Divided Into all Patterns, Walsh-Averages
                 fig_diff_walsh = ...
-                    plot_c_g(walsh_HL, colours_pattern_diff, ...
+                    plot_c_g(walsh_HL, colour_uebersicht, ...
                     curr_experiments, what_analysis{what_idx}, ...
                     who_analysis{who_idx}(1:end-1), 'CI', ...
                     "HL" + newline + "Estimator", numerosities, ...

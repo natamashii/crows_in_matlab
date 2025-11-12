@@ -40,6 +40,7 @@ ax.YTick = 0:max(freq_nums);
 xlabel(ax, "Numerosity", "FontWeight", "bold");
 ylabel(ax, "Numerosity Frequency [#]", "FontWeight", "bold")
 set(gca, "TickDir", "out")
+set(ax, "linewidth", 2)
 
 % Figure Adjustments
 fig_title = title('Distribution of Numerosities');
