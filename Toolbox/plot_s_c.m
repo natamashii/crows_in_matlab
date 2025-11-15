@@ -3,7 +3,8 @@ function fig_pretty = ...
     avg_data_s, avg_data_c, err_data_s, err_data_c, what_analysis, ...
     who_analysis, calc_type, experiment, ...
     err_type, jitterwidth, colours_split, mrksz, plot_font, plot_pos, ...
-    linewidth, capsize, linestyle, factors, add_title, axis_colour)
+    linewidth, capsize, linestyle, factors, add_title, axis_colour, ...
+    subfig_title)
 
 % function to plot behavioural data with focus on comparing standard &
 % control conditions
@@ -36,7 +37,7 @@ ax.XTickLabel = num2str(numerosities(:, 1));
 ax.XTickLabelRotation = 0;
 ax.XLim = [min(numerosities(:, 1)) - .5 max(numerosities(:, 1)) + .5];
 xlabel(ax, "Sample Numerosity", "FontWeight", "bold")
-set(gca, "linewidth", 2)
+set(gca, "linewidth", 3)
 set(gca, "TickDir", "out")
 if strcmp(what_analysis, 'Reaction Times')
     ax.YLim = [0 650];
@@ -204,13 +205,7 @@ for sample_idx = 1:size(numerosities, 1)
 end
 
 % Figure Adjustments
-if add_title
-    fig_title = title([calc_type ' ' what_analysis ' of ' ...
-        who_analysis ' in ' experiment ' Sample Time ']); 
-else
-    fig_title = title(' ');
-end
-
+fig_title = title(subfig_title);
 [fig_pretty, ~] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
     true, leg_patch, leg_label, 'Stimulus Condition', mrksz, ax, axis_colour);

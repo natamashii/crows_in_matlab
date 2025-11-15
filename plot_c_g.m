@@ -42,10 +42,12 @@ for exp_idx = 1:length(exp_x_vals)
     ax.YAxis.FontSize = plot_font;  % set fontsize of ticks
     xlabel(ax, " ", "FontWeight", "bold")
     ax.XTick = 1:3;
-    ax.XTickLabel = ["P2 - P1", "P3 - P1", "P3 - P2"];
+    ax.XTickLabel = ["PA -" + newline + "PE", ...
+        "PM -" + newline + "PE", ...
+        "PM -" + newline + "PA"];
     ax.XTickLabelRotation = 0;
     ax.XLim = [0.8 3.5];
-    set(ax, "linewidth", 2)
+    set(ax, "linewidth", 3)
     % Set ylim depending on what_analysis
     if strcmp(what_analysis, 'Performance') || strcmp(what_analysis, 'Response Frequency')
         ax.YLim = [-50 50];

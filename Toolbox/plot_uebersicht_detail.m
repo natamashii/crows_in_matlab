@@ -3,7 +3,7 @@ function fig_pretty = ...
     patterns, calc_type, err_type, what_analysis, who_analysis, ...
     experiment, plot_font, colours_numbers, plot_pos, linewidth, ...
     mrksz, capsize, jitterwidth, dot_alpha, marker_factor, ...
-    add_title, axis_colour)
+    add_title, axis_colour, subfig_title)
 
 % Function to Plot the Übersichts-Plot (but detailed)
 
@@ -33,6 +33,11 @@ for pattern = 1:length(patterns)
     % Subplot Refinement
     set(gca, "TickDir", "out")
     axis padded
+    set(ax, "linewidth", 3)
+    subtitle(ax, patterns{pattern}, ...
+        "FontWeight", "bold", ...
+        "FontSize", plot_font, ...
+        "Color", axis_colour)
     ax.YGrid = "on";    % plot horizontal grid lines
     ax.Color = [1 1 1];     % set background colour to white
     ax.XColor = axis_colour;    % set colour of axis to black
@@ -154,14 +159,7 @@ leg_patch(end + 1) = leg_err;
 leg_label(end + 1) = err_type;
 
 % Figure Adjustments
-if add_title
-
-    fig_title = title([calc_type ' ' what_analysis ' of ' ...
-        who_analysis ' in ' experiment ' Sample Time ']);
-else
-    fig_title = title(' ');
-end
-
+fig_title = title(subfig_title);
 [fig_pretty, fig_title_pretty] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
     false, leg_patch, leg_label, ' ', mrksz, ax, axis_colour);
@@ -174,5 +172,10 @@ leg = ...
     "FontSize", plot_font, ...
     "FontWeight", "bold");
 title(leg, "Sample", "FontSize", plot_font)
+
+% change figure size
+fig_pretty.Units = "centimeters";
+fig_pretty.Position(3) = plot_pos(2);
+fig_pretty.Position(4) = plot_pos(1);
 
 end

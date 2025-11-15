@@ -3,7 +3,8 @@ function fig_pretty = ...
     patterns, calc_type, err_type, what_analysis, what_idx, who_analysis, ...
     experiment, plot_font, colours_J_U, plot_pos, linewidth, ...
     mrksz, capsize, jitterwidth, focus_type, ...
-    dot_alpha, marker_factor, lin_reg, add_reg, add_title, axis_colour)
+    dot_alpha, marker_factor, lin_reg, add_reg, add_title, axis_colour, ...
+    subfig_title)
 
 % Function to Plot the Übersichts-Plot
 
@@ -72,14 +73,14 @@ ax.XTick = 1:length(patterns);
 ax.XTickLabel = patterns;
 ax.XTickLabelRotation = 0;
 ax.XLim = [.5 length(patterns) + .5];
-set(gca, "linewidth", 2)
+set(gca, "linewidth", 3)
 
 if strcmp(what_analysis, 'Reaction Times')
     ax.YLim = [0 650];
     ylabel(ax, "Reaction Times [ms]")
 elseif strcmp(what_analysis, 'Performance')
-    ax.YLim = [40 100];
-    ax.YTick = 40:20:100;
+    ax.YLim = [50 100];
+    ax.YTick = 50:10:100;
     ylabel(ax, "Performance [%]")
 elseif strcmp(what_analysis, 'Response Frequency')
     ax.YLim = [40 100];
@@ -132,13 +133,7 @@ if strcmp(who_analysis, 'birds')
 end 
 
 % Figure Adjustments
-if add_title 
-    fig_title = title([calc_type ' ' what_analysis ' of ' ...
-        who_analysis ' in ' experiment ' Sample Time ']);
-else
-    fig_title = title(' ');
-end
-
+fig_title = title(subfig_title);
 [fig_pretty, fig_title_pretty] = ...
     prettify_plot(fig, plot_pos, fig_title, plot_font, ...
     false, leg_patch, leg_label, ' ', mrksz, ax, axis_colour);
