@@ -5,6 +5,7 @@ close all
 % Script for sorting behavioural data
 
 % TODO
+% test regression lines of uri vs jello statistically
 % DONE comparison patterns: linear regression, something with correlation
 % DONE statistics: kruskal wallis, but which effect size???
 % DONE post hoc: mann withney u with bonferroni or Conover–Iman test or dunn???
@@ -96,7 +97,8 @@ to_split_sc = false;    % if to compare standard & control conditions
 to_split_ju = false;    % if to compare Jello's & Uri's data
 to_uebersicht = false;     % if plotting pattern comparison (matches)
 to_uebersicht_detail = false;   % if plotting detailed comparison
-to_grouping_chunking = true;    % if plotting experiment comparison
+to_grouping_chunking = false;    % if plotting experiment comparison
+to_gc_all = true;   % if plotting experiment comparison for all subejcts
 to_stim_dist = false;
 
 % all relevant numerosities (Lena's tabular)
@@ -255,7 +257,7 @@ end
 if to_split_sc
 
     % pre definition
-    plot_pos = [21 100];
+    plot_pos = [21 200];
     alpha_stats = 0.05;
     jitterwidth = 0.15;
     progress_counter = 0;
@@ -1127,6 +1129,392 @@ if to_grouping_chunking
                 '-struct', 'statistics')
         end
     end
+end
+
+%% Version of HL Estimator plot with all subjects
+
+if to_gc_all
+
+    % Pre Definition
+    alpha_stats = 0.05;
+    progress_counter = 0;
+    jitterwidth = 0.15;
+    progress_total = (3 + 4 + 4) * size(numerosities, 1);
+    n_boot = 100;
+
+
+
+
+    curr_experiments = {'VS-RT'; 'VS-VT'; 'VS-AT'};
+    exp_x_vals = {[1, 2, 3]};
+
+    plot_idx = input(['Create plots for ... ? ' ...
+    '\n 1 - Presentation ' ...
+    '\n 2 - Thesis ']);
+    axis_colour = axis_colour{plot_idx};
+    aim_name = aim_name{plot_idx};
+    plot_font = plot_font{plot_idx};
+    capsize = capsize{plot_idx};
+    linewidth = linewidth{plot_idx};
+    mrksz = mrksz{plot_idx};
+
+    % set what to analyse further
+    what_idx = input(prompt_what);
+
+    colours_pattern_diff = ...
+        {colours_J_U(1), colours_J_U(2), colour_uebersicht};
+    plot_pos = {[21, 50]};
+
+    % Pre Allocation
+    all_performances = cell(3, 4);
+    all_resp_freq = cell(3, 4);
+    all_rec_times = cell(3, 4);
+    diff_data = cell(5, 3, 4);
+    walsh_HL = cell(5, 3, 4);
+
+    switch what_idx
+        case 1  % Performance
+            calc_idx = 1;   % Mean
+            err_idx = 2;   % SEM
+            focus_idx = 1;  % Matches + Non-Matches
+            stats_name = 'Performance';
+
+        case 2  % Response Frequency
+            calc_idx = 1;   % Mean
+            err_idx = 2;    % SEM
+            focus_idx = 1;  % Matches + Non-Matches
+            stats_name = 'Response_Frequency';
+
+        case 3  % Reaction Time
+            calc_idx = 2;   % Median
+            err_idx = 1;    % STD
+            focus_idx = 2;  % Matches
+            stats_name = 'Reaction_Times';
+
+        otherwise
+            error("You did not enter a correct data specification.")
+    end
+
+    %% Get Data
+    % Iterate over Subjects
+    for who_idx = 1:length(who_analysis) - 1
+        % Set Experiments Accordingly
+        if who_idx == 1     % human subjects
+            all_experiments = {'VS-RT'; 'VS-VT'; 'VS-AT'};
+        else    % crow subjects
+            all_experiments = {'VS-RT, 300 ms'; 'VS-RT, 100 ms'; ...
+                'VS-RT, 50 ms'; 'VS-VT, 50 ms'};
+        end
+
+        % Iterate over Experiments
+        for exp_idx = 1:length(all_experiments)
+            % path adjustment
+            % list of all data & subfolders
+            filelist = dir([data_path who_analysis{who_idx}]);
+            % extract subfolders
+            subfolders = filelist([filelist(:).isdir]);
+            % list of subfolder names (experiments)
+            subfolders = {subfolders(3 : end).name};
+            subfolders = subfolders(2:end);
+            adapt_path = ...
+                [data_path who_analysis{who_idx} subfolders{exp_idx} '\'];
+
+            % load the data
+            sorted_data = load([adapt_path 'sorted_data.mat']);
+
+            % Sort Accordingly
+            all_performances{who_idx, exp_idx} = sorted_data.performances;
+            all_resp_freq{who_idx, exp_idx} = sorted_data.resp_freq;
+            all_rec_times{who_idx, exp_idx} = sorted_data.rec_times;
+
+            %% Get Differences Between Patterns
+            % Pre Allocation
+            placeholder = {"P1 vs. P2", "P1 vs. P3", "P3 vs. P2"; ...
+                [], [], []; [], [], []; [], [], []; [], [], []};
+
+            % Iterate over Samples
+            for sample_idx = 1:size(numerosities, 1)
+                % Pre Allocation
+                filtered_table = cell(3, 2);
+                diff_data{sample_idx, who_idx, exp_idx} = placeholder;
+
+                % Write Data as Table
+                switch focus_type{focus_idx}
+                    case 'Overall'
+                        data_table = ...
+                            datatable(...
+                            {all_performances{who_idx, exp_idx}}, ...
+                            {all_resp_freq{who_idx, exp_idx}}, ...
+                            {all_rec_times{who_idx, exp_idx}}, ...
+                            patterns, numerosities, {' '});
+                      
+                    case 'Matches'
+                        data_table = ...
+                            datatable(...
+                            {all_performances{who_idx, exp_idx}(:, :, :, 1)}, ...
+                            {all_resp_freq{who_idx, exp_idx}(:, :, :, 1)}, ...
+                            {all_rec_times{who_idx, exp_idx}(:, :, :, 1)}, ...
+                            patterns, numerosities, {' '});
+                end
+
+                % Iterate over Patterns
+                for pattern = 1:length(patterns)
+                    % Filter Table to Current Pattern
+                    filtered_sample = ...
+                        data_table(data_table.Sample == ...
+                        numerosities(sample_idx, 1), :);
+                    filtered_table{pattern, 1} = ...
+                        filtered_sample(...
+                        string(filtered_sample.Pattern) == ...
+                        patterns{pattern}, :);
+
+                    switch what_analysis{what_idx}
+                        case "Performance"
+                            filtered_table{pattern, 2} = ...
+                                filtered_table{pattern, 1}.Performance;
+                        case "Response Frequency"
+                            filtered_table{pattern, 2} = ...
+                                filtered_table{pattern, 1}.ResponseFrequency;
+                        case "Reaction Times"
+                            filtered_table{pattern, 2} = ...
+                                filtered_table{pattern, 1}.RT;
+                    end
+                end
+
+                % P2 - P1
+                diff_data{sample_idx, who_idx, exp_idx}{2, 1} = ...
+                    diff([filtered_table{2, 2}, filtered_table{1, 2}], 1, 2);
+                % P3 - P1
+                diff_data{sample_idx, who_idx, exp_idx}{2, 2} = ...
+                    diff([filtered_table{3, 2}, filtered_table{1, 2}], 1, 2);
+                % P3 - P2
+                diff_data{sample_idx, who_idx, exp_idx}{2, 3} = ...
+                    diff([filtered_table{3, 2}, filtered_table{2, 2}], 1, 2);
+                
+                % Take Averages of Differences
+                switch calc_type{calc_idx}
+                    case 'Mean'
+                        diff_data{sample_idx, who_idx, exp_idx}{3, 1} = ...
+                            mean(diff_data{sample_idx, who_idx, exp_idx}{2, 1}, ...
+                            "all", "omitnan");
+                        diff_data{sample_idx, who_idx, exp_idx}{3, 2} = ...
+                            mean(diff_data{sample_idx, who_idx, exp_idx}{2, 2}, ...
+                            "all", "omitnan");
+                        diff_data{sample_idx, who_idx, exp_idx}{3, 3} = ...
+                            mean(diff_data{sample_idx, who_idx, exp_idx}{2, 3}, ...
+                            "all", "omitnan");
+                    case 'Median'
+                        diff_data{sample_idx, who_idx, exp_idx}{3, 1} = ...
+                            median(diff_data{sample_idx, who_idx, exp_idx}{2, 1}, ...
+                            "all", "omitnan");
+                        diff_data{sample_idx, who_idx, exp_idx}{3, 2} = ...
+                            median(diff_data{sample_idx, who_idx, exp_idx}{2, 2}, ...
+                            "all", "omitnan");
+                        diff_data{sample_idx, who_idx, exp_idx}{3, 3} = ...
+                            median(diff_data{sample_idx, who_idx, exp_idx}{2, 3}, ...
+                            "all", "omitnan");
+                end
+
+                % Calculate Corresponding Error
+                switch err_type{err_idx}
+                    case 'STD'
+                        % P2 - P1
+                        diff_data{sample_idx, who_idx, exp_idx}{4, 1} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 1}, ...
+                            [], "all", "omitnan");
+                        diff_data{sample_idx, who_idx, exp_idx}{5, 1} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 1}, ...
+                            [], "all", "omitnan");
+                        % P3 - P1
+                        diff_data{sample_idx, who_idx, exp_idx}{4, 2} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 2}, ...
+                            [], "all", "omitnan");
+                        diff_data{sample_idx, who_idx, exp_idx}{5, 2} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 2}, ...
+                            [], "all", "omitnan");
+                        % P3 - P2
+                        diff_data{sample_idx, who_idx, exp_idx}{4, 3} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 3}, ...
+                            [], "all", "omitnan");
+                        diff_data{sample_idx, who_idx, exp_idx}{5, 3} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 3}, ...
+                            [], "all", "omitnan");
+                    case 'SEM'
+                        % P2 - P1
+                        diff_data{sample_idx, who_idx, exp_idx}{4, 1} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 1}, ...
+                            [], "all", "omitnan") / ...
+                            sqrt(numel(~isnan(diff_data...
+                            {sample_idx, who_idx, exp_idx}{2, 1})));
+                        diff_data{sample_idx, who_idx, exp_idx}{5, 1} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 1}, ...
+                            [], "all", "omitnan") / ...
+                            sqrt(numel(~isnan(diff_data...
+                            {sample_idx, who_idx, exp_idx}{2, 1})));
+                        % P3 - P1
+                        diff_data{sample_idx, who_idx, exp_idx}{4, 2} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 2}, ...
+                            [], "all", "omitnan") / ...
+                            sqrt(numel(~isnan(diff_data...
+                            {sample_idx, who_idx, exp_idx}{2, 2})));
+                        diff_data{sample_idx, who_idx, exp_idx}{5, 2} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 2}, ...
+                            [], "all", "omitnan") / ...
+                            sqrt(numel(~isnan(diff_data...
+                            {sample_idx, who_idx, exp_idx}{2, 2})));
+                        % P3 - P2
+                        diff_data{sample_idx, who_idx, exp_idx}{4, 3} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 3}, ...
+                            [], "all", "omitnan") / ...
+                            sqrt(numel(~isnan(diff_data...
+                            {sample_idx, who_idx, exp_idx}{2, 3})));
+                        diff_data{sample_idx, who_idx, exp_idx}{5, 3} = ...
+                            std(diff_data{sample_idx, who_idx, exp_idx}{2, 3}, ...
+                            [], "all", "omitnan") / ...
+                            sqrt(numel(~isnan(diff_data...
+                            {sample_idx, who_idx, exp_idx}{2, 3})));
+                end
+
+                %% Calculate HL Estimator
+                % Pre Allocation
+                placeholder = {"P1 vs. P2", "P1 vs. P3", "P3 vs. P2"; ...
+                    [], [], []; ...     % Walsh Averages
+                    [], [], []; ...     % Hodges-Lehmann Estimator
+                    [], [], []; ...     % CI Lower
+                    [], [], []};        % CI Upper
+
+                % Extract Raw Difference Values
+                diffs_P2P1 = diff_data{sample_idx, who_idx, exp_idx}{2, 1};
+                diffs_P3P1 = diff_data{sample_idx, who_idx, exp_idx}{2, 2};
+                diffs_P3P2 = diff_data{sample_idx, who_idx, exp_idx}{2, 3};
+
+                % Sample Size
+                n = [numel(diffs_P2P1), numel(diffs_P3P1), numel(diffs_P3P2)];
+
+                % Walsh Averages
+                walsh_P2P1 = (diffs_P2P1 + diffs_P2P1.') / 2;
+                walsh_P3P1 = (diffs_P3P1 + diffs_P3P1.') / 2;
+                walsh_P3P2 = (diffs_P3P2 + diffs_P3P2.') / 2;
+
+                % Remove Duplicates
+                walsh_P2P1 = walsh_P2P1(triu(true(n(1))));
+                walsh_P3P1 = walsh_P3P1(triu(true(n(2))));
+                walsh_P3P2 = walsh_P3P2(triu(true(n(3))));
+
+                % HL Estimator
+                HL_P2P1 = median(walsh_P2P1, "omitnan");
+                HL_P3P1 = median(walsh_P3P1, "omitnan");
+                HL_P3P2 = median(walsh_P3P2, "omitnan");
+
+                % Confidence Intervals
+                [low_err_data_P2P1, up_err_data_P2P1] = ...
+                    bootstrapping(walsh_P2P1, n_boot, alpha_stats);
+                [low_err_data_P3P1, up_err_data_P3P1] = ...
+                    bootstrapping(walsh_P3P1, n_boot, alpha_stats);
+                [low_err_data_P3P2, up_err_data_P3P2] = ...
+                    bootstrapping(walsh_P3P2, n_boot, alpha_stats);
+
+                % Save Results
+                placeholder{2, 1}= walsh_P2P1;
+                placeholder{2, 2} = walsh_P3P1;
+                placeholder{2, 3} = walsh_P3P2;
+                placeholder{3, 1} = HL_P2P1;
+                placeholder{3, 2} = HL_P3P1;
+                placeholder{3, 3} = HL_P3P2;
+                placeholder{4, 1} = low_err_data_P2P1;
+                placeholder{4, 2} = low_err_data_P3P1;
+                placeholder{4, 3} = low_err_data_P3P2;
+                placeholder{5, 1} = up_err_data_P2P1;
+                placeholder{5, 2} = up_err_data_P3P1;
+                placeholder{5, 3} = up_err_data_P3P2;
+
+                walsh_HL{sample_idx, who_idx, exp_idx} = placeholder;
+
+                % update progress bar
+                progress_counter = progress_counter + 1;  % for progressbar
+                progressbar(progress_counter, progress_total)
+            end
+        end
+    end
+
+    %% Plot    
+    % Iterate over Samples
+    for sample_idx = 1:size(numerosities, 1)
+        % Pre Allocation
+        ax_top_all = gobjects(1, length(exp_x_vals)); % store top axes for ylabel later
+        jitter_dots = [-jitterwidth 0 jitterwidth];
+
+        % Create Figure
+        fig = figure("Visible", "off");
+        tiled = tiledlayout(1, length(exp_x_vals), ...
+            "TileSpacing", "none", ...
+            "Padding", "tight");
+
+        % Iterate over Subplots/Experiments 1 & 2
+        for exp_idx = 1:length(exp_x_vals) - 1
+            
+            ax = nexttile(tiled, exp_idx);
+            hold on
+
+            % Axis Adjustments
+            set(ax, "TickDir", "out")
+            axis padded
+            ax.YGrid = "on";    % plot horizontal grid lines
+            ax.Color = "none";     % set background colour to white
+            ax.XColor = axis_colour;    % set colour of axis to black
+            ax.YColor = axis_colour;    % set colour of axis to black
+            ax.FontWeight = "bold";
+            ax.XAxis.FontSize = plot_font;  % set fontsize of ticks
+            ax.YAxis.FontSize = plot_font;  % set fontsize of ticks
+            xlabel(ax, " ", "FontWeight", "bold")
+            ax.XTick = 1:3;
+            set(ax, "TickLabelInterpreter", 'tex')
+            ax.XTickLabel = { ...
+                'PA - \newline PE', ...
+                'PM - \newline PE', ...
+                'PM - \newline PA' };
+            ax.XTickLabelRotation = 0;
+            ax.XLim = [0.8 3.5];
+            set(ax, "linewidth", 3)
+            % Set ylim depending on what_analysis
+            if strcmp(what_analysis{what_idx}, 'Performance') || strcmp(what_analysis{what_idx}, 'Response Frequency')
+                ax.YLim = [-50 50];
+                ax.YTick = [-50, -25, 0, 25, 50];
+            elseif strcmp(what_analysis{what_idx}, 'Reaction Times')
+                ax.YLim = [-80 80];
+                ax.YTick = [-80, -60, -40, -20, 0, 20, 40, 60, 80];
+            end
+
+            subtitle(ax, [curr_experiments{exp_idx}], ...
+                "FontWeight", "bold", ...
+                "FontSize", plot_font, ...
+                "Color", axis_colour)
+
+            % Mark 0 Line
+            ax0 = axes(tiled);
+            ax0.Layout.Tile = ax.Layout.Tile;
+            ax0.Color = [1 1 1];     % set background colour to white
+            ax0.Box = "off";
+            ax0.XAxis.Visible = "off";
+            ax0.YAxis.Visible = "off";
+            ax0.YGrid = "on";
+            chance_colour = ax0.GridAlpha;
+            yl = yline(ax0, 0, ...
+                "LineStyle", ":", ...
+                "Alpha", chance_colour * 3, ...
+                "LineWidth", linewidth, ...
+                "Color", axis_colour);
+            ax0.YGrid = "off";
+
+            uistack(ax, "top")
+            linkaxes([ax0, ax], "xy")
+
+            
+        end
+    end
+
+    
+
 end
 
 %% Stimuli Analysis

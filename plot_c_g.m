@@ -42,17 +42,21 @@ for exp_idx = 1:length(exp_x_vals)
     ax.YAxis.FontSize = plot_font;  % set fontsize of ticks
     xlabel(ax, " ", "FontWeight", "bold")
     ax.XTick = 1:3;
-    ax.XTickLabel = ["PA -" + newline + "PE", ...
-        "PM -" + newline + "PE", ...
-        "PM -" + newline + "PA"];
+    set(ax, "TickLabelInterpreter", 'tex')
+    ax.XTickLabel = { ...
+    'PA - \newline PE', ...
+    'PM - \newline PE', ...
+    'PM - \newline PA' };
     ax.XTickLabelRotation = 0;
     ax.XLim = [0.8 3.5];
     set(ax, "linewidth", 3)
     % Set ylim depending on what_analysis
     if strcmp(what_analysis, 'Performance') || strcmp(what_analysis, 'Response Frequency')
         ax.YLim = [-50 50];
+        ax.YTick = [-50, -25, 0, 25, 50];
     elseif strcmp(what_analysis, 'Reaction Times')
         ax.YLim = [-80 80];
+        ax.YTick = [-80, -60, -40, -20, 0, 20, 40, 60, 80];
     end
 
     subtitle(ax, [curr_experiments{exp_x_vals(exp_idx)} ...
