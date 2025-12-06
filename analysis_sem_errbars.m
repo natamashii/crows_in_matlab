@@ -1138,22 +1138,18 @@ if to_gc_all
     % Pre Definition
     alpha_stats = 0.05;
     progress_counter = 0;
-    jitterwidth = 0.15;
-    progress_total = (3 + 4 + 4) * size(numerosities, 1);
-    n_boot = 100;
-
-
-
-
+    jitterwidth = 0.25;
+    progress_total = ((3 + 4 + 4) * size(numerosities, 1)) + 5;
+    %n_boot = 100;
     curr_experiments = {'VS-RT'; 'VS-VT'; 'VS-AT'};
-    exp_x_vals = {[1, 2, 3]};
+    exp_x_vals = [1, 2, 3];
 
     plot_idx = input(['Create plots for ... ? ' ...
     '\n 1 - Presentation ' ...
     '\n 2 - Thesis ']);
     axis_colour = axis_colour{plot_idx};
     aim_name = aim_name{plot_idx};
-    plot_font = plot_font{plot_idx};
+    plot_font = 21;
     capsize = capsize{plot_idx};
     linewidth = linewidth{plot_idx};
     mrksz = mrksz{plot_idx};
@@ -1162,8 +1158,8 @@ if to_gc_all
     what_idx = input(prompt_what);
 
     colours_pattern_diff = ...
-        {colours_J_U(1), colours_J_U(2), colour_uebersicht};
-    plot_pos = {[21, 50]};
+        {colour_uebersicht{1}; colours_J_U{1}; colours_J_U{2}};
+    plot_pos = [21, 50];
 
     % Pre Allocation
     all_performances = cell(3, 4);
@@ -1474,7 +1470,7 @@ if to_gc_all
                 'PM - \newline PE', ...
                 'PM - \newline PA' };
             ax.XTickLabelRotation = 0;
-            ax.XLim = [0.8 3.5];
+            ax.XLim = [0.9 3.5];
             set(ax, "linewidth", 3)
             % Set ylim depending on what_analysis
             if strcmp(what_analysis{what_idx}, 'Performance') || strcmp(what_analysis{what_idx}, 'Response Frequency')
@@ -1509,12 +1505,223 @@ if to_gc_all
             uistack(ax, "top")
             linkaxes([ax0, ax], "xy")
 
-            
+            % iterate over subjects
+            for who_idx = 1:length(who_analysis) - 1
+                if who_idx == 1     % humans
+                    curr_data = diff_data{sample_idx, who_idx, exp_idx};
+                else    % crows
+                    curr_data = diff_data{sample_idx, who_idx, exp_idx + 2};
+                end
+                ind_data = [curr_data{2, :}];
+                avg_data = [curr_data{3, :}];
+                err_data_low = [curr_data{4, :}];
+                err_data_up = [curr_data{5, :}];
+
+                % Iterate over Pattern Differences
+                for pattern = 1:length(patterns)
+                    % set y vals
+                    y_vals = ind_data(:, pattern);
+                    % set x vals
+                    x_vals = (ones(size(y_vals, 1), 1) * pattern) + ...
+                        jitter_dots(who_idx);
+
+                    % Plot Individual Dots
+                    dot_plot = swarmchart(ax, x_vals, y_vals, ...
+                        mrksz * 4, ...
+                        "XJitter", "randn", ...
+                        "XJitterWidth", jitterwidth, ...
+                        "Marker", "o", ...
+                        "MarkerFaceColor", colours_pattern_diff{who_idx}, ...
+                        "MarkerEdgeColor", "none", ...
+                        "MarkerFaceAlpha", 0.3);
+                end
+
+                % Adjust Colours for Error & Mean Plot
+                avg_colours = colours_pattern_diff{who_idx};
+                avg_colours = rgb2hsv(avg_colours);
+                avg_colours(:, 3) = avg_colours(:, 3) * .7;
+                avg_colours = hsv2rgb(avg_colours);
+
+                % Set x vals
+                x_vals = (1:length(patterns)) + jitter_dots(who_idx);
+
+                % Plot HL Estimator
+                plot_avg = plot(ax, x_vals, avg_data, ...
+                    "LineStyle", "none", ...
+                    "LineWidth", linewidth, ...
+                    "Marker", "o", ...
+                    "Color", avg_colours, ...
+                    "MarkerFaceColor", avg_colours, ...
+                    "MarkerEdgeColor", "none", ...
+                    "MarkerSize", mrksz);
+
+                % Plot Error
+                err_plot = ...
+                    errorbar(ax, x_vals, avg_data, ...
+                    err_data_low, err_data_up, ...
+                    "LineStyle", "none", ...
+                    "Color", avg_colours, ...
+                    "LineWidth", linewidth, ...
+                    "CapSize", capsize, ...
+                    "MarkerSize", mrksz);
+            end
+
+            ax_top_all(exp_idx) = ax;  % remember the top axes for later
+            if exp_idx > 1
+                ax.YAxis.Visible = "off";
+            end
         end
+
+        % VS-AT Plot
+        ax = nexttile(tiled, 3);
+        hold on
+        % Axis Adjustments
+        set(ax, "TickDir", "out")
+        axis padded
+        ax.YGrid = "on";    % plot horizontal grid lines
+        ax.Color = "none";     % set background colour to white
+        ax.XColor = axis_colour;    % set colour of axis to black
+        ax.YColor = axis_colour;    % set colour of axis to black
+        ax.FontWeight = "bold";
+        ax.XAxis.FontSize = plot_font;  % set fontsize of ticks
+        ax.YAxis.FontSize = plot_font;  % set fontsize of ticks
+        xlabel(ax, " ", "FontWeight", "bold")
+        ax.XTick = 1:3;
+        set(ax, "TickLabelInterpreter", 'tex')
+        ax.XTickLabel = { ...
+            'PA - \newline PE', ...
+            'PM - \newline PE', ...
+            'PM - \newline PA' };
+        ax.XTickLabelRotation = 0;
+        ax.XLim = [0.8 3.5];
+        set(ax, "linewidth", 3)
+        % Set ylim depending on what_analysis
+        if strcmp(what_analysis{what_idx}, 'Performance') || strcmp(what_analysis{what_idx}, 'Response Frequency')
+            ax.YLim = [-50 50];
+            ax.YTick = [-50, -25, 0, 25, 50];
+        elseif strcmp(what_analysis{what_idx}, 'Reaction Times')
+            ax.YLim = [-80 80];
+            ax.YTick = [-80, -60, -40, -20, 0, 20, 40, 60, 80];
+        end
+
+        subtitle(ax, [curr_experiments{3}], ...
+            "FontWeight", "bold", ...
+            "FontSize", plot_font, ...
+            "Color", axis_colour)
+
+        % Mark 0 Line
+        ax0 = axes(tiled);
+        ax0.Layout.Tile = ax.Layout.Tile;
+        ax0.Color = [1 1 1];     % set background colour to white
+        ax0.Box = "off";
+        ax0.XAxis.Visible = "off";
+        ax0.YAxis.Visible = "off";
+        ax0.YGrid = "on";
+        chance_colour = ax0.GridAlpha;
+        yl = yline(ax0, 0, ...
+            "LineStyle", ":", ...
+            "Alpha", chance_colour * 3, ...
+            "LineWidth", linewidth, ...
+            "Color", axis_colour);
+        ax0.YGrid = "off";
+
+        uistack(ax, "top")
+        linkaxes([ax0, ax], "xy")
+
+        curr_data = diff_data{sample_idx, 1, 3};
+        ind_data = [curr_data{2, :}];
+        avg_data = [curr_data{3, :}];
+        err_data_low = [curr_data{4, :}];
+        err_data_up = [curr_data{5, :}];
+
+        % Iterate over Pattern Differences
+        for pattern = 1:length(patterns)
+            % set y vals
+            y_vals = ind_data(:, pattern);
+            % set x vals
+            x_vals = (ones(size(y_vals, 1), 1) * pattern) + ...
+                jitter_dots(1);
+
+            % Plot Individual Dots
+            dot_plot = swarmchart(ax, x_vals, y_vals, ...
+                mrksz * 4, ...
+                "XJitter", "randn", ...
+                "XJitterWidth", jitterwidth, ...
+                "Marker", "o", ...
+                "MarkerFaceColor", colours_pattern_diff{1}, ...
+                "MarkerEdgeColor", "none", ...
+                "MarkerFaceAlpha", 0.3);
+        end
+
+        % Adjust Colours for Error & Mean Plot
+        avg_colours = colours_pattern_diff{1};
+        avg_colours = rgb2hsv(avg_colours);
+        avg_colours(:, 3) = avg_colours(:, 3) * .7;
+        avg_colours = hsv2rgb(avg_colours);
+
+        % Set x vals
+        x_vals = (1:length(patterns)) + jitter_dots(1);
+
+        % Plot HL Estimator
+        plot_avg = plot(ax, x_vals, avg_data, ...
+            "LineStyle", "none", ...
+            "LineWidth", linewidth, ...
+            "Marker", "o", ...
+            "Color", avg_colours, ...
+            "MarkerFaceColor", avg_colours, ...
+            "MarkerEdgeColor", "none", ...
+            "MarkerSize", mrksz);
+
+        % Plot Error
+        err_plot = ...
+            errorbar(ax, x_vals, avg_data, ...
+            err_data_low, err_data_up, ...
+            "LineStyle", "none", ...
+            "Color", avg_colours, ...
+            "LineWidth", linewidth, ...
+            "CapSize", capsize, ...
+            "MarkerSize", mrksz);
+        ax.YAxis.Visible = "off";
+
+        % Figure Adjustments
+        if strcmp(what_analysis{what_idx}, 'Reaction Times')
+            ylabel(ax_top_all(1), '\Delta Reaction Time [ms]', ...
+                "FontWeight", "bold", ...
+                "Interpreter", "tex")
+        elseif strcmp(what_analysis{what_idx}, 'Performance')
+            ylabel(ax_top_all(1), '\Delta Performance [%]', ...
+                "FontWeight", "bold", ...
+                "Interpreter", "tex")
+        elseif strcmp(what_analysis{what_idx}, 'Response Frequency')
+            ylabel(ax_top_all(1), '\Delta Response Frequency [%]', ...
+                "FontWeight", "bold", ...
+                "Interpreter", "tex")
+        end
+
+        set(fig, "Color", [1 1 1])  % set figure background to white
+
+        % change figure size
+        fig.Units = "centimeters";
+        fig.Position(3) = plot_pos(2);
+        fig.Position(4) = plot_pos(1);
+        fig.Renderer = "painters";
+        fontname(gcf, "Helvetica")
+
+        fig_name = ['ChunkGroup_divided_Walsh_HL_all_subjects_' ...
+            focus_type{focus_idx} '_' calc_type{calc_idx} '_' ...
+            err_type{err_idx} '_' what_analysis{what_idx} '_Sample_' ...
+            num2str(numerosities(sample_idx, 1)) ...
+            '_' aim_name '.' format];
+        % Save the figure
+        saveas(fig, [figure_path '\z_subjects\all_experiments\Sample_' ...
+            num2str(numerosities(sample_idx, 1)) '\' ...
+            what_analysis{what_idx} '\' fig_name], format)
+        clear fig
+
+        % update progress bar
+        progress_counter = progress_counter + 1;  % for progressbar
+        progressbar(progress_counter, progress_total)
     end
-
-    
-
 end
 
 %% Stimuli Analysis
