@@ -94,11 +94,11 @@ prompt_what = ['What do you wish to analyse? '...
 to_correct = false; % if response matrices shall be corrected
 to_sort = false;     % if data must be sorted first
 to_split_sc = false;    % if to compare standard & control conditions
-to_split_ju = false;    % if to compare Jello's & Uri's data
+to_split_ju = true;    % if to compare Jello's & Uri's data
 to_uebersicht = false;     % if plotting pattern comparison (matches)
 to_uebersicht_detail = false;   % if plotting detailed comparison
 to_grouping_chunking = false;    % if plotting experiment comparison
-to_gc_all = true;   % if plotting experiment comparison for all subejcts
+to_gc_all = false;   % if plotting experiment comparison for all subejcts
 to_stim_dist = false;
 
 % all relevant numerosities (Lena's tabular)

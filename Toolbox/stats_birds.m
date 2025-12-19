@@ -8,9 +8,9 @@ function statistics = ...
 %% Pre Allocation
 
 statistics = struct();
-friedman_table = {"Performance", "Response Frequency", "Reaction Time"; ...
+manwhitney_table = {"Performance", "Response Frequency", "Reaction Time"; ...
     [], [], []};
-friedman_stats = {"Performance", "Response Frequency", "Reaction Time"; ...
+mannwhitney_stats = {"Performance", "Response Frequency", "Reaction Time"; ...
     [], [], []};
 
 stats_table = cell(2, 3);
@@ -47,15 +47,25 @@ end
 % iterate over behavioural data
 for behav_idx = 1:3
     % Friedman Test
-    [stats_table{1, behav_idx}, friedman_table{2, behav_idx}, ...
-        friedman_stats{2, behav_idx}] = ...
-        friedman([crow_split{behav_idx, 1}, ...
-        crow_split{behav_idx, 2}], 1, "off");
+    [stats_table{1, behav_idx}, manwhitney_table{2, behav_idx}, ...
+        mannwhitney_stats{2, behav_idx}] = ...
+        ranksum(crow_split{behav_idx, 1}, ...
+        crow_split{behav_idx, 2});
 
     % Effect Size: Kendall's W
-    chi2 = friedman_table{2, behav_idx}{2, 5};  % Chi Squared Statistics
-    stats_table{2, behav_idx} = chi2 / ...
-        (size(crow_split{behav_idx, 1}, 1) * 2);
+    %chi2 = friedman_table{2, behav_idx}{2, 5};  % Chi Squared Statistics
+    %stats_table{2, behav_idx} = chi2 / ...
+    %    (size(crow_split{behav_idx, 1}, 1) * 2);
+
+    % Effect Size: Rank Biserial Correlation Coefficient r
+    R1 = mannwhitney_stats{2, behav_idx}.ranksum;
+    U1 = R1 - numel(crow_split{behav_idx, 1}) * ...
+        (numel(crow_split{behav_idx, 1}) + 1) / 2; 
+
+    
+    stats_table{2, behav_idx} = 2 * U1 / ...
+        (numel(crow_split{behav_idx, 1}) * ...
+        numel(crow_split{behav_idx, 2})) - 1; 
 end
 
 %% Rewrite the results
@@ -63,11 +73,11 @@ stats_table = cell2table(stats_table);
 stats_table.Properties.VariableNames = ...
     {'Performance', 'Response Frequency', 'Reaction Time'};
 stats_table.Properties.RowNames = ...
-    {'Friedman p-Value', 'Kendalls W'};
+    {'Mann-Whitney p-Value', 'Rank Biserial'};
 
 statistics.Results = stats_table;
-statistics.Friedman_Table = friedman_table;
-statistics.Friedman_Stats = friedman_stats;
+statistics.Friedman_Table = manwhitney_table;
+statistics.Friedman_Stats = mannwhitney_stats;
 statistics.Alpha_Level = alpha_stats;
 
 end
